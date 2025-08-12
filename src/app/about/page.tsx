@@ -14,7 +14,7 @@ const teamMembers = [
     expertise: '关键链项目管理理论研究',
     experience: '20年项目管理经验',
     description: '国内知名项目管理专家，关键链项目管理理论的早期推广者，曾为多家世界500强企业提供咨询服务。',
-    image: '/placeholder-professor.jpg'
+    image: '/placeholder-professor.svg'
   },
   {
     name: '李博士',
@@ -22,7 +22,7 @@ const teamMembers = [
     expertise: '企业项目管理实施',
     experience: '15年咨询经验',
     description: '专注于制造业和IT行业的项目管理优化，具有丰富的企业实施经验和深厚的理论功底。',
-    image: '/placeholder-consultant.jpg'
+    image: '/placeholder-consultant.svg'
   },
   {
     name: '王经理',
@@ -30,7 +30,7 @@ const teamMembers = [
     expertise: '项目管理培训体系设计',
     experience: '12年培训经验',
     description: '负责培训课程设计和实施，擅长将复杂的理论转化为易懂的实践方法，深受学员好评。',
-    image: '/placeholder-trainer.jpg'
+    image: '/placeholder-trainer.svg'
   },
   {
     name: '陈顾问',
@@ -38,7 +38,7 @@ const teamMembers = [
     expertise: '项目管理工具应用',
     experience: '10年实施经验',
     description: '专业的项目管理工具专家，熟练掌握各种项目管理软件，为企业提供技术实施支持。',
-    image: '/placeholder-advisor.jpg'
+    image: '/placeholder-advisor.svg'
   }
 ];
 
@@ -122,7 +122,7 @@ export default function AboutPage() {
               <div className="relative overflow-hidden rounded-3xl bg-gray-900 px-6 pb-9 pt-64 shadow-2xl sm:px-12 lg:max-w-lg lg:px-8 lg:pb-8 xl:px-10 xl:pb-10">
                 <img
                   className="absolute inset-0 h-full w-full object-cover brightness-125 saturate-0"
-                  src="/placeholder-institute.jpg"
+                  src="/placeholder-institute.svg"
                   alt="关键链项目管理研究院"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40" />

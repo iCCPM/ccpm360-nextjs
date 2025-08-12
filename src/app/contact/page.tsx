@@ -59,25 +59,26 @@ export default function ContactPage() {
       try {
         const { data, error } = await supabase
           .from('site_settings')
-          .select('setting_key, setting_value')
-          .in('setting_key', [
-            'contact_email', 'contact_phone', 'contact_address',
-            'direct_phone', 'support_email', 'business_hours_weekday',
-            'business_hours_weekend', 'wechat_account_name', 'wechat_description',
-            'wechat_qr_code'
-          ]);
+          .select('contact_email, contact_phone, contact_address, site_title, site_description')
+          .single();
         
         if (error) throw error;
         
-        const contactData: any = {};
-        data?.forEach((item: any) => {
-          contactData[item.setting_key] = item.setting_value;
-        });
-        
-        setContactInfo(prev => ({
-          ...prev,
-          ...contactData
-        }));
+        if (data) {
+          setContactInfo(prev => ({
+            ...prev,
+            contact_email: data.contact_email || '',
+            contact_phone: data.contact_phone || '',
+            contact_address: data.contact_address || '',
+            direct_phone: data.contact_phone || '', // 使用主电话作为直线电话
+            support_email: data.contact_email || '', // 使用主邮箱作为技术支持邮箱
+            business_hours_weekday: '周一至周五 9:00-18:00',
+            business_hours_weekend: '周六 9:00-17:00',
+            wechat_account_name: 'CCPM360咨询',
+            wechat_description: '关注获取最新项目管理资讯',
+            wechat_qr_code: '/placeholder-qr-code.svg'
+          }));
+        }
       } catch (error) {
         console.error('加载联系信息失败:', error);
       }
@@ -271,11 +272,17 @@ export default function ContactPage() {
                 <div className="text-center">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">关注微信公众号</h3>
                   <div className="inline-block bg-white p-4 rounded-xl shadow-sm">
-                    <img
-                      src={contactInfo.wechat_qr_code}
-                      alt="微信公众号二维码"
-                      className="w-32 h-32 mx-auto"
-                    />
+                    {contactInfo.wechat_qr_code ? (
+                      <img
+                        src={contactInfo.wechat_qr_code}
+                        alt="微信公众号二维码"
+                        className="w-32 h-32 mx-auto"
+                      />
+                    ) : (
+                      <div className="w-32 h-32 mx-auto bg-gray-100 rounded-lg flex items-center justify-center">
+                        <span className="text-gray-400 text-sm">加载中...</span>
+                      </div>
+                    )}
                   </div>
                   <div className="mt-4">
                     <p className="font-semibold text-gray-900">{contactInfo.wechat_account_name}</p>

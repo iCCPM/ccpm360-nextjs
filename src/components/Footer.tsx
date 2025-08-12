@@ -1,8 +1,8 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
 import { Phone, Mail, MapPin, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -39,20 +39,20 @@ export default function Footer() {
         
         const { data, error } = await supabase
           .from('site_settings')
-          .select('setting_key, setting_value')
-          .in('setting_key', ['contact_email', 'contact_phone', 'contact_address']);
+          .select('contact_email, contact_phone, contact_address')
+          .limit(1);
         
         if (error) throw error;
         
-        const contactData: Record<string, string> = {};
-        data?.forEach((item: { setting_key: string; setting_value: string }) => {
-          contactData[item.setting_key] = item.setting_value;
-        });
-        
-        setContactInfo(prev => ({
-          ...prev,
-          ...contactData
-        }));
+        if (data && data.length > 0) {
+          const siteSettings = data[0];
+          setContactInfo(prev => ({
+            ...prev,
+            contact_email: siteSettings.contact_email || prev.contact_email,
+            contact_phone: siteSettings.contact_phone || prev.contact_phone,
+            contact_address: siteSettings.contact_address || prev.contact_address
+          }));
+        }
       } catch (error) {
         console.error('加载联系信息失败:', error);
       }

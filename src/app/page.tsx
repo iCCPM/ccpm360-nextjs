@@ -39,7 +39,7 @@ const caseStudies = [
       delivery: '95%'
     },
     description: '通过关键链项目管理方法，成功管理多条生产线同时改造的复杂项目。',
-    image: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20manufacturing%20facility%20with%20automated%20production%20lines%20and%20industrial%20equipment&image_size=landscape_4_3'
+    image: '/placeholder-manufacturing.svg'
   },
   {
     id: 2,

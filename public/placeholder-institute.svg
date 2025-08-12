@@ -1,0 +1,14 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#1f2937"/>
+  <rect x="50" y="80" width="300" height="140" fill="#374151" rx="8"/>
+  <rect x="70" y="100" width="60" height="80" fill="#4b5563" rx="4"/>
+  <rect x="150" y="100" width="60" height="80" fill="#4b5563" rx="4"/>
+  <rect x="230" y="100" width="60" height="80" fill="#4b5563" rx="4"/>
+  <rect x="310" y="100" width="60" height="80" fill="#4b5563" rx="4"/>
+  <rect x="180" y="60" width="40" height="40" fill="#6b7280" rx="20"/>
+  <rect x="160" y="200" width="80" height="20" fill="#9ca3af" rx="4"/>
+  <text x="200" y="250" text-anchor="middle" fill="#d1d5db" font-family="Arial, sans-serif" font-size="16">CCPM360 Institute</text>
+  <circle cx="80" cy="50" r="8" fill="#fbbf24"/>
+  <circle cx="120" cy="40" r="6" fill="#fbbf24"/>
+  <circle cx="160" cy="35" r="4" fill="#fbbf24"/>
+</svg>
