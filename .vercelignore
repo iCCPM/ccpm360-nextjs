@@ -1,0 +1,12 @@
+node_modules
+.next
+build
+dist
+.git
+.trae
+.log
+*.tsbuildinfo
+.env.local
+.env.*.local
+coverage
+*.log

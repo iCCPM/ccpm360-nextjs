@@ -1,0 +1,511 @@
+@import "tailwindcss";
+
+/* 设计系统变量 */
+:root {
+  /* 间距系统 */
+  --spacing-xs: 0.25rem;    /* 4px */
+  --spacing-sm: 0.5rem;     /* 8px */
+  --spacing-md: 1rem;       /* 16px */
+  --spacing-lg: 1.5rem;     /* 24px */
+  --spacing-xl: 2rem;       /* 32px */
+  --spacing-2xl: 3rem;      /* 48px */
+  --spacing-3xl: 4rem;      /* 64px */
+  
+  /* 圆角系统 */
+  --radius-sm: 0.375rem;    /* 6px */
+  --radius-md: 0.5rem;      /* 8px */
+  --radius-lg: 0.75rem;     /* 12px */
+  --radius-xl: 1rem;        /* 16px */
+  --radius-2xl: 1.5rem;     /* 24px */
+  
+  /* 阴影系统 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  
+  /* 渐变色系统 */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --gradient-warning: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+/* Ethnocentric字体定义 */
+@font-face {
+  font-family: 'Ethnocentric';
+  src: url('../assets/fonts/Ethnocentric Rg.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ethnocentric';
+  src: url('../assets/fonts/Ethnocentric Rg It.otf') format('opentype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ethnocentric字体样式定义 */
+.font-ethnocentric {
+  font-family: 'Ethnocentric', 'Arial Black', 'Helvetica', 'Arial', sans-serif;
+  font-weight: normal;
+  letter-spacing: 0.05em;
+  font-display: swap;
+}
+
+/* 确保Ethnocentric字体在不同设备上的兼容性 */
+@supports (font-family: 'Ethnocentric') {
+  .font-ethnocentric {
+    font-family: 'Ethnocentric', 'Arial Black', 'Helvetica', 'Arial', sans-serif;
+  }
+}
+
+@supports not (font-family: 'Ethnocentric') {
+  .font-ethnocentric {
+    font-family: 'Arial Black', 'Helvetica', 'Arial', sans-serif;
+    font-weight: 900;
+  }
+}
+
+/* 通用组件样式 */
+/* 现代化卡片样式 */
+.card-modern {
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  border: 1px solid rgb(243 244 246);
+  transition: all 0.3s;
+}
+
+.card-modern:hover {
+  box-shadow: 0 25px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  transform: translateY(-0.25rem);
+  border-color: rgb(229 231 235);
+}
+
+/* 渐变按钮样式 */
+.btn-gradient-primary {
+  background: linear-gradient(to right, rgb(37 99 235), rgb(147 51 234));
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transition: all 0.3s;
+  transform: scale(1);
+}
+
+.btn-gradient-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 25px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.btn-gradient-secondary {
+  background: linear-gradient(to right, rgb(34 197 94), rgb(5 150 105));
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transition: all 0.3s;
+  transform: scale(1);
+}
+
+.btn-gradient-secondary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 25px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+  
+/* 图标容器样式 */
+.icon-container {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transition: transform 0.3s;
+}
+
+.group:hover .icon-container {
+  transform: scale(1.1);
+}
+
+.icon-container-sm {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s;
+}
+
+/* 渐变文本样式 */
+.text-gradient-primary {
+  background: linear-gradient(to right, rgb(37 99 235), rgb(147 51 234));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-secondary {
+  background: linear-gradient(to right, rgb(34 197 94), rgb(5 150 105));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* 状态指示器 */
+.status-indicator {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+  
+/* 现代化输入框 */
+.input-modern {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgb(229 231 235);
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+  background-color: white;
+}
+
+.input-modern:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(59 130 246);
+  border-color: transparent;
+}
+
+/* 标签样式 */
+.tag-modern {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  transition: color 0.2s;
+}
+
+/* 分割线样式 */
+.divider-modern {
+  border-top: 1px solid rgb(229 231 235);
+  margin: 2rem 0;
+}
+  
+  /* 背景图案 */
+  .bg-pattern {
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+  
+/* 玻璃态效果 */
+.glass-effect {
+  background-color: rgb(255 255 255 / 0.1);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgb(255 255 255 / 0.2);
+}
+
+/* 悬浮动画 */
+.hover-float {
+  transition: all 0.3s;
+}
+
+.hover-float:hover {
+  transform: translateY(-0.5rem);
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+/* 响应式容器 */
+.container-responsive {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.container-narrow {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-narrow {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-narrow {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+  
+/* 移动端优化的网格布局 */
+.grid-responsive-1 {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.grid-responsive-2 {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .grid-responsive-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+.grid-responsive-3 {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .grid-responsive-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.grid-responsive-4 {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+  
+/* 移动端友好的间距 */
+.spacing-mobile {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .spacing-mobile {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .spacing-mobile {
+    padding: 2rem;
+  }
+}
+
+.spacing-mobile-sm {
+  padding: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .spacing-mobile-sm {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .spacing-mobile-sm {
+    padding: 1.5rem;
+  }
+}
+
+/* 移动端文本大小 */
+.text-responsive-xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+@media (min-width: 640px) {
+  .text-responsive-xl {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-responsive-xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+}
+
+.text-responsive-lg {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+@media (min-width: 640px) {
+  .text-responsive-lg {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-responsive-lg {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+}
+
+.text-responsive-md {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+@media (min-width: 640px) {
+  .text-responsive-md {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-responsive-md {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+}
+
+/* 移动端按钮 */
+.btn-mobile {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .btn-mobile {
+    width: auto;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+}
+
+/* 移动端卡片 */
+.card-mobile {
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .card-mobile {
+    border-radius: 1rem;
+    padding: 1.5rem;
+  }
+}
+
+/* 移动端导航 */
+.nav-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .nav-mobile {
+    flex-direction: row;
+    gap: 1rem;
+  }
+}
+
+/* 移动端特定样式 */
+@media (max-width: 640px) {
+  /* 移动端时隐藏复杂动画 */
+  .hover-float:hover {
+    transform: none;
+  }
+  
+  /* 移动端优化的阴影 */
+  .card-modern {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+  
+  /* 移动端字体优化 */
+  body {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  
+  /* 移动端触摸优化 */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* 平板端优化 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .container-responsive {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* 大屏幕优化 */
+@media (min-width: 1920px) {
+  .container-responsive {
+    max-width: 1400px;
+  }
+}
