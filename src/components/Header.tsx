@@ -7,7 +7,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 
 const navigation = [
-  { name: '首页', href: '/' },
+  { name: '首页home', href: '/' },
   { name: '关于我们', href: '/about' },
   { name: '服务项目', href: '/services' },
   { name: '成功案例', href: '/cases' },
