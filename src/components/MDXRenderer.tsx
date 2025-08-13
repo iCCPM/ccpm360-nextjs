@@ -16,7 +16,7 @@ export function MDXRenderer({ content }: MDXRendererProps) {
       remarkPlugins={[remarkGfm]}
       components={{
         // 自定义代码块渲染
-        code({ node, inline, className, children, ...props }) {
+        code({ node, inline, className, children, ...props }: any) {
           const match = /language-(\w+)/.exec(className || '');
           return !inline && match ? (
             <SyntaxHighlighter
@@ -28,7 +28,7 @@ export function MDXRenderer({ content }: MDXRendererProps) {
               {String(children).replace(/\n$/, '')}
             </SyntaxHighlighter>
           ) : (
-            <code className={className} {...props}>
+            <code className={inline ? "bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-sm font-mono" : className} {...props}>
               {children}
             </code>
           );
@@ -140,12 +140,6 @@ export function MDXRenderer({ content }: MDXRendererProps) {
         // 自定义水平线渲染
         hr: () => (
           <hr className="my-8 border-gray-300" />
-        ),
-        // 自定义内联代码渲染
-        inlineCode: ({ children }) => (
-          <code className="bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-sm font-mono">
-            {children}
-          </code>
         ),
       }}
     >
