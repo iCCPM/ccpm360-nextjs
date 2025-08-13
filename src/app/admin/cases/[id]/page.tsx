@@ -3,16 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Save, 
-  ArrowLeft, 
-  Trash2, 
-  Upload, 
-  X, 
-  Plus,
-  Eye,
-  EyeOff
-} from 'lucide-react';
+import { Save, ArrowLeft, Trash2, X, Plus, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -38,7 +29,7 @@ const AdminCaseEdit = () => {
   const id = params?.id as string;
   const isNew = id === 'new';
   const { user } = useAuthStore();
-  
+
   const [formData, setFormData] = useState<CaseStudy>({
     title: '',
     client_name: '',
@@ -51,9 +42,9 @@ const AdminCaseEdit = () => {
     results: '',
     challenge: '',
     solution: '',
-    testimonial: ''
+    testimonial: '',
   });
-  
+
   const [originalData, setOriginalData] = useState<CaseStudy | null>(null);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -66,7 +57,7 @@ const AdminCaseEdit = () => {
       router.push('/admin/login');
       return;
     }
-    
+
     if (!isNew && id) {
       loadCase();
     }
@@ -81,7 +72,7 @@ const AdminCaseEdit = () => {
         .single();
 
       if (error) throw error;
-      
+
       if (data) {
         const loadedData = {
           ...data,
@@ -89,7 +80,7 @@ const AdminCaseEdit = () => {
           results: data.results || '',
           challenge: data.challenge || '',
           solution: data.solution || '',
-          testimonial: data.testimonial || ''
+          testimonial: data.testimonial || '',
         };
         setFormData(loadedData);
         setOriginalData(loadedData); // 保存原始数据用于对比
@@ -118,10 +109,10 @@ const AdminCaseEdit = () => {
         setSaving(false);
         return;
       }
-      
+
       console.log('Current user:', user);
       console.log('User role:', user.role);
-      
+
       // 准备数据，确保字段类型正确
       const caseData = {
         title: formData.title.trim(),
@@ -136,7 +127,7 @@ const AdminCaseEdit = () => {
         challenge: formData.challenge || '',
         solution: formData.solution || '',
         testimonial: formData.testimonial || null,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       console.log('Saving case data:', caseData);
@@ -150,7 +141,7 @@ const AdminCaseEdit = () => {
           .from('case_studies')
           .insert([{ ...caseData, created_at: new Date().toISOString() }])
           .select();
-        
+
         console.log('Insert result:', result);
         if (result.error) throw result.error;
         setMessage('案例创建成功！');
@@ -162,9 +153,12 @@ const AdminCaseEdit = () => {
           .select('id, title')
           .eq('id', id)
           .single();
-        
-        console.log('Existing record check:', { data: existingRecord, error: checkError });
-        
+
+        console.log('Existing record check:', {
+          data: existingRecord,
+          error: checkError,
+        });
+
         if (checkError) {
           if (checkError.code === 'PGRST116') {
             throw new Error(`记录不存在，ID: ${id}`);
@@ -172,32 +166,35 @@ const AdminCaseEdit = () => {
             throw checkError;
           }
         }
-        
+
         if (!existingRecord) {
           throw new Error(`没有找到ID为 ${id} 的记录`);
         }
-        
+
         console.log('Record exists, proceeding with update...');
-        
+
         // 对比原始数据和新数据
-          if (originalData) {
-            console.log('Original data:', originalData);
-            console.log('New data:', caseData);
-            
-            // 检查是否有实际变化
-            const hasChanges = Object.keys(caseData).some(key => {
-              if (key === 'updated_at') return false; // 忽略时间戳
-              if (key === 'tags') {
-                // 特殊处理数组比较
-                const originalTags = originalData.tags || [];
-                const newTags = caseData.tags || [];
-                return JSON.stringify(originalTags.sort()) !== JSON.stringify(newTags.sort());
-              }
-              const originalKey = key as keyof typeof originalData;
-              const caseKey = key as keyof typeof caseData;
-              return originalData[originalKey] !== caseData[caseKey];
-            });
-          
+        if (originalData) {
+          console.log('Original data:', originalData);
+          console.log('New data:', caseData);
+
+          // 检查是否有实际变化
+          const hasChanges = Object.keys(caseData).some((key) => {
+            if (key === 'updated_at') return false; // 忽略时间戳
+            if (key === 'tags') {
+              // 特殊处理数组比较
+              const originalTags = originalData.tags || [];
+              const newTags = caseData.tags || [];
+              return (
+                JSON.stringify(originalTags.sort()) !==
+                JSON.stringify(newTags.sort())
+              );
+            }
+            const originalKey = key as keyof typeof originalData;
+            const caseKey = key as keyof typeof caseData;
+            return originalData[originalKey] !== caseData[caseKey];
+          });
+
           console.log('Has changes:', hasChanges);
           if (!hasChanges) {
             console.log('No changes detected, skipping update');
@@ -206,45 +203,48 @@ const AdminCaseEdit = () => {
             return;
           }
         }
-        
+
         // 尝试逐个字段更新以定位问题
-        console.log('Attempting update with data:', JSON.stringify(caseData, null, 2));
-        
+        console.log(
+          'Attempting update with data:',
+          JSON.stringify(caseData, null, 2)
+        );
+
         result = await supabase
           .from('case_studies')
           .update(caseData)
           .eq('id', id)
           .select();
-        
+
         console.log('Update result:', result);
         if (result.error) {
           console.error('Update error:', result.error);
           throw result.error;
         }
-        
+
         if (result.data && result.data.length === 0) {
           // 尝试简化的更新来测试
           console.log('Trying simplified update...');
           const simplifiedData = {
             title: caseData.title,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           };
-          
+
           const simpleResult = await supabase
             .from('case_studies')
             .update(simplifiedData)
             .eq('id', id)
             .select();
-          
+
           console.log('Simplified update result:', simpleResult);
-          
+
           if (simpleResult.data && simpleResult.data.length > 0) {
             throw new Error('复杂数据更新失败，可能存在字段类型问题');
           } else {
             throw new Error('更新操作未影响任何记录，可能是权限或约束问题');
           }
         }
-        
+
         console.log('Update successful, affected rows:', result.data.length);
         setMessage('案例更新成功！');
       }
@@ -258,7 +258,7 @@ const AdminCaseEdit = () => {
         message: error.message,
         details: error.details,
         hint: error.hint,
-        code: error.code
+        code: error.code,
       });
       setMessage(`保存失败：${error.message || '请重试'}`);
     } finally {
@@ -276,7 +276,7 @@ const AdminCaseEdit = () => {
         .from('case_studies')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
       router.push('/admin/cases');
     } catch (error) {
@@ -287,18 +287,18 @@ const AdminCaseEdit = () => {
 
   const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        tags: [...prev.tags, newTag.trim()]
+        tags: [...prev.tags, newTag.trim()],
       }));
       setNewTag('');
     }
   };
 
   const removeTag = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      tags: prev.tags.filter((_, i) => i !== index)
+      tags: prev.tags.filter((_, i) => i !== index),
     }));
   };
 
@@ -355,9 +355,13 @@ const AdminCaseEdit = () => {
 
       {/* 消息提示 */}
       {message && (
-        <div className={`p-4 rounded-lg ${
-          message.includes('成功') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
-        }`}>
+        <div
+          className={`p-4 rounded-lg ${
+            message.includes('成功')
+              ? 'bg-green-50 text-green-700 border border-green-200'
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}
+        >
           {message}
         </div>
       )}
@@ -367,7 +371,9 @@ const AdminCaseEdit = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* 基本信息 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">基本信息</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              基本信息
+            </h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -376,12 +382,14 @@ const AdminCaseEdit = () => {
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, title: e.target.value }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="输入案例标题"
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -390,12 +398,17 @@ const AdminCaseEdit = () => {
                   <input
                     type="text"
                     value={formData.client_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, client_name: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        client_name: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="客户公司名称"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     所属行业
@@ -403,13 +416,18 @@ const AdminCaseEdit = () => {
                   <input
                     type="text"
                     value={formData.industry}
-                    onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        industry: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="如：制造业、IT软件、建筑工程"
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -418,12 +436,17 @@ const AdminCaseEdit = () => {
                   <input
                     type="text"
                     value={formData.project_duration}
-                    onChange={(e) => setFormData(prev => ({ ...prev, project_duration: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        project_duration: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="如：6个月、1年"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     团队规模
@@ -432,13 +455,18 @@ const AdminCaseEdit = () => {
                     type="number"
                     min="1"
                     value={formData.team_size}
-                    onChange={(e) => setFormData(prev => ({ ...prev, team_size: parseInt(e.target.value) || 1 }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        team_size: parseInt(e.target.value) || 1,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="团队人数"
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   案例图片URL
@@ -446,7 +474,12 @@ const AdminCaseEdit = () => {
                 <input
                   type="url"
                   value={formData.featured_image_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, featured_image_url: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      featured_image_url: e.target.value,
+                    }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="https://example.com/image.jpg"
                 />
@@ -456,14 +489,18 @@ const AdminCaseEdit = () => {
 
           {/* 项目成果 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">项目成果</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              项目成果
+            </h2>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 项目成果描述
               </label>
               <textarea
                 value={formData.results}
-                onChange={(e) => setFormData(prev => ({ ...prev, results: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, results: e.target.value }))
+                }
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="详细描述项目取得的成果和效益"
@@ -473,8 +510,10 @@ const AdminCaseEdit = () => {
 
           {/* 挑战与解决方案 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">挑战与解决方案</h2>
-            
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              挑战与解决方案
+            </h2>
+
             <div className="space-y-6">
               {/* 项目挑战 */}
               <div>
@@ -483,13 +522,18 @@ const AdminCaseEdit = () => {
                 </label>
                 <textarea
                   value={formData.challenge}
-                  onChange={(e) => setFormData(prev => ({ ...prev, challenge: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      challenge: e.target.value,
+                    }))
+                  }
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="描述项目面临的主要挑战和难点"
                 />
               </div>
-              
+
               {/* 解决方案 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -497,7 +541,12 @@ const AdminCaseEdit = () => {
                 </label>
                 <textarea
                   value={formData.solution}
-                  onChange={(e) => setFormData(prev => ({ ...prev, solution: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      solution: e.target.value,
+                    }))
+                  }
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="描述采用的解决方案和实施方法"
@@ -505,17 +554,24 @@ const AdminCaseEdit = () => {
               </div>
             </div>
           </div>
-          
+
           {/* 客户评价 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">客户评价</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              客户评价
+            </h2>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 客户反馈
               </label>
               <textarea
                 value={formData.testimonial}
-                onChange={(e) => setFormData(prev => ({ ...prev, testimonial: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    testimonial: e.target.value,
+                  }))
+                }
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="客户对项目的评价和反馈（可选）"
@@ -528,17 +584,28 @@ const AdminCaseEdit = () => {
         <div className="space-y-6">
           {/* 发布状态 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">发布状态</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              发布状态
+            </h2>
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => setFormData(prev => ({ ...prev, published: !prev.published }))}
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    published: !prev.published,
+                  }))
+                }
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
                   formData.published
                     ? 'bg-green-100 text-green-700 border border-green-200'
                     : 'bg-gray-100 text-gray-700 border border-gray-200'
                 }`}
               >
-                {formData.published ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                {formData.published ? (
+                  <Eye className="w-4 h-4" />
+                ) : (
+                  <EyeOff className="w-4 h-4" />
+                )}
                 <span>{formData.published ? '已发布' : '草稿'}</span>
               </button>
             </div>
@@ -564,7 +631,7 @@ const AdminCaseEdit = () => {
                   </span>
                 ))}
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <input
                   type="text"

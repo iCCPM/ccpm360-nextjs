@@ -5,7 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Lock, Mail, AlertCircle, User, Key } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
-import { checkAdminExists, createAdminUser, createFirstAdminUser, validateInvitationCode } from '@/lib/initAdmin';
+import {
+  checkAdminExists,
+  createAdminUser,
+  createFirstAdminUser,
+  validateInvitationCode,
+} from '@/lib/initAdmin';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -36,10 +41,16 @@ const AdminLogin = () => {
 
   const checkForExistingAdmin = async () => {
     try {
+      console.log('开始检查现有管理员...');
       const result = await checkAdminExists();
+      console.log('管理员检查结果:', result);
+
       if (!result.exists) {
+        console.log('未发现管理员，切换到首个管理员创建模式');
         setIsFirstAdmin(true);
         setIsRegisterMode(true);
+      } else {
+        console.log('发现现有管理员，保持登录模式');
       }
     } catch (error) {
       console.error('检查管理员用户失败:', error);
@@ -70,9 +81,20 @@ const AdminLogin = () => {
         const result = await createFirstAdminUser(email, password, fullName);
         if (result.success) {
           if (result.requiresEmailVerification) {
-            setSuccess('首个管理员账户创建成功！请检查您的邮箱并点击验证链接，然后返回登录。');
+            setSuccess(
+              '首个管理员账户创建成功！请检查您的邮箱并点击验证链接，然后返回登录。'
+            );
           } else {
             setSuccess('首个管理员账户创建成功！请使用新账户登录。');
+            // 如果不需要邮箱验证，自动尝试登录
+            setTimeout(async () => {
+              const loginResult = await login(email, password);
+              if (loginResult.success) {
+                // 登录成功，页面会自动跳转
+              } else {
+                setError('账户创建成功，但自动登录失败，请手动登录');
+              }
+            }, 1000);
           }
           setIsRegisterMode(false);
           setIsFirstAdmin(false);
@@ -89,16 +111,26 @@ const AdminLogin = () => {
 
         setValidatingInvitation(true);
         try {
-          const invitationResult = await validateInvitationCode(invitationCode, email);
+          const invitationResult = await validateInvitationCode(
+            invitationCode,
+            email
+          );
           if (!invitationResult.valid) {
             setError(invitationResult.error || '邀请码无效');
             return;
           }
 
-          const result = await createAdminUser(email, password, fullName, invitationCode);
+          const result = await createAdminUser(
+            email,
+            password,
+            fullName,
+            invitationCode
+          );
           if (result.success) {
             if (result.requiresEmailVerification) {
-              setSuccess('管理员账户创建成功！请检查您的邮箱并点击验证链接，然后返回登录。');
+              setSuccess(
+                '管理员账户创建成功！请检查您的邮箱并点击验证链接，然后返回登录。'
+              );
             } else {
               setSuccess('管理员账户创建成功！请使用新账户登录。');
             }
@@ -159,7 +191,11 @@ const AdminLogin = () => {
             CCPM360 管理后台
           </h2>
           <p className="text-gray-600">
-            {isRegisterMode ? (isFirstAdmin ? '创建第一个管理员账户' : '创建管理员账户') : '请使用管理员账户登录'}
+            {isRegisterMode
+              ? isFirstAdmin
+                ? '创建第一个管理员账户'
+                : '创建管理员账户'
+              : '请使用管理员账户登录'}
           </p>
         </div>
 
@@ -185,7 +221,10 @@ const AdminLogin = () => {
             {/* 邀请码输入（仅非首个管理员注册模式） */}
             {isRegisterMode && !isFirstAdmin && (
               <div>
-                <label htmlFor="invitationCode" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="invitationCode"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   邀请码
                 </label>
                 <div className="relative">
@@ -209,7 +248,10 @@ const AdminLogin = () => {
             {/* 姓名输入（仅注册模式） */}
             {isRegisterMode && (
               <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="fullName"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   姓名
                 </label>
                 <div className="relative">
@@ -233,7 +275,10 @@ const AdminLogin = () => {
 
             {/* 邮箱输入 */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 邮箱地址
               </label>
               <div className="relative">
@@ -256,7 +301,10 @@ const AdminLogin = () => {
 
             {/* 密码输入 */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 密码
               </label>
               <div className="relative">
@@ -298,11 +346,17 @@ const AdminLogin = () => {
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>
-                    {validatingInvitation ? '验证邀请码...' : (isRegisterMode ? '创建中...' : '登录中...')}
+                    {validatingInvitation
+                      ? '验证邀请码...'
+                      : isRegisterMode
+                        ? '创建中...'
+                        : '登录中...'}
                   </span>
                 </div>
+              ) : isRegisterMode ? (
+                '创建管理员账户'
               ) : (
-                isRegisterMode ? '创建管理员账户' : '登录'
+                '登录'
               )}
             </button>
 
@@ -320,7 +374,7 @@ const AdminLogin = () => {
                     </Link>
                   </div>
                 )}
-                
+
                 {/* 模式切换按钮 */}
                 <div className="text-center">
                   {!isRegisterMode ? (
@@ -347,8 +401,8 @@ const AdminLogin = () => {
 
           {/* 返回首页链接 */}
           <div className="mt-6 text-center">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="text-sm text-blue-600 hover:text-blue-500 transition-colors duration-200"
             >
               ← 返回网站首页

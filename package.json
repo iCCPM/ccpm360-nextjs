@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prepare": "husky",
+    "type-check": "tsc --noEmit",
+    "check": "npm run lint && npm run type-check && npm run build",
+    "pre-deploy": "npm run check"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -14,6 +18,7 @@
     "@supabase/supabase-js": "^2.54.0",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
+    "@umami/node": "^0.4.0",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.2",
     "lucide-react": "^0.539.0",
@@ -40,7 +45,19 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,mdx}": [
+      "prettier --write"
+    ]
   }
 }

@@ -2,23 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Download, 
-  Edit, 
-  Trash2, 
+import {
+  Plus,
+  Search,
+  Filter,
+  Download,
+  Edit,
+  Trash2,
   Eye,
   FileText,
   Image,
   Video,
   File,
   Calendar,
-  User
+  User,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/stores/authStore';
 
 interface Resource {
   id: string;
@@ -45,7 +44,6 @@ const AdminResourcesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
-  const { user } = useAuthStore();
 
   const categories = [
     { value: 'all', label: '全部分类' },
@@ -54,7 +52,7 @@ const AdminResourcesPage = () => {
     { value: 'guide', label: '指导手册' },
     { value: 'case_study', label: '案例研究' },
     { value: 'training', label: '培训材料' },
-    { value: 'other', label: '其他' }
+    { value: 'other', label: '其他' },
   ];
 
   useEffect(() => {
@@ -90,16 +88,24 @@ const AdminResourcesPage = () => {
 
     // 搜索过滤
     if (searchTerm) {
-      filtered = filtered.filter(resource =>
-        resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (resource.tags && resource.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
+      filtered = filtered.filter(
+        (resource) =>
+          resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          resource.description
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (resource.tags &&
+            resource.tags.some((tag) =>
+              tag.toLowerCase().includes(searchTerm.toLowerCase())
+            ))
       );
     }
 
     // 分类过滤
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(resource => resource.category === selectedCategory);
+      filtered = filtered.filter(
+        (resource) => resource.category === selectedCategory
+      );
     }
 
     setFilteredResources(filtered);
@@ -121,7 +127,7 @@ const AdminResourcesPage = () => {
         return;
       }
 
-      setResources(resources.filter(r => r.id !== id));
+      setResources(resources.filter((r) => r.id !== id));
     } catch (error) {
       alert('删除失败');
     }
@@ -133,7 +139,11 @@ const AdminResourcesPage = () => {
       return;
     }
 
-    if (!confirm(`确定要删除选中的 ${selectedResources.length} 个资源吗？此操作不可撤销。`)) {
+    if (
+      !confirm(
+        `确定要删除选中的 ${selectedResources.length} 个资源吗？此操作不可撤销。`
+      )
+    ) {
       return;
     }
 
@@ -148,7 +158,7 @@ const AdminResourcesPage = () => {
         return;
       }
 
-      setResources(resources.filter(r => !selectedResources.includes(r.id)));
+      setResources(resources.filter((r) => !selectedResources.includes(r.id)));
       setSelectedResources([]);
     } catch (error) {
       alert('批量删除失败');
@@ -167,9 +177,11 @@ const AdminResourcesPage = () => {
         return;
       }
 
-      setResources(resources.map(r => 
-        r.id === id ? { ...r, is_published: !currentStatus } : r
-      ));
+      setResources(
+        resources.map((r) =>
+          r.id === id ? { ...r, is_published: !currentStatus } : r
+        )
+      );
     } catch (error) {
       alert('更新状态失败');
     }
@@ -178,7 +190,8 @@ const AdminResourcesPage = () => {
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith('image/')) return <Image className="w-4 h-4" />;
     if (fileType.startsWith('video/')) return <Video className="w-4 h-4" />;
-    if (fileType.includes('pdf') || fileType.includes('document')) return <FileText className="w-4 h-4" />;
+    if (fileType.includes('pdf') || fileType.includes('document'))
+      return <FileText className="w-4 h-4" />;
     return <File className="w-4 h-4" />;
   };
 
@@ -194,7 +207,7 @@ const AdminResourcesPage = () => {
     if (selectedResources.length === filteredResources.length) {
       setSelectedResources([]);
     } else {
-      setSelectedResources(filteredResources.map(r => r.id));
+      setSelectedResources(filteredResources.map((r) => r.id));
     }
   };
 
@@ -215,7 +228,9 @@ const AdminResourcesPage = () => {
         {/* 页面标题 */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">资源管理</h1>
-          <p className="mt-2 text-gray-600">管理网站的下载资源，包括文档、模板、指南等</p>
+          <p className="mt-2 text-gray-600">
+            管理网站的下载资源，包括文档、模板、指南等
+          </p>
         </div>
 
         {/* 操作栏 */}
@@ -233,7 +248,7 @@ const AdminResourcesPage = () => {
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
                 />
               </div>
-              
+
               <div className="relative">
                 <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <select
@@ -241,7 +256,7 @@ const AdminResourcesPage = () => {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
                 >
-                  {categories.map(category => (
+                  {categories.map((category) => (
                     <option key={category.value} value={category.value}>
                       {category.label}
                     </option>
@@ -261,7 +276,7 @@ const AdminResourcesPage = () => {
                   删除选中 ({selectedResources.length})
                 </button>
               )}
-              
+
               <Link
                 href="/admin/resources/new"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -278,7 +293,9 @@ const AdminResourcesPage = () => {
           {filteredResources.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">暂无资源</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                暂无资源
+              </h3>
               <p className="text-gray-600 mb-4">还没有上传任何资源</p>
               <Link
                 href="/admin/resources/new"
@@ -296,7 +313,9 @@ const AdminResourcesPage = () => {
                     <th className="px-6 py-3 text-left">
                       <input
                         type="checkbox"
-                        checked={selectedResources.length === filteredResources.length}
+                        checked={
+                          selectedResources.length === filteredResources.length
+                        }
                         onChange={handleSelectAll}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
@@ -333,9 +352,16 @@ const AdminResourcesPage = () => {
                           checked={selectedResources.includes(resource.id)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedResources([...selectedResources, resource.id]);
+                              setSelectedResources([
+                                ...selectedResources,
+                                resource.id,
+                              ]);
                             } else {
-                              setSelectedResources(selectedResources.filter(id => id !== resource.id));
+                              setSelectedResources(
+                                selectedResources.filter(
+                                  (id) => id !== resource.id
+                                )
+                              );
                             }
                           }}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -364,7 +390,9 @@ const AdminResourcesPage = () => {
                                   </span>
                                 ))}
                                 {resource.tags.length > 3 && (
-                                  <span className="text-xs text-gray-500">+{resource.tags.length - 3}</span>
+                                  <span className="text-xs text-gray-500">
+                                    +{resource.tags.length - 3}
+                                  </span>
                                 )}
                               </div>
                             )}
@@ -373,13 +401,16 @@ const AdminResourcesPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {categories.find(c => c.value === resource.category)?.label || resource.category}
+                          {categories.find((c) => c.value === resource.category)
+                            ?.label || resource.category}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div>
                           <p className="font-medium">{resource.file_name}</p>
-                          <p className="text-gray-500">{formatFileSize(resource.file_size)}</p>
+                          <p className="text-gray-500">
+                            {formatFileSize(resource.file_size)}
+                          </p>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -391,7 +422,12 @@ const AdminResourcesPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
                           <button
-                            onClick={() => togglePublishStatus(resource.id, resource.is_published)}
+                            onClick={() =>
+                              togglePublishStatus(
+                                resource.id,
+                                resource.is_published
+                              )
+                            }
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                               resource.is_published
                                 ? 'bg-green-100 text-green-800'
@@ -458,18 +494,20 @@ const AdminResourcesPage = () => {
         <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{resources.length}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {resources.length}
+              </div>
               <div className="text-sm text-gray-600">总资源数</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {resources.filter(r => r.is_published).length}
+                {resources.filter((r) => r.is_published).length}
               </div>
               <div className="text-sm text-gray-600">已发布</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-yellow-600">
-                {resources.filter(r => r.is_featured).length}
+                {resources.filter((r) => r.is_featured).length}
               </div>
               <div className="text-sm text-gray-600">推荐资源</div>
             </div>

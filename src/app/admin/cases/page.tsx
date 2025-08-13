@@ -2,17 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Edit, 
-  Trash2, 
+import {
+  Plus,
+  Search,
+  Filter,
+  Edit,
+  Trash2,
   Eye,
   Calendar,
   Tag,
   Building,
-  MoreVertical
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -35,7 +34,9 @@ const AdminCases = () => {
   const [cases, setCases] = useState<CaseStudy[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft'>('all');
+  const [filterStatus, setFilterStatus] = useState<
+    'all' | 'published' | 'draft'
+  >('all');
   const [selectedCases, setSelectedCases] = useState<string[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [caseToDelete, setCaseToDelete] = useState<string | null>(null);
@@ -68,8 +69,8 @@ const AdminCases = () => {
         .eq('id', id);
 
       if (error) throw error;
-      
-      setCases(prev => prev.filter(c => c.id !== id));
+
+      setCases((prev) => prev.filter((c) => c.id !== id));
       setShowDeleteModal(false);
       setCaseToDelete(null);
     } catch (error) {
@@ -85,8 +86,8 @@ const AdminCases = () => {
         .in('id', selectedCases);
 
       if (error) throw error;
-      
-      setCases(prev => prev.filter(c => !selectedCases.includes(c.id)));
+
+      setCases((prev) => prev.filter((c) => !selectedCases.includes(c.id)));
       setSelectedCases([]);
     } catch (error) {
       console.error('Failed to delete cases:', error);
@@ -101,24 +102,26 @@ const AdminCases = () => {
         .eq('id', id);
 
       if (error) throw error;
-      
-      setCases(prev => prev.map(c => 
-        c.id === id ? { ...c, published: !published } : c
-      ));
+
+      setCases((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, published: !published } : c))
+      );
     } catch (error) {
       console.error('Failed to update case status:', error);
     }
   };
 
-  const filteredCases = cases.filter(case_study => {
-    const matchesSearch = case_study.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         case_study.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         case_study.industry.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFilter = filterStatus === 'all' || 
-                         (filterStatus === 'published' && case_study.published) ||
-                         (filterStatus === 'draft' && !case_study.published);
-    
+  const filteredCases = cases.filter((case_study) => {
+    const matchesSearch =
+      case_study.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      case_study.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      case_study.industry.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesFilter =
+      filterStatus === 'all' ||
+      (filterStatus === 'published' && case_study.published) ||
+      (filterStatus === 'draft' && !case_study.published);
+
     return matchesSearch && matchesFilter;
   });
 
@@ -126,7 +129,7 @@ const AdminCases = () => {
     if (selectedCases.length === filteredCases.length) {
       setSelectedCases([]);
     } else {
-      setSelectedCases(filteredCases.map(c => c.id));
+      setSelectedCases(filteredCases.map((c) => c.id));
     }
   };
 
@@ -169,7 +172,7 @@ const AdminCases = () => {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           {/* 状态筛选 */}
           <div className="flex items-center space-x-2">
             <Filter className="w-4 h-4 text-gray-400" />
@@ -230,14 +233,19 @@ const AdminCases = () => {
                   onChange={handleSelectAll}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="ml-3 text-sm font-medium text-gray-700">全选</span>
+                <span className="ml-3 text-sm font-medium text-gray-700">
+                  全选
+                </span>
               </div>
             </div>
 
             {/* 案例列表 */}
             <div className="divide-y divide-gray-200">
               {filteredCases.map((case_study) => (
-                <div key={case_study.id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
+                <div
+                  key={case_study.id}
+                  className="p-6 hover:bg-gray-50 transition-colors duration-200"
+                >
                   <div className="flex items-start space-x-4">
                     {/* 选择框 */}
                     <input
@@ -245,9 +253,11 @@ const AdminCases = () => {
                       checked={selectedCases.includes(case_study.id)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedCases(prev => [...prev, case_study.id]);
+                          setSelectedCases((prev) => [...prev, case_study.id]);
                         } else {
-                          setSelectedCases(prev => prev.filter(id => id !== case_study.id));
+                          setSelectedCases((prev) =>
+                            prev.filter((id) => id !== case_study.id)
+                          );
                         }
                       }}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
@@ -256,8 +266,8 @@ const AdminCases = () => {
                     {/* 案例图片 */}
                     <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                       {case_study.image_url ? (
-                        <img 
-                          src={case_study.image_url} 
+                        <img
+                          src={case_study.image_url}
                           alt={case_study.title}
                           className="w-full h-full object-cover"
                         />
@@ -278,7 +288,7 @@ const AdminCases = () => {
                           <p className="text-gray-600 text-sm mb-2 line-clamp-2">
                             {case_study.description}
                           </p>
-                          
+
                           <div className="flex items-center space-x-4 text-sm text-gray-500">
                             <div className="flex items-center space-x-1">
                               <Building className="w-4 h-4" />
@@ -290,7 +300,11 @@ const AdminCases = () => {
                             </div>
                             <div className="flex items-center space-x-1">
                               <Calendar className="w-4 h-4" />
-                              <span>{new Date(case_study.created_at).toLocaleDateString('zh-CN')}</span>
+                              <span>
+                                {new Date(
+                                  case_study.created_at
+                                ).toLocaleDateString('zh-CN')}
+                              </span>
                             </div>
                           </div>
 
@@ -298,7 +312,7 @@ const AdminCases = () => {
                           {case_study.tags && case_study.tags.length > 0 && (
                             <div className="flex items-center space-x-2 mt-2">
                               {case_study.tags.slice(0, 3).map((tag, index) => (
-                                <span 
+                                <span
                                   key={index}
                                   className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
                                 >
@@ -318,10 +332,15 @@ const AdminCases = () => {
                         <div className="flex items-center space-x-3 ml-4">
                           {/* 发布状态 */}
                           <button
-                            onClick={() => togglePublished(case_study.id, case_study.published)}
+                            onClick={() =>
+                              togglePublished(
+                                case_study.id,
+                                case_study.published
+                              )
+                            }
                             className={`px-3 py-1 text-xs font-medium rounded-full ${
-                              case_study.published 
-                                ? 'bg-green-100 text-green-700' 
+                              case_study.published
+                                ? 'bg-green-100 text-green-700'
                                 : 'bg-yellow-100 text-yellow-700'
                             }`}
                           >

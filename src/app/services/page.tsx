@@ -2,7 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, Target, TrendingUp, BookOpen, Award, Clock, CheckCircle, ArrowRight, Star, Calendar, Download } from 'lucide-react';
+import {
+  Users,
+  Target,
+  TrendingUp,
+  BookOpen,
+  Award,
+  Clock,
+  CheckCircle,
+  ArrowRight,
+  Star,
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 // 图标映射
@@ -14,7 +24,7 @@ const iconMap: { [key: string]: any } = {
   Award,
   Clock,
   CheckCircle,
-  Star
+  Star,
 };
 
 interface TrainingCourse {
@@ -57,7 +67,9 @@ interface IndustrySolution {
 
 export default function ServicesPage() {
   const [trainingCourses, setTrainingCourses] = useState<TrainingCourse[]>([]);
-  const [consultingServices, setConsultingServices] = useState<ConsultingService[]>([]);
+  const [consultingServices, setConsultingServices] = useState<
+    ConsultingService[]
+  >([]);
   const [solutions, setSolutions] = useState<IndustrySolution[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,37 +80,36 @@ export default function ServicesPage() {
   const loadServicesData = async () => {
     try {
       setLoading(true);
-      
+
       // 加载培训课程
       const { data: courses, error: coursesError } = await supabase
         .from('training_courses')
         .select('*')
         .eq('is_active', true)
         .order('sort_order');
-      
+
       if (coursesError) throw coursesError;
       setTrainingCourses(courses || []);
-      
+
       // 加载咨询服务
       const { data: consulting, error: consultingError } = await supabase
         .from('consulting_services')
         .select('*')
         .eq('is_active', true)
         .order('sort_order');
-      
+
       if (consultingError) throw consultingError;
       setConsultingServices(consulting || []);
-      
+
       // 加载行业解决方案
       const { data: industrySolutions, error: solutionsError } = await supabase
         .from('industry_solutions')
         .select('*')
         .eq('is_active', true)
         .order('sort_order');
-      
+
       if (solutionsError) throw solutionsError;
       setSolutions(industrySolutions || []);
-      
     } catch (error) {
       console.error('加载服务数据失败:', error);
     } finally {
@@ -113,7 +124,7 @@ export default function ServicesPage() {
         {/* 背景图案 */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.05%22%3E%3Ccircle cx=%2230%22 cy=%2230%22 r=%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-        
+
         <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-4xl text-center">
             <div className="inline-flex items-center px-4 py-2 bg-blue-500/20 backdrop-blur-sm text-blue-200 rounded-full text-sm font-medium mb-6 border border-blue-400/30">
@@ -130,7 +141,7 @@ export default function ServicesPage() {
             <p className="mt-6 text-xl leading-8 text-blue-100 max-w-3xl mx-auto">
               从专业培训到定制咨询，提供完整的关键链项目管理服务体系，助力企业实现项目成功
             </p>
-            
+
             {/* 服务特点 */}
             <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <div className="flex items-center justify-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
@@ -167,7 +178,7 @@ export default function ServicesPage() {
               从基础理论到高级实践，构建完整的CCPM知识体系，满足不同层次的学习需求
             </p>
           </div>
-          
+
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -175,75 +186,80 @@ export default function ServicesPage() {
           ) : (
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               {trainingCourses.map((course) => (
-              <div
-                key={course.id}
-                className="card-modern group overflow-hidden"
-              >
-                <div className="relative h-56 overflow-hidden">
-                  <img
-                    src={course.image_url || '/placeholder-training.jpg'}
-                    alt={course.title}
-                    className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
-                  <div className="absolute top-4 left-4">
-                    <span className="inline-flex items-center rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-4 py-2 text-sm font-bold text-white shadow-lg">
-                      {course.level}
-                    </span>
-                  </div>
-                  <div className="absolute top-4 right-4">
-                    <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-lg">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {course.duration}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="p-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                    {course.title}
-                  </h3>
-                  <p className="text-gray-600 mb-6 leading-relaxed">
-                    {course.description}
-                  </p>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center text-sm text-gray-600 mb-4 bg-gray-50 rounded-xl p-3">
-                      <Users className="h-5 w-5 mr-3 text-blue-500" />
-                      <span className="font-medium">适合对象：</span>
-                      <span className="ml-1">{course.participants}</span>
-                    </div>
-                    <div className="flex items-center justify-between bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4">
-                      <span className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                        {course.price}
+                <div
+                  key={course.id}
+                  className="card-modern group overflow-hidden"
+                >
+                  <div className="relative h-56 overflow-hidden">
+                    <img
+                      src={course.image_url || '/placeholder-training.jpg'}
+                      alt={course.title}
+                      className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                    <div className="absolute top-4 left-4">
+                      <span className="inline-flex items-center rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-4 py-2 text-sm font-bold text-white shadow-lg">
+                        {course.level}
                       </span>
-                      <span className="text-sm text-gray-500 font-medium">
-                        /人
+                    </div>
+                    <div className="absolute top-4 right-4">
+                      <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-lg">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {course.duration}
                       </span>
                     </div>
                   </div>
-                  
-                  <div className="mb-8">
-                    <h4 className="font-bold text-gray-900 mb-4 text-lg">课程内容：</h4>
-                    <ul className="space-y-3">
-                      {course.features.map((feature, index) => (
-                        <li key={index} className="flex items-start text-sm text-gray-600">
-                          <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
-                          <span className="leading-relaxed">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
+
+                  <div className="p-8">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                      {course.title}
+                    </h3>
+                    <p className="text-gray-600 mb-6 leading-relaxed">
+                      {course.description}
+                    </p>
+
+                    <div className="mb-6">
+                      <div className="flex items-center text-sm text-gray-600 mb-4 bg-gray-50 rounded-xl p-3">
+                        <Users className="h-5 w-5 mr-3 text-blue-500" />
+                        <span className="font-medium">适合对象：</span>
+                        <span className="ml-1">{course.participants}</span>
+                      </div>
+                      <div className="flex items-center justify-between bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4">
+                        <span className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                          {course.price}
+                        </span>
+                        <span className="text-sm text-gray-500 font-medium">
+                          /人
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mb-8">
+                      <h4 className="font-bold text-gray-900 mb-4 text-lg">
+                        课程内容：
+                      </h4>
+                      <ul className="space-y-3">
+                        {course.features.map((feature, index) => (
+                          <li
+                            key={index}
+                            className="flex items-start text-sm text-gray-600"
+                          >
+                            <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                            <span className="leading-relaxed">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <Link
+                      href="/contact"
+                      className="btn-gradient-primary w-full flex items-center justify-center gap-3 group"
+                    >
+                      <span>立即报名</span>
+                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                    </Link>
                   </div>
-                  
-                  <Link
-                    href="/contact"
-                    className="btn-gradient-primary w-full flex items-center justify-center gap-3 group"
-                  >
-                    <span>立即报名</span>
-                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                  </Link>
                 </div>
-              </div>
               ))}
             </div>
           )}
@@ -261,7 +277,7 @@ export default function ServicesPage() {
               专业的项目管理咨询服务，为企业提供定制化的CCPM实施方案
             </p>
           </div>
-          
+
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -271,26 +287,26 @@ export default function ServicesPage() {
               {consultingServices.map((service, index) => {
                 const Icon = iconMap[service.icon] || Target;
                 return (
-                  <div
-                    key={index}
-                    className="card-modern"
-                  >
+                  <div key={index} className="card-modern">
                     <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-600 to-blue-500 rounded-lg mb-6">
                       <Icon className="h-6 w-6 text-white" />
                     </div>
-                    
+
                     <h3 className="text-xl font-semibold text-gray-900 mb-4">
                       {service.title}
                     </h3>
-                    <p className="text-gray-600 mb-6">
-                      {service.description}
-                    </p>
-                    
+                    <p className="text-gray-600 mb-6">{service.description}</p>
+
                     <div className="mb-6">
-                      <h4 className="font-medium text-gray-900 mb-3">服务流程：</h4>
+                      <h4 className="font-medium text-gray-900 mb-3">
+                        服务流程：
+                      </h4>
                       <div className="space-y-2">
                         {service.process.map((step, stepIndex) => (
-                          <div key={stepIndex} className="flex items-center text-sm text-gray-600">
+                          <div
+                            key={stepIndex}
+                            className="flex items-center text-sm text-gray-600"
+                          >
                             <div className="w-6 h-6 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-xs font-medium mr-3">
                               {stepIndex + 1}
                             </div>
@@ -299,9 +315,11 @@ export default function ServicesPage() {
                         ))}
                       </div>
                     </div>
-                    
+
                     <div className="mb-6">
-                      <h4 className="font-medium text-gray-900 mb-2">交付成果：</h4>
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        交付成果：
+                      </h4>
                       <div className="flex flex-wrap gap-2">
                         {service.deliverables.map((deliverable, delIndex) => (
                           <span
@@ -313,14 +331,14 @@ export default function ServicesPage() {
                         ))}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center text-sm text-gray-600">
                         <Clock className="h-4 w-4 mr-2 text-green-500" />
                         周期：{service.timeline}
                       </div>
                     </div>
-                    
+
                     <Link
                       href="/contact"
                       className="btn-gradient-secondary w-full flex items-center justify-center gap-2"
@@ -347,7 +365,7 @@ export default function ServicesPage() {
               针对不同行业特点，提供定制化的关键链项目管理解决方案
             </p>
           </div>
-          
+
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -376,48 +394,65 @@ export default function ServicesPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className={index % 2 === 1 ? 'lg:order-1' : ''}>
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">
                       {solution.title}
                     </h3>
-                    
+
                     <div className="mb-6">
-                      <h4 className="font-medium text-gray-900 mb-3">面临挑战：</h4>
+                      <h4 className="font-medium text-gray-900 mb-3">
+                        面临挑战：
+                      </h4>
                       <ul className="space-y-2">
-                        {solution.challenges.map((challenge, challengeIndex) => (
-                          <li key={challengeIndex} className="flex items-center text-gray-600">
-                            <div className="w-2 h-2 bg-red-400 rounded-full mr-3" />
-                            {challenge}
-                          </li>
-                        ))}
+                        {solution.challenges.map(
+                          (challenge, challengeIndex) => (
+                            <li
+                              key={challengeIndex}
+                              className="flex items-center text-gray-600"
+                            >
+                              <div className="w-2 h-2 bg-red-400 rounded-full mr-3" />
+                              {challenge}
+                            </li>
+                          )
+                        )}
                       </ul>
                     </div>
-                    
+
                     <div className="mb-6">
-                      <h4 className="font-medium text-gray-900 mb-3">预期收益：</h4>
+                      <h4 className="font-medium text-gray-900 mb-3">
+                        预期收益：
+                      </h4>
                       <ul className="space-y-2">
                         {solution.benefits.map((benefit, benefitIndex) => (
-                          <li key={benefitIndex} className="flex items-center text-gray-600">
+                          <li
+                            key={benefitIndex}
+                            className="flex items-center text-gray-600"
+                          >
                             <Star className="h-4 w-4 text-yellow-400 mr-3" />
                             {benefit}
                           </li>
                         ))}
                       </ul>
                     </div>
-                    
+
                     <div className="mb-8">
-                      <h4 className="font-medium text-gray-900 mb-3">核心功能：</h4>
+                      <h4 className="font-medium text-gray-900 mb-3">
+                        核心功能：
+                      </h4>
                       <div className="grid grid-cols-2 gap-2">
                         {solution.features.map((feature, featureIndex) => (
-                          <div key={featureIndex} className="flex items-center text-sm text-gray-600">
+                          <div
+                            key={featureIndex}
+                            className="flex items-center text-sm text-gray-600"
+                          >
                             <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
                             {feature}
                           </div>
                         ))}
                       </div>
                     </div>
-                    
+
                     <Link
                       href="/contact"
                       className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white py-3 px-6 rounded-lg hover:from-orange-500 hover:to-orange-400 transition-all duration-200"

@@ -1,7 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { Building, Users, TrendingUp, Clock, Award, Star, Quote, ArrowRight, CheckCircle, Target, X } from 'lucide-react';
+import {
+  Users,
+  Clock,
+  Quote,
+  CheckCircle,
+  X,
+  Target,
+  TrendingUp,
+  Building,
+  Award,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { caseStudiesAPI, type CaseStudy } from '@/lib/supabase';
 
@@ -12,7 +22,7 @@ const industries = [
   { name: '建筑工程', value: '建筑工程' },
   { name: '新能源', value: '新能源' },
   { name: '医药', value: '医药' },
-  { name: '航空制造', value: '航空制造' }
+  { name: '航空制造', value: '航空制造' },
 ];
 
 export default function CasesPage() {
@@ -63,9 +73,10 @@ export default function CasesPage() {
     };
   }, [isModalOpen]);
 
-  const filteredCases = selectedIndustry === 'all' 
-    ? cases 
-    : cases.filter(case_ => case_.industry === selectedIndustry);
+  const filteredCases =
+    selectedIndustry === 'all'
+      ? cases
+      : cases.filter((case_) => case_.industry === selectedIndustry);
 
   if (loading) {
     return (
@@ -80,8 +91,8 @@ export default function CasesPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
           >
             重新加载
@@ -90,29 +101,6 @@ export default function CasesPage() {
       </div>
     );
   }
-
-  const getResultLabel = (key: string) => {
-    const labels: Record<string, string> = {
-      efficiency: '效率提升',
-      utilization: '资源利用率提升',
-      delivery: '按时交付率',
-      cost: '成本节约',
-      timeToMarket: '上市时间缩短',
-      quality: '质量提升',
-      satisfaction: '客户满意度',
-      schedule: '工期控制精度提升',
-      safety: '安全记录',
-      development: '研发周期缩短',
-      market: '提前上市',
-      investment: '投资回报提升',
-      revenue: '收入增长',
-      timeline: '研发周期缩短',
-      compliance: '合规达标率',
-      success: '项目成功率',
-      defect: '缺陷率降低'
-    };
-    return labels[key] || key;
-  };
 
   return (
     <div>
@@ -177,24 +165,24 @@ export default function CasesPage() {
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                     {case_.client_name}
-                    </h3>
+                    {case_.client_name}
+                  </h3>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                     {case_.challenge}
-                    </p>
-                  
+                    {case_.challenge}
+                  </p>
+
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {case_.project_duration || '未指定'}
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        {case_.team_size || 0}人
-                      </div>
+                      <Clock className="h-4 w-4 mr-1" />
+                      {case_.project_duration || '未指定'}
+                    </div>
+                    <div className="flex items-center">
+                      <Users className="h-4 w-4 mr-1" />
+                      {case_.team_size || 0}人
+                    </div>
                   </div>
                 </div>
               </div>
@@ -205,7 +193,7 @@ export default function CasesPage() {
 
       {/* 案例详情弹窗 */}
       {isModalOpen && selectedCase && (
-        <div 
+        <div
           className="fixed inset-0 z-50 overflow-y-auto"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -215,7 +203,7 @@ export default function CasesPage() {
         >
           {/* 遮罩层 */}
           <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
-          
+
           {/* 弹窗内容 */}
           <div className="flex min-h-full items-center justify-center p-4">
             <div className="relative bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
@@ -226,19 +214,22 @@ export default function CasesPage() {
               >
                 <X className="h-5 w-5 text-gray-500" />
               </button>
-              
+
               {/* 滚动内容区域 */}
               <div className="overflow-y-auto max-h-[90vh]">
                 <div className="grid grid-cols-1 lg:grid-cols-2">
                   <div className="relative h-64 lg:h-80">
                     <img
-                      src={selectedCase.featured_image_url || '/placeholder-project.jpg'}
+                      src={
+                        selectedCase.featured_image_url ||
+                        '/placeholder-project.jpg'
+                      }
                       alt={selectedCase.title}
                       className="h-full w-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-transparent" />
                   </div>
-                  
+
                   <div className="p-6 lg:p-8">
                     <div className="flex items-center gap-2 mb-4">
                       <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
@@ -248,14 +239,14 @@ export default function CasesPage() {
                         {selectedCase.project_duration || '未指定'}
                       </span>
                     </div>
-                    
+
                     <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">
                       {selectedCase.client_name}
                     </h2>
                     <h3 className="text-lg font-semibold text-gray-700 mb-6">
                       {selectedCase.title}
                     </h3>
-                    
+
                     <div className="space-y-4">
                       <div>
                         <h4 className="font-medium text-gray-900 mb-2 flex items-center">
@@ -266,7 +257,7 @@ export default function CasesPage() {
                           {selectedCase.challenge}
                         </p>
                       </div>
-                      
+
                       <div>
                         <h4 className="font-medium text-gray-900 mb-2 flex items-center">
                           <CheckCircle className="h-4 w-4 mr-2 text-blue-500" />
@@ -279,7 +270,7 @@ export default function CasesPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* 项目成果 */}
                 <div className="border-t border-gray-200 p-6 lg:p-8">
                   <h4 className="font-medium text-gray-900 mb-4 flex items-center">
@@ -290,7 +281,7 @@ export default function CasesPage() {
                     {selectedCase.results}
                   </div>
                 </div>
-                
+
                 {/* 客户证言 */}
                 {selectedCase.testimonial && (
                   <div className="bg-gradient-to-r from-blue-50 to-orange-50 p-6 lg:p-8">
@@ -321,7 +312,7 @@ export default function CasesPage() {
               数据说话，用实际成果证明CCPM360的专业价值
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div className="bg-white rounded-2xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow duration-300">
               <Building className="h-12 w-12 text-orange-500 mx-auto mb-4" />

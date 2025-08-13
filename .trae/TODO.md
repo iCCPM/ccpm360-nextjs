@@ -1,7 +1,6 @@
 # TODO:
 
-- [x] 23: 创建博客动态路由目录结构 (priority: High)
-- [x] 24: 实现博客文章动态页面组件 (priority: High)
-- [x] 25: 配置博客文章内容渲染逻辑 (priority: High)
-- [x] 26: 测试博客文章页面访问 (priority: High)
-- [x] 27: 推送修复到GitHub部署 (priority: High)
+- [x] fix_auth_check_1: 在admin页面中添加更详细的调试日志，确保checkAuth函数被正确调用 (priority: High)
+- [x] fix_auth_check_2: 检查useEffect的依赖数组，确保checkAuth函数被正确引用 (priority: High)
+- [x] fix_auth_check_3: 使用useCallback来稳定checkAuth函数引用，避免无限重新渲染 (priority: Medium)
+- [x] fix_auth_check_4: 测试修复后的认证检查是否正常工作 (priority: Medium)

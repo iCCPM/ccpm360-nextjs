@@ -13,31 +13,42 @@ interface AdminUser {
 interface AuthState {
   user: AdminUser | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   checkAuth: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()(persist(
-  (set) => ({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
       user: null,
       isLoading: false,
 
       login: async (email: string, password: string) => {
         set({ isLoading: true });
-        
+
         try {
           // 使用Supabase Auth登录
-          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
+          const { data: authData, error: authError } =
+            await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
 
           if (authError) {
             set({ isLoading: false });
             // 检查是否是邮箱未验证的错误
-            if (authError.message.includes('Email not confirmed') || authError.message.includes('email_not_confirmed')) {
-              return { success: false, error: '邮箱尚未验证，请检查您的邮箱并点击验证链接后再登录' };
+            if (
+              authError.message.includes('Email not confirmed') ||
+              authError.message.includes('email_not_confirmed')
+            ) {
+              return {
+                success: false,
+                error: '邮箱尚未验证，请检查您的邮箱并点击验证链接后再登录',
+              };
             }
             return { success: false, error: authError.message };
           }
@@ -46,7 +57,10 @@ export const useAuthStore = create<AuthState>()(persist(
           if (!authData.user?.email_confirmed_at) {
             await supabase.auth.signOut();
             set({ isLoading: false });
-            return { success: false, error: '邮箱尚未验证，请检查您的邮箱并点击验证链接后再登录' };
+            return {
+              success: false,
+              error: '邮箱尚未验证，请检查您的邮箱并点击验证链接后再登录',
+            };
           }
 
           // 获取管理员用户信息
@@ -67,7 +81,10 @@ export const useAuthStore = create<AuthState>()(persist(
           if (!adminUser.is_active) {
             await supabase.auth.signOut();
             set({ isLoading: false });
-            return { success: false, error: '管理员账户未激活，请联系超级管理员' };
+            return {
+              success: false,
+              error: '管理员账户未激活，请联系超级管理员',
+            };
           }
 
           // 如果邮箱已验证但admin_users表中is_active为false，则激活账户
@@ -76,23 +93,23 @@ export const useAuthStore = create<AuthState>()(persist(
               .from('admin_users')
               .update({ is_active: true })
               .eq('id', adminUser.id);
-            
+
             if (!updateError) {
               adminUser.is_active = true;
             }
           }
 
-          set({ 
+          set({
             user: adminUser,
-            isLoading: false 
+            isLoading: false,
           });
 
           return { success: true };
         } catch (error) {
           set({ isLoading: false });
-          return { 
-            success: false, 
-            error: error instanceof Error ? error.message : '登录失败' 
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : '登录失败',
           };
         }
       },
@@ -104,11 +121,14 @@ export const useAuthStore = create<AuthState>()(persist(
 
       checkAuth: async () => {
         set({ isLoading: true });
-        
+
         try {
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (!session) {
+          const {
+            data: { session },
+            error: sessionError,
+          } = await supabase.auth.getSession();
+
+          if (sessionError || !session) {
             set({ user: null, isLoading: false });
             return;
           }
@@ -129,7 +149,6 @@ export const useAuthStore = create<AuthState>()(persist(
 
           set({ user: adminUser, isLoading: false });
         } catch (error) {
-          console.error('Auth check failed:', error);
           set({ user: null, isLoading: false });
         }
       },

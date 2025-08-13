@@ -1,7 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle, User, MessageSquare, Building, Briefcase, AlertCircle } from 'lucide-react';
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Send,
+  CheckCircle,
+  User,
+  MessageSquare,
+  Building,
+  Briefcase,
+  AlertCircle,
+} from 'lucide-react';
 import { contactAPI, type ContactSubmission, supabase } from '@/lib/supabase';
 import { initEmailJS, sendContactEmail } from '@/lib/emailjs';
 
@@ -20,7 +32,7 @@ const serviceTypes = [
   { value: 'consulting', label: '项目管理咨询' },
   { value: 'implementation', label: 'CCPM实施指导' },
   { value: 'assessment', label: '项目管理评估' },
-  { value: 'other', label: '其他服务' }
+  { value: 'other', label: '其他服务' },
 ];
 
 export default function ContactPage() {
@@ -31,9 +43,9 @@ export default function ContactPage() {
     phone: '',
     email: '',
     serviceType: '',
-    message: ''
+    message: '',
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -48,24 +60,26 @@ export default function ContactPage() {
     business_hours_weekend: '周六：9:00 - 12:00',
     wechat_account_name: 'CCPM360项目管理',
     wechat_description: '获取最新行业资讯、管理技巧和培训信息',
-    wechat_qr_code: ''
+    wechat_qr_code: '',
   });
 
   // 初始化EmailJS和加载联系信息
   useEffect(() => {
     initEmailJS();
-    
+
     const loadContactInfo = async () => {
       try {
         const { data, error } = await supabase
           .from('site_settings')
-          .select('contact_email, contact_phone, contact_address, site_title, site_description')
+          .select(
+            'contact_email, contact_phone, contact_address, site_title, site_description'
+          )
           .single();
-        
+
         if (error) throw error;
-        
+
         if (data) {
-          setContactInfo(prev => ({
+          setContactInfo((prev) => ({
             ...prev,
             contact_email: data.contact_email || '',
             contact_phone: data.contact_phone || '',
@@ -76,22 +90,26 @@ export default function ContactPage() {
             business_hours_weekend: '周六 9:00-17:00',
             wechat_account_name: 'CCPM360咨询',
             wechat_description: '关注获取最新项目管理资讯',
-            wechat_qr_code: '/placeholder-qr-code.svg'
+            wechat_qr_code: '/placeholder-qr-code.svg',
           }));
         }
       } catch (error) {
         console.error('加载联系信息失败:', error);
       }
     };
-    
+
     loadContactInfo();
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -100,7 +118,7 @@ export default function ContactPage() {
     setIsSubmitting(true);
     setSubmitError(null);
     setEmailSent(false);
-    
+
     try {
       // 1. 首先发送邮件通知
       const emailData = {
@@ -108,43 +126,43 @@ export default function ContactPage() {
         email: formData.email,
         phone: formData.phone,
         company: formData.company || '未填写',
-        message: `服务类型：${serviceTypes.find(t => t.value === formData.serviceType)?.label || '未选择'}\n职位：${formData.position || '未填写'}\n\n详细需求：\n${formData.message}`
+        message: `服务类型：${serviceTypes.find((t) => t.value === formData.serviceType)?.label || '未选择'}\n职位：${formData.position || '未填写'}\n\n详细需求：\n${formData.message}`,
       };
-      
+
       const emailResult = await sendContactEmail(emailData);
-      
+
       if (emailResult.success) {
         setEmailSent(true);
       } else {
         console.warn('邮件发送失败，但继续保存到数据库:', emailResult.error);
-        
+
         // 如果是配置问题，给用户更友好的提示
         if (emailResult.needsConfiguration) {
           if ('details' in emailResult.error) {
-          console.info('EmailJS配置提示:', emailResult.error.details);
-        }
-        if ('configSteps' in emailResult.error) {
-          console.info('配置步骤:', emailResult.error.configSteps);
-        }
+            console.info('EmailJS配置提示:', emailResult.error.details);
+          }
+          if ('configSteps' in emailResult.error) {
+            console.info('配置步骤:', emailResult.error.configSteps);
+          }
         }
       }
-      
+
       // 2. 保存到数据库
       const submissionData: ContactSubmission = {
         name: formData.name,
-        company: formData.company || undefined,
-        position: formData.position || undefined,
+        ...(formData.company && { company: formData.company }),
+        ...(formData.position && { position: formData.position }),
         phone: formData.phone,
         email: formData.email,
         service_type: formData.serviceType,
-        message: formData.message
+        message: formData.message,
       };
-      
+
       await contactAPI.submitForm(submissionData);
-      
+
       setIsSubmitting(false);
       setIsSubmitted(true);
-      
+
       // 重置表单
       setTimeout(() => {
         setIsSubmitted(false);
@@ -156,12 +174,14 @@ export default function ContactPage() {
           phone: '',
           email: '',
           serviceType: '',
-          message: ''
+          message: '',
         });
       }, 5000);
     } catch (error) {
       setIsSubmitting(false);
-      setSubmitError(error instanceof Error ? error.message : '提交失败，请稍后重试');
+      setSubmitError(
+        error instanceof Error ? error.message : '提交失败，请稍后重试'
+      );
     }
   };
 
@@ -221,12 +241,18 @@ export default function ContactPage() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">咨询热线</h3>
-                      <p className="text-gray-600 mt-1">{contactInfo.contact_phone}</p>
-                      <p className="text-sm text-gray-500">直线电话：{contactInfo.direct_phone}</p>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        咨询热线
+                      </h3>
+                      <p className="text-gray-600 mt-1">
+                        {contactInfo.contact_phone}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        直线电话：{contactInfo.direct_phone}
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start space-x-4">
                     <div className="flex-shrink-0">
                       <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
@@ -234,12 +260,18 @@ export default function ContactPage() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">电子邮箱</h3>
-                      <p className="text-gray-600 mt-1">{contactInfo.contact_email}</p>
-                      <p className="text-sm text-gray-500">技术支持：{contactInfo.support_email}</p>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        电子邮箱
+                      </h3>
+                      <p className="text-gray-600 mt-1">
+                        {contactInfo.contact_email}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        技术支持：{contactInfo.support_email}
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start space-x-4">
                     <div className="flex-shrink-0">
                       <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl flex items-center justify-center">
@@ -247,11 +279,15 @@ export default function ContactPage() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">办公地址</h3>
-                      <p className="text-gray-600 mt-1 whitespace-pre-line">{contactInfo.contact_address}</p>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        办公地址
+                      </h3>
+                      <p className="text-gray-600 mt-1 whitespace-pre-line">
+                        {contactInfo.contact_address}
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start space-x-4">
                     <div className="flex-shrink-0">
                       <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center">
@@ -259,18 +295,26 @@ export default function ContactPage() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">营业时间</h3>
-                      <p className="text-gray-600 mt-1">{contactInfo.business_hours_weekday}</p>
-                      <p className="text-sm text-gray-500">{contactInfo.business_hours_weekend}</p>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        营业时间
+                      </h3>
+                      <p className="text-gray-600 mt-1">
+                        {contactInfo.business_hours_weekday}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {contactInfo.business_hours_weekend}
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               {/* 微信公众号 */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 border border-green-100">
                 <div className="text-center">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">关注微信公众号</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                    关注微信公众号
+                  </h3>
                   <div className="inline-block bg-white p-4 rounded-xl shadow-sm">
                     {contactInfo.wechat_qr_code ? (
                       <img
@@ -285,13 +329,17 @@ export default function ContactPage() {
                     )}
                   </div>
                   <div className="mt-4">
-                    <p className="font-semibold text-gray-900">{contactInfo.wechat_account_name}</p>
-                    <p className="text-sm text-gray-600 mt-1">{contactInfo.wechat_description}</p>
+                    <p className="font-semibold text-gray-900">
+                      {contactInfo.wechat_account_name}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {contactInfo.wechat_description}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             {/* 咨询表单 */}
             <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-12">
               <div className="text-center mb-8">
@@ -302,11 +350,14 @@ export default function ContactPage() {
                   填写您的需求，我们将为您提供专业的解决方案
                 </p>
               </div>
-              
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-semibold text-gray-800 mb-3">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-semibold text-gray-800 mb-3"
+                    >
                       姓名 <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -323,9 +374,12 @@ export default function ContactPage() {
                       />
                     </div>
                   </div>
-                  
+
                   <div>
-                    <label htmlFor="company" className="block text-sm font-semibold text-gray-800 mb-3">
+                    <label
+                      htmlFor="company"
+                      className="block text-sm font-semibold text-gray-800 mb-3"
+                    >
                       公司名称
                     </label>
                     <div className="relative">
@@ -342,10 +396,13 @@ export default function ContactPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="position" className="block text-sm font-semibold text-gray-800 mb-3">
+                    <label
+                      htmlFor="position"
+                      className="block text-sm font-semibold text-gray-800 mb-3"
+                    >
                       职位
                     </label>
                     <div className="relative">
@@ -361,9 +418,12 @@ export default function ContactPage() {
                       />
                     </div>
                   </div>
-                  
+
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-semibold text-gray-800 mb-3">
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-semibold text-gray-800 mb-3"
+                    >
                       联系电话 <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -381,9 +441,12 @@ export default function ContactPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-gray-800 mb-3">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-semibold text-gray-800 mb-3"
+                  >
                     电子邮箱 <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -400,9 +463,12 @@ export default function ContactPage() {
                     />
                   </div>
                 </div>
-                
+
                 <div>
-                  <label htmlFor="serviceType" className="block text-sm font-semibold text-gray-800 mb-3">
+                  <label
+                    htmlFor="serviceType"
+                    className="block text-sm font-semibold text-gray-800 mb-3"
+                  >
                     咨询服务类型 <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -421,9 +487,12 @@ export default function ContactPage() {
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
-                  <label htmlFor="message" className="block text-sm font-semibold text-gray-800 mb-3">
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-semibold text-gray-800 mb-3"
+                  >
                     详细需求 <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -440,7 +509,7 @@ export default function ContactPage() {
                     />
                   </div>
                 </div>
-                
+
                 {submitError && (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                     <div className="flex items-center">
@@ -449,18 +518,19 @@ export default function ContactPage() {
                     </div>
                   </div>
                 )}
-                
+
                 {isSubmitted && emailSent && (
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
                     <div className="flex items-center">
                       <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                       <p className="text-sm text-green-800">
-                        <strong>提交成功！</strong>您的咨询信息已发送到 business@ccpm360.com，我们将在24小时内回复您。
+                        <strong>提交成功！</strong>您的咨询信息已发送到
+                        business@ccpm360.com，我们将在24小时内回复您。
                       </p>
                     </div>
                   </div>
                 )}
-                
+
                 <button
                   type="submit"
                   disabled={isSubmitting || isSubmitted}
@@ -468,14 +538,16 @@ export default function ContactPage() {
                     isSubmitted
                       ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-xl'
                       : isSubmitting
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 hover:from-orange-600 hover:via-pink-600 hover:to-purple-700 shadow-xl hover:shadow-2xl focus:ring-4 focus:ring-orange-300 focus:ring-offset-2'
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 hover:from-orange-600 hover:via-pink-600 hover:to-purple-700 shadow-xl hover:shadow-2xl focus:ring-4 focus:ring-orange-300 focus:ring-offset-2'
                   }`}
                 >
                   {isSubmitted ? (
                     <>
                       <CheckCircle className="h-6 w-6 mr-3" />
-                      <span className="animate-pulse">{emailSent ? '提交成功，邮件已发送' : '提交成功'}</span>
+                      <span className="animate-pulse">
+                        {emailSent ? '提交成功，邮件已发送' : '提交成功'}
+                      </span>
                     </>
                   ) : isSubmitting ? (
                     <>
@@ -490,10 +562,11 @@ export default function ContactPage() {
                   )}
                 </button>
               </form>
-              
+
               <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>温馨提示：</strong>我们将在24小时内回复您的咨询，请保持电话畅通。如有紧急需求，请直接拨打咨询热线。
+                  <strong>温馨提示：</strong>
+                  我们将在24小时内回复您的咨询，请保持电话畅通。如有紧急需求，请直接拨打咨询热线。
                 </p>
               </div>
             </div>
@@ -512,7 +585,7 @@ export default function ContactPage() {
               欢迎您到访我们的办公室进行面对面交流
             </p>
           </div>
-          
+
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="h-96 bg-gray-200 flex items-center justify-center">
               <div className="text-center">
@@ -539,7 +612,7 @@ export default function ContactPage() {
               快速了解我们的服务和合作方式
             </p>
           </div>
-          
+
           <div className="mx-auto max-w-4xl">
             <div className="space-y-6">
               <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -547,34 +620,38 @@ export default function ContactPage() {
                   Q: CCPM培训课程的周期是多长？
                 </h3>
                 <p className="text-gray-600">
-                  A: 我们提供不同层次的培训课程，基础课程为2-3天，高级课程为5-7天，企业定制培训可根据需求灵活安排。
+                  A:
+                  我们提供不同层次的培训课程，基础课程为2-3天，高级课程为5-7天，企业定制培训可根据需求灵活安排。
                 </p>
               </div>
-              
+
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
                   Q: 咨询服务的收费标准是什么？
                 </h3>
                 <p className="text-gray-600">
-                  A: 咨询费用根据项目复杂度、服务周期和客户需求确定。我们提供免费的初步评估，详细报价会在需求分析后提供。
+                  A:
+                  咨询费用根据项目复杂度、服务周期和客户需求确定。我们提供免费的初步评估，详细报价会在需求分析后提供。
                 </p>
               </div>
-              
+
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
                   Q: 是否提供远程咨询服务？
                 </h3>
                 <p className="text-gray-600">
-                  A: 是的，我们支持线上线下相结合的服务模式，可通过视频会议、在线协作工具等方式提供远程咨询和培训服务。
+                  A:
+                  是的，我们支持线上线下相结合的服务模式，可通过视频会议、在线协作工具等方式提供远程咨询和培训服务。
                 </p>
               </div>
-              
+
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
                   Q: 如何保证项目实施效果？
                 </h3>
                 <p className="text-gray-600">
-                  A: 我们采用阶段性评估和持续跟踪的方式，确保项目按计划推进。同时提供后续支持服务，保障实施效果的持续性。
+                  A:
+                  我们采用阶段性评估和持续跟踪的方式，确保项目按计划推进。同时提供后续支持服务，保障实施效果的持续性。
                 </p>
               </div>
             </div>
