@@ -148,7 +148,12 @@ export default function GeneralSettingsPage() {
   };
 
   const updateSetting = (key: keyof SystemSettings, value: any) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
+    console.log('updateSetting called:', key, value);
+    setSettings((prev) => {
+      const newSettings = { ...prev, [key]: value };
+      console.log('Settings updated:', newSettings);
+      return newSettings;
+    });
   };
 
   return (
@@ -322,9 +327,9 @@ export default function GeneralSettingsPage() {
               </div>
               <Switch
                 checked={settings.enableRegistration}
-                onCheckedChange={(checked) =>
-                  updateSetting('enableRegistration', checked)
-                }
+                onCheckedChange={(checked) => {
+                  updateSetting('enableRegistration', checked);
+                }}
               />
             </div>
             <Separator />
@@ -337,9 +342,9 @@ export default function GeneralSettingsPage() {
               </div>
               <Switch
                 checked={settings.requireEmailVerification}
-                onCheckedChange={(checked) =>
-                  updateSetting('requireEmailVerification', checked)
-                }
+                onCheckedChange={(checked) => {
+                  updateSetting('requireEmailVerification', checked);
+                }}
               />
             </div>
             <Separator />
@@ -352,9 +357,9 @@ export default function GeneralSettingsPage() {
               </div>
               <Switch
                 checked={settings.enableTwoFactor}
-                onCheckedChange={(checked) =>
-                  updateSetting('enableTwoFactor', checked)
-                }
+                onCheckedChange={(checked) => {
+                  updateSetting('enableTwoFactor', checked);
+                }}
               />
             </div>
             <Separator />
