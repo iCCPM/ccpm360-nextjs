@@ -36,7 +36,6 @@ import { Separator } from '@/components/ui/separator';
 import {
   HardDrive,
   Download,
-  Upload,
   RefreshCw,
   Trash2,
   Clock,
@@ -155,9 +154,6 @@ export default function BackupPage() {
   const [isRestoring, setIsRestoring] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0);
   const [selectedBackupType, setSelectedBackupType] = useState('full');
-  const [selectedBackupForRestore, setSelectedBackupForRestore] = useState<
-    string | null
-  >(null);
 
   const getStatusIcon = (status: BackupRecord['status']) => {
     switch (status) {
@@ -247,14 +243,14 @@ export default function BackupPage() {
   const handleRestoreBackup = async (backupId: string) => {
     setIsRestoring(true);
     try {
-      // TODO: 实现恢复备份API调用
+      // TODO: 实现恢复备份API调用，使用 backupId 参数
+      console.log('Restoring backup:', backupId);
       await new Promise((resolve) => setTimeout(resolve, 3000));
       toast.success('数据恢复成功');
     } catch (error) {
       toast.error('数据恢复失败');
     } finally {
       setIsRestoring(false);
-      setSelectedBackupForRestore(null);
     }
   };
 
@@ -582,9 +578,6 @@ export default function BackupPage() {
                             variant="ghost"
                             size="sm"
                             disabled={backup.status !== 'completed'}
-                            onClick={() =>
-                              setSelectedBackupForRestore(backup.id)
-                            }
                           >
                             <RefreshCw className="h-4 w-4" />
                           </Button>
@@ -598,12 +591,7 @@ export default function BackupPage() {
                             </DialogDescription>
                           </DialogHeader>
                           <DialogFooter>
-                            <Button
-                              variant="outline"
-                              onClick={() => setSelectedBackupForRestore(null)}
-                            >
-                              取消
-                            </Button>
+                            <Button variant="outline">取消</Button>
                             <Button
                               onClick={() => handleRestoreBackup(backup.id)}
                               disabled={isRestoring}

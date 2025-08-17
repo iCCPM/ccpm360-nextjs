@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     };
 
     // 检查是否已存在记录
-    const { data: existingData, error: checkError } = await supabaseAdmin
+    const { data: existingData, error: _checkError } = await supabaseAdmin
       .from('contact_page_settings')
       .select('id')
       .maybeSingle();

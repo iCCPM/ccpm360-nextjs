@@ -19,7 +19,7 @@ interface AuthGuardProps {
  */
 export function AuthGuard({
   children,
-  fallback,
+  fallback: _fallback,
   redirectTo = '/admin/login',
   allowedRoles = [],
 }: AuthGuardProps) {
@@ -101,7 +101,7 @@ export function withAuthGuard<P extends object>(
  * 角色检查Hook
  */
 export function useRoleCheck(requiredRoles: string[] = []) {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
 
   const hasRole = (role: string) => user?.role === role;
   const hasAnyRole = (roles: string[]) =>

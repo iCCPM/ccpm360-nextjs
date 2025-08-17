@@ -13,7 +13,7 @@ function createServerSupabaseClient() {
   return createClient(supabaseUrl, supabaseServiceKey);
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   console.log('=== 开始检查管理员用户 ===');
 
   try {
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
 }
 
 // 支持OPTIONS请求（CORS预检）
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS(_request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
     headers: {

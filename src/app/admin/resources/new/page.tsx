@@ -1,16 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Save,
-  ArrowLeft,
-  Eye,
-  Upload,
-  Tag,
-  Calendar,
-  FileText,
-  Download,
-} from 'lucide-react';
+import { Save, ArrowLeft, Eye, Upload, Tag, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

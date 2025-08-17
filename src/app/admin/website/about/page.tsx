@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Save, Eye, Target, Users, Settings, Award } from 'lucide-react';
+import { Save, Eye, Target, Settings, Award } from 'lucide-react';
 
 interface AboutSettings {
   hero_title: string;

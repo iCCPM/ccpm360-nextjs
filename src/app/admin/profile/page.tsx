@@ -20,7 +20,7 @@ interface UserProfile {
   bio?: string;
   phone?: string;
   created_at: string;
-  updated_at?: string;
+  updated_at?: string | undefined;
 }
 
 export default function ProfilePage() {
@@ -78,7 +78,7 @@ export default function ProfilePage() {
           bio: user.user_metadata?.bio || '',
           phone: user.user_metadata?.phone || '',
           created_at: user.created_at,
-          updated_at: user.updated_at,
+          updated_at: user.updated_at || undefined,
         };
 
         setProfile(userProfile);

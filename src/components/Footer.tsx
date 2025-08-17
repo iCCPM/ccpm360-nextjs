@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Phone, Mail, MapPin, Clock } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 
 const services = [
   { name: '关键链项目管理培训', href: '/services' },

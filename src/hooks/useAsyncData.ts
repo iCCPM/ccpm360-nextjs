@@ -111,7 +111,7 @@ export function useAsyncData<T>(
  * 分页数据获取钩子
  */
 interface UsePaginatedDataOptions<T>
-  extends Omit<UseAsyncDataOptions<T[]>, 'initialData'> {
+  extends Omit<UseAsyncDataOptions<PaginatedData<T>>, 'initialData'> {
   pageSize?: number;
   initialPage?: number;
 }
@@ -172,9 +172,9 @@ export function usePaginatedData<T>(
     retry,
     reset: originalReset,
     refresh,
-  } = useAsyncData(fetchData, {
+  } = useAsyncData<PaginatedData<T>>(fetchData, {
     ...asyncOptions,
-    initialData: initialData as any,
+    initialData: initialData,
   });
 
   const nextPage = useCallback(async () => {
@@ -199,14 +199,7 @@ export function usePaginatedData<T>(
     if (data?.hasMore && !loading && !isLoadingMore) {
       setIsLoadingMore(true);
       try {
-        const nextPageData = await asyncFunction(currentPage + 1, pageSize);
-        const newData: PaginatedData<T> = {
-          items: [...(data?.items || []), ...nextPageData.items],
-          total: nextPageData.total,
-          page: currentPage + 1,
-          pageSize,
-          hasMore: (currentPage + 1) * pageSize < nextPageData.total,
-        };
+        await asyncFunction(currentPage + 1, pageSize);
         setCurrentPage((prev) => prev + 1);
         // 这里需要手动更新数据，因为我们不是替换而是追加
       } catch (error) {

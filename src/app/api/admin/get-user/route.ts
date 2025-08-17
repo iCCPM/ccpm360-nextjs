@@ -77,7 +77,8 @@ export async function GET(request: NextRequest) {
     // 查询指定ID的管理员用户（带重试机制）
     console.log('查询admin_users表，用户ID:', userId);
 
-    let adminUsers, error;
+    let adminUsers: any[] | null = null;
+    let error: any = null;
     let retryCount = 0;
     const maxRetries = 3;
 
@@ -192,7 +193,7 @@ export async function GET(request: NextRequest) {
 }
 
 // 支持OPTIONS请求（CORS预检）
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS(_request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
     headers: {

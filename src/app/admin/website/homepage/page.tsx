@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Upload, Eye, Settings } from 'lucide-react';
+import { Save, Eye, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface HomepageConfig {
@@ -86,7 +86,7 @@ export default function HomepageManagement() {
   };
 
   const handleInputChange = (
-    field: keyof HomepageConfig,
+    field: keyof HomepageConfig | string,
     value: string | number
   ) => {
     if (field.startsWith('statistics.')) {

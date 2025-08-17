@@ -1,17 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Upload, Eye, Settings } from 'lucide-react';
+import { Save, Eye } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface ServiceItem {
-  id: string;
-  title: string;
-  description: string;
-  features: string[];
-  price: string;
-  duration: string;
-}
 
 interface ServicesSettings {
   hero_title: string;

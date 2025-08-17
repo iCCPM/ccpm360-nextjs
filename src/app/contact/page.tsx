@@ -14,7 +14,7 @@ import {
   Briefcase,
   AlertCircle,
 } from 'lucide-react';
-import { contactAPI, type ContactSubmission, supabase } from '@/lib/supabase';
+import { contactAPI, type ContactSubmission } from '@/lib/supabase';
 import { initEmailJS, sendContactEmail } from '@/lib/emailjs';
 import BaiduMap from '@/components/BaiduMap';
 

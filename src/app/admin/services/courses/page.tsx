@@ -10,8 +10,6 @@ import {
   Clock,
   Users,
   DollarSign,
-  Filter,
-  MoreHorizontal,
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -57,8 +55,8 @@ export default function CoursesManagement() {
     duration: '',
     price: 0,
     max_participants: 20,
-    level: 'beginner' as const,
-    status: 'draft' as const,
+    level: 'beginner' as 'beginner' | 'intermediate' | 'advanced',
+    status: 'draft' as 'draft' | 'active',
   });
 
   useEffect(() => {
@@ -339,9 +337,6 @@ export default function CoursesManagement() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        <div className="text-sm text-gray-900">
-                          {course.category}
-                        </div>
                         {getLevelBadge(course.level)}
                       </div>
                     </td>
@@ -360,11 +355,11 @@ export default function CoursesManagement() {
                     <td className="px-6 py-4">
                       <div className="flex items-center text-sm text-gray-900">
                         <Users className="w-4 h-4 mr-1 text-gray-400" />
-                        {course.max_participants}人
+                        {course.participants}人
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {getStatusBadge(course.status)}
+                      {getStatusBadge(course.is_active ? 'active' : 'draft')}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">

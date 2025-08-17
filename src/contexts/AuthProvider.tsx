@@ -65,7 +65,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return result;
     } catch (error) {
       setIsLoading(false);
-      handleError(error);
+      handleError(error instanceof Error ? error : new Error(String(error)));
       return { success: false, error: '登录过程中发生错误' };
     }
   };
@@ -75,7 +75,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await AuthService.logout();
       setUser(null);
     } catch (error) {
-      handleError(error);
+      handleError(error instanceof Error ? error : new Error(String(error)));
     }
   };
 
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setUser(currentUser);
     } catch (error) {
-      handleError(error);
+      handleError(error instanceof Error ? error : new Error(String(error)));
       setUser(null);
     } finally {
       setIsLoading(false);

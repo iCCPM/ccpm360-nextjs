@@ -16,34 +16,35 @@ function createSupabaseClient(): SupabaseClient {
       const mockSingleResult = { data: null, error: null };
 
       const queryBuilder = {
-        select: (columns?: string) => queryBuilder,
-        eq: (column: string, value: any) => queryBuilder,
-        neq: (column: string, value: any) => queryBuilder,
-        gt: (column: string, value: any) => queryBuilder,
-        gte: (column: string, value: any) => queryBuilder,
-        lt: (column: string, value: any) => queryBuilder,
-        lte: (column: string, value: any) => queryBuilder,
-        like: (column: string, pattern: string) => queryBuilder,
-        ilike: (column: string, pattern: string) => queryBuilder,
-        is: (column: string, value: any) => queryBuilder,
-        in: (column: string, values: any[]) => queryBuilder,
-        contains: (column: string, value: any) => queryBuilder,
-        containedBy: (column: string, value: any) => queryBuilder,
-        rangeGt: (column: string, value: any) => queryBuilder,
-        rangeGte: (column: string, value: any) => queryBuilder,
-        rangeLt: (column: string, value: any) => queryBuilder,
-        rangeLte: (column: string, value: any) => queryBuilder,
-        rangeAdjacent: (column: string, value: any) => queryBuilder,
-        overlaps: (column: string, value: any) => queryBuilder,
-        textSearch: (column: string, query: string) => queryBuilder,
-        match: (query: Record<string, any>) => queryBuilder,
-        not: (column: string, operator: string, value: any) => queryBuilder,
-        or: (filters: string) => queryBuilder,
-        filter: (column: string, operator: string, value: any) => queryBuilder,
-        order: (column: string, options?: { ascending?: boolean }) =>
+        select: (_columns?: string) => queryBuilder,
+        eq: (_column: string, _value: any) => queryBuilder,
+        neq: (_column: string, _value: any) => queryBuilder,
+        gt: (_column: string, _value: any) => queryBuilder,
+        gte: (_column: string, _value: any) => queryBuilder,
+        lt: (_column: string, _value: any) => queryBuilder,
+        lte: (_column: string, _value: any) => queryBuilder,
+        like: (_column: string, _pattern: string) => queryBuilder,
+        ilike: (_column: string, _pattern: string) => queryBuilder,
+        is: (_column: string, _value: any) => queryBuilder,
+        in: (_column: string, _values: any[]) => queryBuilder,
+        contains: (_column: string, _value: any) => queryBuilder,
+        containedBy: (_column: string, _value: any) => queryBuilder,
+        rangeGt: (_column: string, _value: any) => queryBuilder,
+        rangeGte: (_column: string, _value: any) => queryBuilder,
+        rangeLt: (_column: string, _value: any) => queryBuilder,
+        rangeLte: (_column: string, _value: any) => queryBuilder,
+        rangeAdjacent: (_column: string, _value: any) => queryBuilder,
+        overlaps: (_column: string, _value: any) => queryBuilder,
+        textSearch: (_column: string, _query: string) => queryBuilder,
+        match: (_query: Record<string, any>) => queryBuilder,
+        not: (_column: string, _operator: string, _value: any) => queryBuilder,
+        or: (_filters: string) => queryBuilder,
+        filter: (_column: string, _operator: string, _value: any) =>
           queryBuilder,
-        limit: (count: number) => queryBuilder,
-        range: (from: number, to: number) => queryBuilder,
+        order: (_column: string, _options?: { ascending?: boolean }) =>
+          queryBuilder,
+        limit: (_count: number) => queryBuilder,
+        range: (_from: number, _to: number) => queryBuilder,
         single: () => Promise.resolve(mockSingleResult),
         maybeSingle: () => Promise.resolve(mockSingleResult),
         then: (resolve: any) => Promise.resolve(mockResult).then(resolve),
@@ -76,19 +77,19 @@ function createSupabaseClient(): SupabaseClient {
         updateUser: () =>
           Promise.resolve({ data: { user: null }, error: null }),
       },
-      from: (table: string) => ({
-        select: (columns?: string) => createMockQueryBuilder(),
-        insert: (values: any, options?: any) =>
+      from: (_table: string) => ({
+        select: (_columns?: string) => createMockQueryBuilder(),
+        insert: (_values: any, _options?: any) =>
           Promise.resolve({ data: null, error: null }),
-        upsert: (values: any, options?: any) =>
+        upsert: (_values: any, _options?: any) =>
           Promise.resolve({ data: null, error: null }),
-        update: (values: any, options?: any) => createMockQueryBuilder(),
-        delete: (options?: any) => createMockQueryBuilder(),
+        update: (_values: any, _options?: any) => createMockQueryBuilder(),
+        delete: (_options?: any) => createMockQueryBuilder(),
       }),
-      rpc: (fn: string, args?: any) =>
+      rpc: (_fn: string, _args?: any) =>
         Promise.resolve({ data: null, error: null }),
       storage: {
-        from: (bucket: string) => ({
+        from: (_bucket: string) => ({
           upload: () => Promise.resolve({ data: null, error: null }),
           remove: () => Promise.resolve({ data: null, error: null }),
           download: () => Promise.resolve({ data: null, error: null }),

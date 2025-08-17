@@ -1,7 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { MapPin, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+
+// 声明百度地图全局变量类型
+declare global {
+  interface Window {
+    BMap: any;
+    initBaiduMap: () => void;
+  }
+}
 
 interface BaiduMapProps {
   width?: string;
@@ -201,7 +209,7 @@ export default function BaiduMap({
           }
         };
 
-        script.onerror = (event) => {
+        script.onerror = (_event) => {
           if (isMounted) {
             // 检测是否是浏览器阻止导致的错误
             const userAgent = navigator.userAgent;
@@ -259,6 +267,7 @@ export default function BaiduMap({
           setError('地图初始化失败');
           setIsLoading(false);
         }
+        return;
       }
     };
 

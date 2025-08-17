@@ -1,16 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Save,
-  Upload,
-  Eye,
-  Settings,
-  Mail,
-  Phone,
-  MapPin,
-  Clock,
-} from 'lucide-react';
+import { Save, Eye, Settings, Mail, Phone, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ContactInfo {
@@ -157,7 +148,7 @@ export default function ContactManagement() {
         throw new Error(errorData.error || '保存联系页面设置失败');
       }
 
-      const result = await response.json();
+      await response.json();
       toast.success('联系页面设置保存成功');
     } catch (error) {
       console.error('保存联系页面设置失败:', error);

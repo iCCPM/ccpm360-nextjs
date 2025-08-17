@@ -65,7 +65,7 @@ export function useAuthGuard(options: UseAuthGuardOptions = {}) {
  */
 export function usePageAuth(allowedRoles?: string[]) {
   return useAuthGuard({
-    allowedRoles,
+    ...(allowedRoles && { allowedRoles }),
     requireAuth: true,
     redirectTo: '/login',
   });

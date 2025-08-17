@@ -137,11 +137,10 @@ const maintenanceTasks = [
 ];
 
 export default function DatabasePage() {
-  const [tables, setTables] = useState<DatabaseTable[]>(mockTables);
+  const [tables] = useState<DatabaseTable[]>(mockTables);
   const [stats] = useState<DatabaseStats>(mockStats);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
-  const [selectedTable, setSelectedTable] = useState<string | null>(null);
 
   const getStatusIcon = (status: DatabaseTable['status']) => {
     switch (status) {
@@ -206,11 +205,11 @@ export default function DatabasePage() {
   const handleTruncateTable = (tableName: string) => {
     // TODO: 实现清空表数据功能
     toast.success(`${tableName} 表数据已清空`);
-    setSelectedTable(null);
   };
 
   const handleRunMaintenance = (taskId: string) => {
-    // TODO: 实现维护任务执行
+    // TODO: 实现维护任务执行，使用 taskId 参数
+    console.log('Running maintenance task:', taskId);
     toast.success('维护任务已启动');
   };
 
@@ -345,7 +344,6 @@ export default function DatabasePage() {
                             variant="ghost"
                             size="sm"
                             className="text-destructive hover:text-destructive"
-                            onClick={() => setSelectedTable(table.name)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -359,12 +357,7 @@ export default function DatabasePage() {
                             </DialogDescription>
                           </DialogHeader>
                           <DialogFooter>
-                            <Button
-                              variant="outline"
-                              onClick={() => setSelectedTable(null)}
-                            >
-                              取消
-                            </Button>
+                            <Button variant="outline">取消</Button>
                             <Button
                               variant="destructive"
                               onClick={() => handleTruncateTable(table.name)}

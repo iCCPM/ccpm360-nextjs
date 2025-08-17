@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Upload, Eye, Settings } from 'lucide-react';
+import { Save, Eye, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 
 // 案例页面设置接口

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,20 +30,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+
 import {
   Users,
   Plus,
   Search,
-  Filter,
   Edit,
   Trash2,
   UserCheck,
   UserX,
   Mail,
   Phone,
-  Calendar,
   Shield,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -128,7 +125,7 @@ export default function UsersPage() {
     phone: '',
     role: '',
     department: '',
-    status: 'active' as const,
+    status: 'active' as User['status'],
     permissions: [] as string[],
   });
 
