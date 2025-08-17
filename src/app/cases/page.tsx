@@ -15,6 +15,58 @@ import {
 import { useState, useEffect } from 'react';
 import { caseStudiesAPI, type CaseStudy } from '@/lib/supabase';
 
+// 案例页面配置接口
+interface CasesPageConfig {
+  page_title: string;
+  page_subtitle: string;
+  stats_title: string;
+  stats_subtitle: string;
+  stat1_number: string;
+  stat1_label: string;
+  stat1_icon: string;
+  stat2_number: string;
+  stat2_label: string;
+  stat2_icon: string;
+  stat3_number: string;
+  stat3_label: string;
+  stat3_icon: string;
+  stat4_number: string;
+  stat4_label: string;
+  stat4_icon: string;
+  cta_title: string;
+  cta_subtitle: string;
+  cta_button_text: string;
+  cta_button_link: string;
+  cta_secondary_text: string;
+  cta_secondary_link: string;
+}
+
+// 默认配置
+const defaultConfig: CasesPageConfig = {
+  page_title: '成功案例',
+  page_subtitle: '真实案例见证CCPM360的专业实力，为各行业客户创造价值',
+  stats_title: '服务成果统计',
+  stats_subtitle: '数据说话，用实际成果证明CCPM360的专业价值',
+  stat1_number: '500+',
+  stat1_label: '服务企业',
+  stat1_icon: 'Building',
+  stat2_number: '5000+',
+  stat2_label: '培训学员',
+  stat2_icon: 'Users',
+  stat3_number: '95%',
+  stat3_label: '客户满意度',
+  stat3_icon: 'Award',
+  stat4_number: '30%',
+  stat4_label: '平均效率提升',
+  stat4_icon: 'TrendingUp',
+  cta_title: '让您的项目也成为成功案例',
+  cta_subtitle: '联系我们，获取专业的关键链项目管理解决方案',
+  cta_button_text: '开始咨询',
+  cta_button_link: '/contact',
+  cta_secondary_text: '查看服务',
+  cta_secondary_link: '/services',
+};
+
 const industries = [
   { name: '全部', value: 'all' },
   { name: '制造业', value: '制造业' },
@@ -32,6 +84,21 @@ export default function CasesPage() {
   const [cases, setCases] = useState<CaseStudy[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [config, setConfig] = useState<CasesPageConfig>(defaultConfig);
+
+  // 加载页面配置
+  const loadPageConfig = async () => {
+    try {
+      const response = await fetch('/api/admin/website/cases');
+      if (response.ok) {
+        const data = await response.json();
+        setConfig(data);
+      }
+    } catch (error) {
+      console.error('Failed to load page config:', error);
+      // 使用默认配置
+    }
+  };
 
   // 加载案例数据
   useEffect(() => {
@@ -51,6 +118,7 @@ export default function CasesPage() {
     };
 
     loadCases();
+    loadPageConfig();
   }, []);
 
   // ESC键关闭弹窗
@@ -109,10 +177,10 @@ export default function CasesPage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              成功案例
+              {config.page_title}
             </h1>
             <p className="mt-6 text-lg leading-8 text-blue-100">
-              真实案例见证CCPM360的专业实力，为各行业客户创造价值
+              {config.page_subtitle}
             </p>
           </div>
         </div>
@@ -306,33 +374,41 @@ export default function CasesPage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              服务成果统计
+              {config.stats_title}
             </h2>
             <p className="mt-4 text-lg leading-8 text-gray-600">
-              数据说话，用实际成果证明CCPM360的专业价值
+              {config.stats_subtitle}
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div className="bg-white rounded-2xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow duration-300">
               <Building className="h-12 w-12 text-orange-500 mx-auto mb-4" />
-              <div className="text-3xl font-bold text-gray-900 mb-2">500+</div>
-              <div className="text-gray-600">服务企业</div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">
+                {config.stat1_number}
+              </div>
+              <div className="text-gray-600">{config.stat1_label}</div>
             </div>
             <div className="bg-white rounded-2xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow duration-300">
               <Users className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-              <div className="text-3xl font-bold text-gray-900 mb-2">5000+</div>
-              <div className="text-gray-600">培训学员</div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">
+                {config.stat2_number}
+              </div>
+              <div className="text-gray-600">{config.stat2_label}</div>
             </div>
             <div className="bg-white rounded-2xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow duration-300">
               <Award className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <div className="text-3xl font-bold text-gray-900 mb-2">95%</div>
-              <div className="text-gray-600">客户满意度</div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">
+                {config.stat3_number}
+              </div>
+              <div className="text-gray-600">{config.stat3_label}</div>
             </div>
             <div className="bg-white rounded-2xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow duration-300">
               <TrendingUp className="h-12 w-12 text-purple-500 mx-auto mb-4" />
-              <div className="text-3xl font-bold text-gray-900 mb-2">30%</div>
-              <div className="text-gray-600">平均效率提升</div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">
+                {config.stat4_number}
+              </div>
+              <div className="text-gray-600">{config.stat4_label}</div>
             </div>
           </div>
         </div>
@@ -343,23 +419,23 @@ export default function CasesPage() {
         <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              让您的项目也成为成功案例
+              {config.cta_title}
             </h2>
             <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-blue-100">
-              联系我们，获取专业的关键链项目管理解决方案
+              {config.cta_subtitle}
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link
-                href="/contact"
+                href={config.cta_button_link}
                 className="rounded-md bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:from-orange-400 hover:to-orange-300 transition-all duration-200"
               >
-                开始咨询
+                {config.cta_button_text}
               </Link>
               <Link
-                href="/services"
+                href={config.cta_secondary_link}
                 className="text-sm font-semibold leading-6 text-white hover:text-orange-300 transition-colors"
               >
-                查看服务 <span aria-hidden="true">→</span>
+                {config.cta_secondary_text} <span aria-hidden="true">→</span>
               </Link>
             </div>
           </div>

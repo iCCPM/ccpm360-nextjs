@@ -2,11 +2,11 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuth } from '@/contexts/AuthProvider';
 
 export default function AdminPage() {
   const router = useRouter();
-  const { user, isLoading, checkAuth } = useAuthStore();
+  const { user, isLoading, checkAuth } = useAuth();
 
   useEffect(() => {
     checkAuth();

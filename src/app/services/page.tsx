@@ -15,6 +15,49 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
+interface ServicesPageConfig {
+  hero_title: string;
+  hero_subtitle: string;
+  hero_badge_text: string;
+  feature_1_title: string;
+  feature_2_title: string;
+  feature_3_title: string;
+  training_section_title: string;
+  training_section_subtitle: string;
+  training_badge_text: string;
+  consulting_section_title: string;
+  consulting_section_subtitle: string;
+  solutions_section_title: string;
+  solutions_section_subtitle: string;
+  cta_title: string;
+  cta_subtitle: string;
+  cta_button_text: string;
+}
+
+const defaultConfig: ServicesPageConfig = {
+  hero_title: '全方位项目管理解决方案',
+  hero_subtitle:
+    '从专业培训到定制咨询，提供完整的关键链项目管理服务体系，助力企业实现项目成功',
+  hero_badge_text: '专业服务',
+  feature_1_title: '系统化培训',
+  feature_2_title: '定制化咨询',
+  feature_3_title: '行业解决方案',
+  training_section_title: '系统化培训课程',
+  training_section_subtitle:
+    '从基础理论到高级实践，构建完整的CCPM知识体系，满足不同层次的学习需求',
+  training_badge_text: '专业培训',
+  consulting_section_title: '咨询服务',
+  consulting_section_subtitle:
+    '专业的项目管理咨询服务，为企业提供定制化的CCPM实施方案',
+  solutions_section_title: '行业解决方案',
+  solutions_section_subtitle:
+    '针对不同行业特点，提供定制化的关键链项目管理解决方案',
+  cta_title: '选择适合您的服务方案',
+  cta_subtitle:
+    '无论是培训、咨询还是定制化解决方案，我们都能为您提供专业的服务',
+  cta_button_text: '免费咨询',
+};
+
 // 图标映射
 const iconMap: { [key: string]: any } = {
   Target,
@@ -66,6 +109,7 @@ interface IndustrySolution {
 }
 
 export default function ServicesPage() {
+  const [config, setConfig] = useState<ServicesPageConfig>(defaultConfig);
   const [trainingCourses, setTrainingCourses] = useState<TrainingCourse[]>([]);
   const [consultingServices, setConsultingServices] = useState<
     ConsultingService[]
@@ -74,8 +118,21 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    loadPageConfig();
     loadServicesData();
   }, []);
+
+  const loadPageConfig = async () => {
+    try {
+      const response = await fetch('/api/admin/website/services');
+      if (response.ok) {
+        const data = await response.json();
+        setConfig(data);
+      }
+    } catch (error) {
+      console.error('加载页面配置失败:', error);
+    }
+  };
 
   const loadServicesData = async () => {
     try {
@@ -129,32 +186,36 @@ export default function ServicesPage() {
           <div className="mx-auto max-w-4xl text-center">
             <div className="inline-flex items-center px-4 py-2 bg-blue-500/20 backdrop-blur-sm text-blue-200 rounded-full text-sm font-medium mb-6 border border-blue-400/30">
               <Award className="w-4 h-4 mr-2" />
-              专业服务
+              {config.hero_badge_text}
             </div>
             <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl mb-6">
               <span className="bg-gradient-to-r from-blue-200 via-white to-purple-200 bg-clip-text text-transparent">
-                全方位项目管理
+                {config.hero_title}
               </span>
-              <br />
-              <span className="text-white">解决方案</span>
             </h1>
             <p className="mt-6 text-xl leading-8 text-blue-100 max-w-3xl mx-auto">
-              从专业培训到定制咨询，提供完整的关键链项目管理服务体系，助力企业实现项目成功
+              {config.hero_subtitle}
             </p>
 
             {/* 服务特点 */}
             <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <div className="flex items-center justify-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
                 <BookOpen className="h-6 w-6 text-blue-300" />
-                <span className="text-white font-medium">系统化培训</span>
+                <span className="text-white font-medium">
+                  {config.feature_1_title}
+                </span>
               </div>
               <div className="flex items-center justify-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
                 <Target className="h-6 w-6 text-purple-300" />
-                <span className="text-white font-medium">定制化咨询</span>
+                <span className="text-white font-medium">
+                  {config.feature_2_title}
+                </span>
               </div>
               <div className="flex items-center justify-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
                 <TrendingUp className="h-6 w-6 text-green-300" />
-                <span className="text-white font-medium">行业解决方案</span>
+                <span className="text-white font-medium">
+                  {config.feature_3_title}
+                </span>
               </div>
             </div>
           </div>
@@ -167,15 +228,15 @@ export default function ServicesPage() {
           <div className="mx-auto max-w-4xl text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-6">
               <BookOpen className="w-4 h-4 mr-2" />
-              专业培训
+              {config.training_badge_text}
             </div>
             <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl mb-4">
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                系统化培训课程
+                {config.training_section_title}
               </span>
             </h2>
             <p className="mt-4 text-xl leading-8 text-gray-600 max-w-3xl mx-auto">
-              从基础理论到高级实践，构建完整的CCPM知识体系，满足不同层次的学习需求
+              {config.training_section_subtitle}
             </p>
           </div>
 
@@ -271,10 +332,10 @@ export default function ServicesPage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              咨询服务
+              {config.consulting_section_title}
             </h2>
             <p className="mt-4 text-lg leading-8 text-gray-600">
-              专业的项目管理咨询服务，为企业提供定制化的CCPM实施方案
+              {config.consulting_section_subtitle}
             </p>
           </div>
 
@@ -359,10 +420,10 @@ export default function ServicesPage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              行业解决方案
+              {config.solutions_section_title}
             </h2>
             <p className="mt-4 text-lg leading-8 text-gray-600">
-              针对不同行业特点，提供定制化的关键链项目管理解决方案
+              {config.solutions_section_subtitle}
             </p>
           </div>
 
@@ -473,17 +534,17 @@ export default function ServicesPage() {
         <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              选择适合您的服务方案
+              {config.cta_title}
             </h2>
             <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-blue-100">
-              无论是培训、咨询还是定制化解决方案，我们都能为您提供专业的服务
+              {config.cta_subtitle}
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link
                 href="/contact"
                 className="rounded-md bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:from-orange-400 hover:to-orange-300 transition-all duration-200"
               >
-                免费咨询
+                {config.cta_button_text}
               </Link>
               <Link
                 href="/cases"

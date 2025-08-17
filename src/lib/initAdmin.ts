@@ -97,23 +97,39 @@ export async function createAdminUser(
 
     // 在admin_users表中创建记录（使用upsert避免重复插入）
     if (signUpData.user) {
-      const { error: upsertError } = await supabase.from('admin_users').upsert(
-        {
-          id: signUpData.user.id,
-          email: email,
-          password_hash: 'managed_by_supabase_auth',
-          full_name: fullName,
-          role: userRole,
-          is_active: false, // 初始状态为未激活，需要邮箱验证后激活
+      // 使用API端点创建管理员记录
+      const upsertResponse = await fetch('/api/admin/upsert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
+        body: JSON.stringify({
+          adminData: {
+            id: signUpData.user.id,
+            email: email,
+            password_hash: 'managed_by_supabase_auth',
+            full_name: fullName,
+            role: userRole,
+            is_active: false, // 初始状态为未激活，需要邮箱验证后激活
+          },
           onConflict: 'id',
-        }
-      );
+        }),
+        cache: 'no-cache',
+      });
 
-      if (upsertError) {
-        console.error('更新admin_users表失败:', upsertError.message);
-        return { success: false, error: upsertError.message };
+      if (!upsertResponse.ok) {
+        const errorData = await upsertResponse.json().catch(() => ({}));
+        console.error('更新admin_users表失败:', errorData);
+        return {
+          success: false,
+          error: errorData.error || '更新admin_users表失败',
+        };
+      }
+
+      const upsertResult = await upsertResponse.json();
+      if (!upsertResult.success) {
+        console.error('更新admin_users表失败:', upsertResult.error);
+        return { success: false, error: upsertResult.error };
       }
 
       // 标记邀请码为已使用
@@ -139,21 +155,40 @@ export async function createAdminUser(
 
 /**
  * 激活现有的管理员用户
+ * 使用API端点而不是直接查询Supabase以避免网络资源错误
  */
 export async function activateAdminUser(email: string) {
   try {
-    const { data, error } = await supabase
-      .from('admin_users')
-      .update({ is_active: true })
-      .eq('email', email)
-      .select();
+    console.log('通过API端点激活管理员用户:', email);
 
-    if (error) {
-      console.error('激活管理员用户失败:', error.message);
-      return { success: false, error: error.message };
+    // 使用API端点激活管理员用户
+    const response = await fetch('/api/admin/activate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+      cache: 'no-cache',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('激活管理员用户API请求失败:', response.status, errorData);
+      return {
+        success: false,
+        error: errorData.error || `HTTP ${response.status}`,
+      };
     }
 
-    return { success: true, data };
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error('激活管理员用户失败:', result.error);
+      return { success: false, error: result.error };
+    }
+
+    console.log('成功激活管理员用户:', email);
+    return { success: true, data: result.data };
   } catch (error) {
     console.error('激活管理员用户异常:', error);
     return { success: false, error: '激活失败' };
@@ -205,23 +240,36 @@ export async function createFirstAdminUser(
       return { success: false, error: '用户创建失败' };
     }
 
-    // 创建管理员记录
-    const { error: adminError } = await supabase.from('admin_users').upsert(
-      {
-        id: authData.user.id,
-        email: email,
-        password_hash: 'managed_by_supabase_auth',
-        full_name: fullName,
-        role: 'super_admin', // 首个管理员设为超级管理员
-        is_active: true, // 首个管理员直接激活，无需邮箱验证
+    // 使用API端点创建管理员记录
+    const upsertResponse = await fetch('/api/admin/upsert', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      {
+      body: JSON.stringify({
+        adminData: {
+          id: authData.user.id,
+          email: email,
+          password_hash: 'managed_by_supabase_auth',
+          full_name: fullName,
+          role: 'super_admin', // 首个管理员设为超级管理员
+          is_active: true, // 首个管理员直接激活，无需邮箱验证
+        },
         onConflict: 'id',
-      }
-    );
+      }),
+      cache: 'no-cache',
+    });
 
-    if (adminError) {
-      return { success: false, error: adminError.message };
+    if (!upsertResponse.ok) {
+      const errorData = await upsertResponse.json().catch(() => ({}));
+      console.error('创建管理员记录失败:', errorData);
+      return { success: false, error: errorData.error || '创建管理员记录失败' };
+    }
+
+    const upsertResult = await upsertResponse.json();
+    if (!upsertResult.success) {
+      console.error('创建管理员记录失败:', upsertResult.error);
+      return { success: false, error: upsertResult.error };
     }
 
     return {
@@ -237,42 +285,66 @@ export async function createFirstAdminUser(
 
 /**
  * 检查是否存在管理员用户
+ * 使用API端点而不是直接查询Supabase以避免网络资源错误
  */
 export async function checkAdminExists() {
   try {
-    // 检查环境变量是否可用
-    if (
-      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    ) {
-      console.warn('Supabase环境变量不可用，假设不存在管理员用户');
-      return { exists: false, error: 'Supabase环境变量不可用' };
-    }
+    console.log('通过API端点检查管理员用户');
 
-    // 检查是否存在任何管理员用户（不管激活状态）
-    const { data, error } = await supabase
-      .from('admin_users')
-      .select('id, is_active')
-      .limit(1);
+    // 使用API端点检查管理员用户
+    const response = await fetch('/api/admin/check-exists', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // 添加缓存控制
+      cache: 'no-cache',
+    });
 
-    if (error) {
-      console.error('检查管理员用户失败:', error.message);
-      // 如果是API密钥相关错误，返回特定的错误信息
-      if (
-        error.message.includes('Invalid API key') ||
-        error.message.includes('No API key')
-      ) {
-        return { exists: false, error: 'API密钥配置错误，请检查环境变量' };
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('API请求失败:', response.status, errorData);
+
+      // 如果是服务器错误，返回具体错误信息
+      if (response.status >= 500) {
+        return {
+          exists: false,
+          error: errorData.error || '服务器内部错误',
+          message: errorData.message || '检查管理员用户时发生服务器错误',
+        };
       }
-      return { exists: false, error: error.message };
+
+      return {
+        exists: false,
+        error: `HTTP ${response.status}`,
+        message: '请求失败',
+      };
     }
 
-    const hasAnyAdmin = data && data.length > 0;
-    console.log('管理员检查结果:', { hasAnyAdmin, adminCount: data?.length });
+    const result = await response.json();
+    console.log('管理员检查结果:', result);
 
-    return { exists: hasAnyAdmin };
+    return {
+      exists: result.exists || false,
+      adminCount: result.adminCount,
+      message: result.message,
+    };
   } catch (error) {
     console.error('检查管理员用户异常:', error);
-    return { exists: false, error: '检查失败' };
+
+    // 如果是网络错误，提供更友好的错误信息
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      return {
+        exists: false,
+        error: '网络连接失败',
+        message: '无法连接到服务器，请检查网络连接',
+      };
+    }
+
+    return {
+      exists: false,
+      error: error instanceof Error ? error.message : '未知错误',
+      message: '检查管理员用户时发生错误',
+    };
   }
 }

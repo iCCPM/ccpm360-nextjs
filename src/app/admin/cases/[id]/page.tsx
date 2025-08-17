@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Save, ArrowLeft, Trash2, X, Plus, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuth } from '@/contexts/AuthProvider';
 
 interface CaseStudy {
   id?: string;
@@ -28,7 +28,7 @@ const AdminCaseEdit = () => {
   const router = useRouter();
   const id = params?.id as string;
   const isNew = id === 'new';
-  const { user } = useAuthStore();
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState<CaseStudy>({
     title: '',

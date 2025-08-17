@@ -24,40 +24,32 @@ export default function Footer() {
   const [contactInfo, setContactInfo] = useState({
     contact_email: 'info@ccpm360.com',
     contact_phone: '400-123-4567',
-    contact_address: '北京市朝阳区商务中心区'
+    contact_address: '北京市朝阳区商务中心区',
   });
 
   // 加载联系信息
   useEffect(() => {
     const loadContactInfo = async () => {
       try {
-        // 检查环境变量是否可用
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          console.warn('Supabase环境变量不可用，使用默认联系信息');
-          return;
+        const response = await fetch('/api/contact-info');
+        if (!response.ok) {
+          throw new Error('获取联系信息失败');
         }
-        
-        const { data, error } = await supabase
-          .from('site_settings')
-          .select('contact_email, contact_phone, contact_address')
-          .limit(1);
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          const siteSettings = data[0];
-          setContactInfo(prev => ({
-            ...prev,
-            contact_email: siteSettings.contact_email || prev.contact_email,
-            contact_phone: siteSettings.contact_phone || prev.contact_phone,
-            contact_address: siteSettings.contact_address || prev.contact_address
-          }));
-        }
+
+        const data = await response.json();
+
+        setContactInfo((prev) => ({
+          ...prev,
+          contact_email: data.email || prev.contact_email,
+          contact_phone: data.phone || prev.contact_phone,
+          contact_address: data.address || prev.contact_address,
+        }));
       } catch (error) {
         console.error('加载联系信息失败:', error);
+        // 保持默认值
       }
     };
-    
+
     loadContactInfo();
   }, []);
 
@@ -70,25 +62,30 @@ export default function Footer() {
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center p-2">
-                <Image 
-                  src="/ccpm360-logo.png" 
-                  alt="CCPM360" 
+                <Image
+                  src="/ccpm360-logo.png"
+                  alt="CCPM360"
                   width={40}
                   height={40}
                   className="w-full h-full object-contain"
-                  style={{ width: 'auto', height: 'auto' }}
                 />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">关键链项目管理研究院</h3>
-                <div className="text-lg font-bold text-gradient-primary bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">CCPM360</div>
+                <h3 className="text-xl font-bold text-white">
+                  关键链项目管理研究院
+                </h3>
+                <div className="text-lg font-bold text-gradient-primary bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  CCPM360
+                </div>
               </div>
             </div>
             <p className="text-gray-300 leading-relaxed">
               专注于关键链项目管理（CCPM）的培训与咨询服务，帮助企业提升项目管理效率，实现项目成功交付。
             </p>
             <div className="inline-flex items-center px-4 py-2 bg-blue-500/20 rounded-full border border-blue-400/30">
-              <span className="text-sm text-blue-300 font-semibold">国内领先的关键链项目管理专业服务机构</span>
+              <span className="text-sm text-blue-300 font-semibold">
+                国内领先的关键链项目管理专业服务机构
+              </span>
             </div>
           </div>
 
@@ -124,25 +121,33 @@ export default function Footer() {
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Phone className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-gray-300 group-hover:text-white transition-colors">{contactInfo.contact_phone}</span>
+                <span className="text-gray-300 group-hover:text-white transition-colors">
+                  {contactInfo.contact_phone}
+                </span>
               </div>
               <div className="group flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all duration-300">
                 <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Mail className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-gray-300 group-hover:text-white transition-colors">{contactInfo.contact_email}</span>
+                <span className="text-gray-300 group-hover:text-white transition-colors">
+                  {contactInfo.contact_email}
+                </span>
               </div>
               <div className="group flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all duration-300">
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <MapPin className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-gray-300 group-hover:text-white transition-colors">{contactInfo.contact_address.split('\n')[0]}</span>
+                <span className="text-gray-300 group-hover:text-white transition-colors">
+                  {contactInfo.contact_address.split('\n')[0]}
+                </span>
               </div>
               <div className="group flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all duration-300">
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Clock className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-gray-300 group-hover:text-white transition-colors">周一至周五 9:00-18:00</span>
+                <span className="text-gray-300 group-hover:text-white transition-colors">
+                  周一至周五 9:00-18:00
+                </span>
               </div>
             </div>
           </div>
@@ -156,19 +161,25 @@ export default function Footer() {
             <div className="space-y-4">
               <div className="text-center">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/20 rounded-full border border-green-400/30 mb-4">
-                  <span className="text-sm text-green-300 font-semibold">微信公众号：ccpm360</span>
+                  <span className="text-sm text-green-300 font-semibold">
+                    微信公众号：ccpm360
+                  </span>
                 </div>
                 <div className="w-36 h-36 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-2xl border-4 border-white/10">
                   <div className="w-32 h-32 bg-gray-100 rounded-xl flex items-center justify-center">
                     <div className="text-center">
                       <div className="w-16 h-16 bg-green-500 rounded-lg flex items-center justify-center mx-auto mb-2">
-                        <span className="text-white font-bold text-lg">微信</span>
+                        <span className="text-white font-bold text-lg">
+                          微信
+                        </span>
                       </div>
                       <p className="text-xs text-gray-500">二维码</p>
                     </div>
                   </div>
                 </div>
-                <p className="text-sm text-gray-400 mt-3">扫码关注获取更多资讯</p>
+                <p className="text-sm text-gray-400 mt-3">
+                  扫码关注获取更多资讯
+                </p>
               </div>
             </div>
           </div>
@@ -184,15 +195,24 @@ export default function Footer() {
               </p>
             </div>
             <div className="flex items-center space-x-8">
-              <Link href="/" className="group text-gray-400 hover:text-blue-400 text-sm transition-all duration-300 relative">
+              <Link
+                href="/"
+                className="group text-gray-400 hover:text-blue-400 text-sm transition-all duration-300 relative"
+              >
                 <span className="relative z-10">隐私政策</span>
                 <div className="absolute inset-0 bg-blue-400/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></div>
               </Link>
-              <Link href="/" className="group text-gray-400 hover:text-blue-400 text-sm transition-all duration-300 relative">
+              <Link
+                href="/"
+                className="group text-gray-400 hover:text-blue-400 text-sm transition-all duration-300 relative"
+              >
                 <span className="relative z-10">服务条款</span>
                 <div className="absolute inset-0 bg-blue-400/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></div>
               </Link>
-              <Link href="/" className="group text-gray-400 hover:text-blue-400 text-sm transition-all duration-300 relative">
+              <Link
+                href="/"
+                className="group text-gray-400 hover:text-blue-400 text-sm transition-all duration-300 relative"
+              >
                 <span className="relative z-10">网站地图</span>
                 <div className="absolute inset-0 bg-blue-400/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></div>
               </Link>

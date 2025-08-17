@@ -1,6 +1,7 @@
 # TODO:
 
-- [x] fix_auth_check_1: 在admin页面中添加更详细的调试日志，确保checkAuth函数被正确调用 (priority: High)
-- [x] fix_auth_check_2: 检查useEffect的依赖数组，确保checkAuth函数被正确引用 (priority: High)
-- [x] fix_auth_check_3: 使用useCallback来稳定checkAuth函数引用，避免无限重新渲染 (priority: Medium)
-- [x] fix_auth_check_4: 测试修复后的认证检查是否正常工作 (priority: Medium)
+- [x] 128: 检查API端点/api/admin/website/contact的POST方法保存逻辑 (priority: High)
+- [x] 129: 验证数据库表contact_page_settings的数据是否真正插入或更新 (priority: High)
+- [x] 130: 检查前端loadSettings函数是否正确从数据库加载数据 (priority: High)
+- [x] 131: 验证保存和加载逻辑的数据格式一致性 (priority: Medium)
+- [x] 132: 测试完整的保存-刷新-加载流程 (priority: Medium)

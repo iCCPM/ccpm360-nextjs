@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { contactAPI, type ContactSubmission, supabase } from '@/lib/supabase';
 import { initEmailJS, sendContactEmail } from '@/lib/emailjs';
+import BaiduMap from '@/components/BaiduMap';
 
 interface FormData {
   name: string;
@@ -61,6 +62,12 @@ export default function ContactPage() {
     wechat_account_name: 'CCPM360项目管理',
     wechat_description: '获取最新行业资讯、管理技巧和培训信息',
     wechat_qr_code: '',
+    subway_route: '地铁4号线/10号线海淀黄庄站A2出口，步行约5分钟',
+    bus_route:
+      '乘坐26路、302路、332路、394路、608路、614路、681路、683路、717路、732路、801路、808路、814路、运通105线、运通106线、运通205线等公交车至中关村站下车',
+    driving_route: '导航至"中关村大街27号"，周边有多个停车场可供选择',
+    traffic_tips:
+      '建议优先选择地铁出行，避开早晚高峰时段。如需驾车前往，请提前了解停车位情况。',
   });
 
   // 初始化EmailJS和加载联系信息
@@ -69,32 +76,34 @@ export default function ContactPage() {
 
     const loadContactInfo = async () => {
       try {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .select(
-            'contact_email, contact_phone, contact_address, site_title, site_description'
-          )
-          .single();
-
-        if (error) throw error;
-
-        if (data) {
-          setContactInfo((prev) => ({
-            ...prev,
-            contact_email: data.contact_email || '',
-            contact_phone: data.contact_phone || '',
-            contact_address: data.contact_address || '',
-            direct_phone: data.contact_phone || '', // 使用主电话作为直线电话
-            support_email: data.contact_email || '', // 使用主邮箱作为技术支持邮箱
-            business_hours_weekday: '周一至周五 9:00-18:00',
-            business_hours_weekend: '周六 9:00-17:00',
-            wechat_account_name: 'CCPM360咨询',
-            wechat_description: '关注获取最新项目管理资讯',
-            wechat_qr_code: '/placeholder-qr-code.svg',
-          }));
+        const response = await fetch('/api/contact-info');
+        if (!response.ok) {
+          throw new Error('获取联系信息失败');
         }
+
+        const data = await response.json();
+
+        setContactInfo((prev) => ({
+          ...prev,
+          contact_email: data.email || prev.contact_email,
+          contact_phone: data.phone || prev.contact_phone,
+          contact_address: data.address || prev.contact_address,
+          direct_phone: data.phone || prev.direct_phone,
+          support_email: data.email || prev.support_email,
+          business_hours_weekday: data.working_hours || '周一至周五 9:00-18:00',
+          business_hours_weekend:
+            data.weekend_hours || '周六日及节假日 08:00~22:00',
+          wechat_account_name: data.wechat || 'CCPM360咨询',
+          wechat_description: '关注获取最新项目管理资讯',
+          wechat_qr_code: '/placeholder-qr-code.svg',
+          subway_route: data.subway_route || prev.subway_route,
+          bus_route: data.bus_route || prev.bus_route,
+          driving_route: data.driving_route || prev.driving_route,
+          traffic_tips: data.traffic_tips || prev.traffic_tips,
+        }));
       } catch (error) {
         console.error('加载联系信息失败:', error);
+        // 保持默认值
       }
     };
 
@@ -247,9 +256,6 @@ export default function ContactPage() {
                       <p className="text-gray-600 mt-1">
                         {contactInfo.contact_phone}
                       </p>
-                      <p className="text-sm text-gray-500">
-                        直线电话：{contactInfo.direct_phone}
-                      </p>
                     </div>
                   </div>
 
@@ -265,9 +271,6 @@ export default function ContactPage() {
                       </h3>
                       <p className="text-gray-600 mt-1">
                         {contactInfo.contact_email}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        技术支持：{contactInfo.support_email}
                       </p>
                     </div>
                   </div>
@@ -587,15 +590,107 @@ export default function ContactPage() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="h-96 bg-gray-200 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">
-                  地图加载中...
-                  <br />
-                  北京市海淀区中关村科技园区创新大厦A座15层
+            <div className="grid lg:grid-cols-3 gap-0">
+              {/* 地址信息卡片 */}
+              <div className="p-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <MapPin className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        办公地址
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                        {contactInfo.contact_address}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <Clock className="h-8 w-8 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        工作时间
+                      </h3>
+                      <p className="text-gray-700 whitespace-pre-line">
+                        {contactInfo.business_hours_weekday ||
+                          '周一至周五 9:00-18:00'}
+                        {'\n'}
+                        {contactInfo.business_hours_weekend ||
+                          '周六日及节假日 08:00~22:00'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 百度交互式地图 */}
+              <div className="lg:col-span-2 relative h-96 lg:h-auto min-h-[400px]">
+                <BaiduMap
+                  className="rounded-r-2xl lg:rounded-r-2xl lg:rounded-l-none overflow-hidden"
+                  height="100%"
+                  address={contactInfo.contact_address}
+                  zoom={16}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 交通指南 */}
+          <div className="mt-8 bg-white rounded-2xl shadow-lg p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">交通指南</h3>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                  <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                    地
+                  </span>
+                  地铁路线
+                </h4>
+                <p className="text-gray-600 ml-9 whitespace-pre-line">
+                  {contactInfo.subway_route ||
+                    '地铁4号线/10号线海淀黄庄站A2出口，步行约5分钟'}
                 </p>
               </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                  <span className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                    公
+                  </span>
+                  公交路线
+                </h4>
+                <p className="text-gray-600 ml-9 whitespace-pre-line">
+                  {contactInfo.bus_route ||
+                    '乘坐26路、302路、332路、394路、608路、614路、681路、683路、717路、732路、801路、808路、814路、运通105线、运通106线、运通205线等公交车至中关村站下车'}
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                  <span className="w-6 h-6 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                    车
+                  </span>
+                  自驾路线
+                </h4>
+                <p className="text-gray-600 ml-9 whitespace-pre-line">
+                  {contactInfo.driving_route ||
+                    '导航至"中关村大街27号"，周边有多个停车场可供选择'}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-sm text-gray-500 whitespace-pre-line">
+                <strong>温馨提示：</strong>
+                {contactInfo.traffic_tips ||
+                  '建议优先选择地铁出行，避开早晚高峰时段。如需驾车前往，请提前了解停车位情况。'}
+              </p>
             </div>
           </div>
         </div>

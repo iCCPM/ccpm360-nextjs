@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Lock, Mail, AlertCircle, User, Key } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuth } from '@/contexts/AuthProvider';
 import {
   checkAdminExists,
   createAdminUser,
@@ -24,12 +24,21 @@ const AdminLogin = () => {
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [validatingInvitation, setValidatingInvitation] = useState(false);
   const [isFirstAdmin, setIsFirstAdmin] = useState(false);
-  const { user, login, isLoading, checkAuth } = useAuthStore();
+  const hasCheckedAdmin = useRef(false);
+  const adminCheckResult = useRef<{ exists: boolean; checked: boolean }>({
+    exists: false,
+    checked: false,
+  });
+  const { user, login, isLoading, checkAuth } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    checkAuth();
-    checkForExistingAdmin();
+    // 只在初始加载时检查，避免重复调用
+    if (!hasCheckedAdmin.current) {
+      hasCheckedAdmin.current = true;
+      checkAuth();
+      checkForExistingAdmin();
+    }
   }, [checkAuth]);
 
   useEffect(() => {
@@ -40,10 +49,27 @@ const AdminLogin = () => {
   }, [user, router]);
 
   const checkForExistingAdmin = async () => {
+    // 如果已经检查过，直接使用缓存结果
+    if (adminCheckResult.current.checked) {
+      console.log('使用缓存的管理员检查结果:', adminCheckResult.current.exists);
+      if (!adminCheckResult.current.exists) {
+        setIsFirstAdmin(true);
+        setIsRegisterMode(true);
+      }
+      setCheckingAdmin(false);
+      return;
+    }
+
     try {
       console.log('开始检查现有管理员...');
       const result = await checkAdminExists();
       console.log('管理员检查结果:', result);
+
+      // 缓存检查结果
+      adminCheckResult.current = {
+        exists: result.exists,
+        checked: true,
+      };
 
       if (!result.exists) {
         console.log('未发现管理员，切换到首个管理员创建模式');
@@ -54,6 +80,8 @@ const AdminLogin = () => {
       }
     } catch (error) {
       console.error('检查管理员用户失败:', error);
+      // 即使出错也标记为已检查，避免重复调用
+      adminCheckResult.current.checked = true;
     } finally {
       setCheckingAdmin(false);
     }

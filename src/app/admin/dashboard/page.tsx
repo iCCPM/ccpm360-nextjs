@@ -61,7 +61,11 @@ const AdminDashboardPage = () => {
 
       // 获取访客统计数据
       const today = new Date().toISOString().split('T')[0];
-      const thisMonth = new Date().toISOString().substring(0, 7);
+      const thisMonthStart = new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        1
+      ).toISOString();
 
       const [visitorsResult, dailyVisitorsResult, monthlyPageViewsResult] =
         await Promise.all([
@@ -73,7 +77,7 @@ const AdminDashboardPage = () => {
           supabase
             .from('page_views')
             .select('id', { count: 'exact' })
-            .gte('created_at', thisMonth),
+            .gte('created_at', thisMonthStart),
         ]);
 
       // 获取最近的数据

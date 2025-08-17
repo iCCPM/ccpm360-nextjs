@@ -27,7 +27,8 @@ import {
   Shield,
   Database,
 } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuth } from '@/contexts/AuthProvider';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 
 interface MenuItem {
   id: string;
@@ -117,10 +118,10 @@ const menuItems: MenuItem[] = [
         href: '/admin/contacts',
       },
       {
-        id: 'contacts-settings',
-        label: '联系设置',
-        icon: Settings,
-        href: '/admin/contacts/settings',
+        id: 'contacts-page',
+        label: '联系页面',
+        icon: Mail,
+        href: '/admin/website/contact',
       },
     ],
   },
@@ -145,6 +146,26 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
+    id: 'services',
+    label: '服务管理',
+    icon: Briefcase,
+    href: '/admin/services',
+    children: [
+      {
+        id: 'services-settings',
+        label: '服务设置',
+        icon: Settings,
+        href: '/admin/website/services',
+      },
+      {
+        id: 'services-courses',
+        label: '课程管理',
+        icon: BookOpen,
+        href: '/admin/services/courses',
+      },
+    ],
+  },
+  {
     id: 'website',
     label: '网站管理',
     icon: Globe,
@@ -161,18 +182,6 @@ const menuItems: MenuItem[] = [
         label: '关于我们',
         icon: FileText,
         href: '/admin/website/about',
-      },
-      {
-        id: 'website-services',
-        label: '服务页面',
-        icon: Briefcase,
-        href: '/admin/website/services',
-      },
-      {
-        id: 'website-contact',
-        label: '联系页面',
-        icon: Mail,
-        href: '/admin/website/contact',
       },
     ],
   },
@@ -213,24 +222,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['dashboard']);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-
-  // 检查用户是否已登录
-  useEffect(() => {
-    console.log('[AdminLayout] 检查用户登录状态:', { user: !!user, pathname });
-
-    // 避免在登录页面时重定向，防止无限循环
-    if (!user && pathname !== '/admin/login') {
-      console.log('[AdminLayout] 用户未登录，重定向到登录页面');
-      router.push('/admin/login');
-    } else if (!user && pathname === '/admin/login') {
-      console.log('[AdminLayout] 当前在登录页面，跳过重定向');
-    } else if (user) {
-      console.log('[AdminLayout] 用户已登录:', user.email);
-    }
-  }, [user, router, pathname]);
 
   // 根据当前路径自动展开相应的菜单
   useEffect(() => {
@@ -292,29 +286,70 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   };
 
-  // 如果是登录页面，直接渲染子组件，不进行认证检查
+  // 如果是登录页面，直接渲染子组件，不需要认证保护
   if (pathname === '/admin/login') {
     return children;
   }
 
-  // 非登录页面且用户未登录时，显示加载状态
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">正在验证登录状态...</p>
-        </div>
-      </div>
-    );
-  }
+  // 非登录页面使用AuthGuard保护
+  return (
+    <AuthGuard allowedRoles={['super_admin', 'admin', 'editor', 'reviewer']}>
+      <AdminLayoutContent
+        sidebarCollapsed={sidebarCollapsed}
+        setSidebarCollapsed={setSidebarCollapsed}
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
+        expandedMenus={expandedMenus}
+        userMenuOpen={userMenuOpen}
+        setUserMenuOpen={setUserMenuOpen}
+        user={user}
+        toggleMenu={toggleMenu}
+        handleLogout={handleLogout}
+        generateBreadcrumbs={generateBreadcrumbs}
+        isActiveLink={isActiveLink}
+      >
+        {children}
+      </AdminLayoutContent>
+    </AuthGuard>
+  );
+}
 
+// 将布局内容提取为单独的组件
+function AdminLayoutContent({
+  children,
+  sidebarCollapsed,
+  setSidebarCollapsed,
+  mobileMenuOpen,
+  setMobileMenuOpen,
+  expandedMenus,
+  userMenuOpen,
+  setUserMenuOpen,
+  user,
+  toggleMenu,
+  handleLogout,
+  generateBreadcrumbs,
+  isActiveLink,
+}: {
+  children: React.ReactNode;
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+  mobileMenuOpen: boolean;
+  setMobileMenuOpen: (open: boolean) => void;
+  expandedMenus: string[];
+  userMenuOpen: boolean;
+  setUserMenuOpen: (open: boolean) => void;
+  user: any;
+  toggleMenu: (menuId: string) => void;
+  handleLogout: () => void;
+  generateBreadcrumbs: () => { label: string; href: string }[];
+  isActiveLink: (href: string) => boolean;
+}) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 移动端菜单遮罩 */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -484,23 +519,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               {/* 面包屑导航 */}
               <nav className="hidden sm:flex" aria-label="Breadcrumb">
                 <ol className="flex items-center space-x-2">
-                  {generateBreadcrumbs().map((crumb, index) => (
-                    <li key={index} className="flex items-center">
-                      {index > 0 && (
-                        <ChevronRight className="w-4 h-4 text-gray-400 mx-2" />
-                      )}
-                      <Link
-                        href={crumb.href}
-                        className={`text-sm font-medium transition-colors ${
-                          index === generateBreadcrumbs().length - 1
-                            ? 'text-gray-900'
-                            : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                      >
-                        {crumb.label}
-                      </Link>
-                    </li>
-                  ))}
+                  {generateBreadcrumbs().map(
+                    (crumb: { label: string; href: string }, index: number) => (
+                      <li key={index} className="flex items-center">
+                        {index > 0 && (
+                          <ChevronRight className="w-4 h-4 text-gray-400 mx-2" />
+                        )}
+                        <Link
+                          href={crumb.href}
+                          className={`text-sm font-medium transition-colors ${
+                            index === generateBreadcrumbs().length - 1
+                              ? 'text-gray-900'
+                              : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                        >
+                          {crumb.label}
+                        </Link>
+                      </li>
+                    )
+                  )}
                 </ol>
               </nav>
             </div>
