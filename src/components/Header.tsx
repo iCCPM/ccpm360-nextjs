@@ -22,18 +22,23 @@ export default function Header() {
 
   return (
     <header className="bg-white/95 backdrop-blur-md shadow-xl border-b border-gray-100 sticky top-0 z-50">
-      <nav className="container-responsive flex items-center justify-between py-4" aria-label="Global">
+      <nav
+        className="container-responsive flex items-center justify-between py-4"
+        aria-label="Global"
+      >
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2">
-            <Image 
-              src="/ccpm360-logo.png" 
-              alt="CCPM360" 
+            <Image
+              src="/ccpm360-logo.png"
+              alt="CCPM360"
               width={40}
               height={40}
               className="h-10 w-auto"
               style={{ width: 'auto', height: 'auto' }}
             />
-            <span className="text-xl font-bold text-blue-800 hidden sm:block font-ethnocentric">CCPM360</span>
+            <span className="text-xl font-bold text-blue-800 hidden sm:block font-ethnocentric">
+              CCPM360
+            </span>
           </Link>
         </div>
         <div className="flex lg:hidden">
@@ -77,19 +82,24 @@ export default function Header() {
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden" role="dialog" aria-modal="true">
-          <div className="fixed inset-0 z-[9999] bg-black/20 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}></div>
+          <div
+            className="fixed inset-0 z-[9999] bg-black/20 backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          ></div>
           <div className="fixed inset-y-0 right-0 z-[9999] w-full h-screen overflow-y-auto bg-white/95 backdrop-blur-md px-6 py-6 sm:max-w-sm border-l border-gray-200 shadow-2xl">
             <div className="flex items-center justify-between">
               <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2">
-                <Image 
-                  src="/ccpm360-logo.png" 
-                  alt="CCPM360" 
+                <Image
+                  src="/ccpm360-logo.png"
+                  alt="CCPM360"
                   width={32}
                   height={32}
                   className="h-8 w-auto"
                   style={{ width: 'auto', height: 'auto' }}
                 />
-                <span className="text-xl font-bold text-blue-800 font-ethnocentric">CCPM360</span>
+                <span className="text-xl font-bold text-blue-800 font-ethnocentric">
+                  CCPM360
+                </span>
               </Link>
               <button
                 type="button"

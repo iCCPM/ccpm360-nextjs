@@ -1,4 +1,4 @@
-import type { Config } from 'tailwindcss'
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: [
@@ -9,13 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        'ethnocentric': ['Ethnocentric', 'sans-serif'],
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
-        'heading': ['Poppins', 'system-ui', 'sans-serif'],
+        ethnocentric: ['Ethnocentric', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        heading: ['Poppins', 'system-ui', 'sans-serif'],
       },
     },
   },
   plugins: [],
-}
+};
 
-export default config
+export default config;

@@ -35,13 +35,19 @@ export async function POST(request: NextRequest) {
   try {
     // 检查Supabase配置
     if (!supabase) {
-      return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      );
     }
 
     const { token, password } = await request.json();
 
     if (!token || !password) {
-      return NextResponse.json({ error: '令牌和密码不能为空' }, { status: 400 });
+      return NextResponse.json(
+        { error: '令牌和密码不能为空' },
+        { status: 400 }
+      );
     }
 
     // 验证密码强度
@@ -53,7 +59,8 @@ export async function POST(request: NextRequest) {
     // 查询并验证令牌
     const { data: resetToken, error: tokenError } = await supabase
       .from('password_reset_tokens')
-      .select(`
+      .select(
+        `
         id,
         admin_user_id,
         expires_at,
@@ -64,7 +71,8 @@ export async function POST(request: NextRequest) {
           full_name,
           is_active
         )
-      `)
+      `
+      )
       .eq('token', token)
       .single();
 
@@ -80,14 +88,17 @@ export async function POST(request: NextRequest) {
     // 检查令牌是否过期
     const now = new Date();
     const expiresAt = new Date(resetToken.expires_at);
-    
+
     if (now > expiresAt) {
       return NextResponse.json({ error: '重置令牌已过期' }, { status: 400 });
     }
 
     // 检查关联的管理员用户是否有效
     if (!resetToken.admin_users[0]?.is_active) {
-      return NextResponse.json({ error: '关联的管理员账户已被禁用' }, { status: 400 });
+      return NextResponse.json(
+        { error: '关联的管理员账户已被禁用' },
+        { status: 400 }
+      );
     }
 
     // 生成新密码的哈希
@@ -98,7 +109,7 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await supabase.rpc('reset_admin_password', {
       p_admin_user_id: resetToken.admin_user_id,
       p_new_password_hash: passwordHash,
-      p_token_id: resetToken.id
+      p_token_id: resetToken.id,
     });
 
     if (updateError) {
@@ -106,11 +117,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '密码更新失败' }, { status: 500 });
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: '密码重置成功'
+      message: '密码重置成功',
     });
-
   } catch (error) {
     console.error('Reset password error:', error);
     return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });

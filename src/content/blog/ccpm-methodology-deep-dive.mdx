@@ -1,4 +1,8 @@
-import { ProjectTimelineChart, BufferConsumptionChart, ResourceUtilizationChart } from '../../components/charts';
+import {
+  ProjectTimelineChart,
+  BufferConsumptionChart,
+  ResourceUtilizationChart,
+} from '../../components/charts';
 
 # 关键链项目管理方法论深度解析
 
@@ -21,14 +25,14 @@ CCPM是基于约束理论（Theory of Constraints, TOC）的项目管理方法�
 
 下面的图表展示了传统项目管理与CCPM方法在时间规划上的差异：
 
-<ProjectTimelineChart 
+<ProjectTimelineChart
   title="传统方法 vs CCPM方法时间对比"
   data={[
     { task: '需求分析', planned: 10, actual: 12, buffer: 2 },
     { task: '系统设计', planned: 15, actual: 14, buffer: 3 },
     { task: '开发实现', planned: 30, actual: 35, buffer: 5 },
     { task: '测试验证', planned: 12, actual: 10, buffer: 2 },
-    { task: '部署上线', planned: 5, actual: 6, buffer: 1 }
+    { task: '部署上线', planned: 5, actual: 6, buffer: 1 },
   ]}
 />
 
@@ -46,7 +50,7 @@ CCPM是基于约束理论（Theory of Constraints, TOC）的项目管理方法�
 
 ### 缓冲区消耗监控
 
-<BufferConsumptionChart 
+<BufferConsumptionChart
   title="项目缓冲区消耗趋势监控"
   data={[
     { week: 1, consumption: 5, threshold: 33 },
@@ -60,7 +64,7 @@ CCPM是基于约束理论（Theory of Constraints, TOC）的项目管理方法�
     { week: 9, consumption: 62, threshold: 33 },
     { week: 10, consumption: 68, threshold: 33 },
     { week: 11, consumption: 75, threshold: 33 },
-    { week: 12, consumption: 82, threshold: 33 }
+    { week: 12, consumption: 82, threshold: 33 },
   ]}
 />
 
@@ -70,7 +74,7 @@ CCPM是基于约束理论（Theory of Constraints, TOC）的项目管理方法�
 
 在多项目环境中，资源冲突是导致项目延期的主要原因之一。CCPM通过资源平衡和优化，显著提高了项目执行效率。
 
-<ResourceUtilizationChart 
+<ResourceUtilizationChart
   title="团队资源利用率分析"
   data={[
     { name: '项目经理', value: 85, color: '#3B82F6' },
@@ -78,7 +82,7 @@ CCPM是基于约束理论（Theory of Constraints, TOC）的项目管理方法�
     { name: '测试工程师', value: 78, color: '#10B981' },
     { name: 'UI设计师', value: 65, color: '#F59E0B' },
     { name: '产品经理', value: 88, color: '#8B5CF6' },
-    { name: '运维工程师', value: 72, color: '#06B6D4' }
+    { name: '运维工程师', value: 72, color: '#06B6D4' },
   ]}
 />
 
@@ -111,7 +115,7 @@ function calculateBuffer(tasks) {
   const sumOfSquares = tasks.reduce((sum, task) => {
     return sum + Math.pow(task.duration, 2);
   }, 0);
-  
+
   return Math.sqrt(sumOfSquares) * 0.5; // 50%的安全系数
 }
 
@@ -119,7 +123,7 @@ function calculateBuffer(tasks) {
 const criticalChainTasks = [
   { name: '需求分析', duration: 8 },
   { name: '系统设计', duration: 12 },
-  { name: '核心开发', duration: 25 }
+  { name: '核心开发', duration: 25 },
 ];
 
 const projectBuffer = calculateBuffer(criticalChainTasks);
@@ -140,13 +144,13 @@ console.log(`项目缓冲区: ${projectBuffer.toFixed(1)} 天`);
 
 ## 与传统项目管理的对比
 
-| 特征 | 传统CPM | CCPM |
-|------|---------|------|
-| 关注点 | 时间 | 时间 + 资源 |
-| 安全时间 | 分散在各任务中 | 集中在缓冲区 |
-| 资源考虑 | 后期考虑 | 前期规划 |
-| 多任务处理 | 允许 | 避免 |
-| 监控重点 | 任务完成 | 缓冲区消耗 |
+| 特征       | 传统CPM        | CCPM         |
+| ---------- | -------------- | ------------ |
+| 关注点     | 时间           | 时间 + 资源  |
+| 安全时间   | 分散在各任务中 | 集中在缓冲区 |
+| 资源考虑   | 后期考虑       | 前期规划     |
+| 多任务处理 | 允许           | 避免         |
+| 监控重点   | 任务完成       | 缓冲区消耗   |
 
 ## 成功案例分享
 
@@ -193,4 +197,4 @@ CCPM作为一种先进的项目管理方法论，通过关注约束、优化资�
 
 ---
 
-*本文为CCPM360团队原创内容，如需转载请注明出处。更多项目管理资源和案例分析，请关注我们的博客更新。*
+_本文为CCPM360团队原创内容，如需转载请注明出处。更多项目管理资源和案例分析，请关注我们的博客更新。_

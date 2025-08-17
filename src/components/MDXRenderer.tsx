@@ -28,7 +28,14 @@ export function MDXRenderer({ content }: MDXRendererProps) {
               {String(children).replace(/\n$/, '')}
             </SyntaxHighlighter>
           ) : (
-            <code className={inline ? "bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-sm font-mono" : className} {...props}>
+            <code
+              className={
+                inline
+                  ? 'bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-sm font-mono'
+                  : className
+              }
+              {...props}
+            >
               {children}
             </code>
           );
@@ -56,9 +63,7 @@ export function MDXRenderer({ content }: MDXRendererProps) {
         ),
         // 自定义段落渲染
         p: ({ children }) => (
-          <p className="text-gray-700 leading-relaxed mb-4">
-            {children}
-          </p>
+          <p className="text-gray-700 leading-relaxed mb-4">{children}</p>
         ),
         // 自定义列表渲染
         ul: ({ children }) => (
@@ -71,14 +76,10 @@ export function MDXRenderer({ content }: MDXRendererProps) {
             {children}
           </ol>
         ),
-        li: ({ children }) => (
-          <li className="leading-relaxed">
-            {children}
-          </li>
-        ),
+        li: ({ children }) => <li className="leading-relaxed">{children}</li>,
         // 自定义链接渲染
         a: ({ href, children }) => (
-          <a 
+          <a
             href={href}
             className="text-blue-600 hover:text-blue-700 underline"
             target="_blank"
@@ -102,20 +103,14 @@ export function MDXRenderer({ content }: MDXRendererProps) {
           </div>
         ),
         thead: ({ children }) => (
-          <thead className="bg-gray-50">
-            {children}
-          </thead>
+          <thead className="bg-gray-50">{children}</thead>
         ),
         tbody: ({ children }) => (
           <tbody className="bg-white divide-y divide-gray-200">
             {children}
           </tbody>
         ),
-        tr: ({ children }) => (
-          <tr>
-            {children}
-          </tr>
-        ),
+        tr: ({ children }) => <tr>{children}</tr>,
         th: ({ children }) => (
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 last:border-r-0">
             {children}
@@ -128,19 +123,13 @@ export function MDXRenderer({ content }: MDXRendererProps) {
         ),
         // 自定义强调文本渲染
         strong: ({ children }) => (
-          <strong className="font-bold text-gray-900">
-            {children}
-          </strong>
+          <strong className="font-bold text-gray-900">{children}</strong>
         ),
         em: ({ children }) => (
-          <em className="italic text-gray-700">
-            {children}
-          </em>
+          <em className="italic text-gray-700">{children}</em>
         ),
         // 自定义水平线渲染
-        hr: () => (
-          <hr className="my-8 border-gray-300" />
-        ),
+        hr: () => <hr className="my-8 border-gray-300" />,
       }}
     >
       {content}

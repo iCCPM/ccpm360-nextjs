@@ -4,14 +4,19 @@ import emailjs from '@emailjs/browser';
 const EMAILJS_CONFIG = {
   serviceId: 'service_xlf7ocv', // 需要在EmailJS控制台创建
   templateId: 'template_contact', // 需要在EmailJS控制台创建
-  publicKey: '8T9H_VHVx5vXUgWAR' // 需要在EmailJS控制台获取
+  publicKey: '8T9H_VHVx5vXUgWAR', // 需要在EmailJS控制台获取
 };
 
 // 检查EmailJS配置是否完整
 export const isEmailJSConfigured = () => {
-  return EMAILJS_CONFIG.serviceId && EMAILJS_CONFIG.serviceId !== 'service_ccpm360' && 
-         EMAILJS_CONFIG.templateId && EMAILJS_CONFIG.templateId !== 'template_default' && 
-         EMAILJS_CONFIG.publicKey && EMAILJS_CONFIG.publicKey !== 'YOUR_PUBLIC_KEY';
+  return (
+    EMAILJS_CONFIG.serviceId &&
+    EMAILJS_CONFIG.serviceId !== 'service_ccpm360' &&
+    EMAILJS_CONFIG.templateId &&
+    EMAILJS_CONFIG.templateId !== 'template_default' &&
+    EMAILJS_CONFIG.publicKey &&
+    EMAILJS_CONFIG.publicKey !== 'YOUR_PUBLIC_KEY'
+  );
 };
 
 // 初始化EmailJS
@@ -42,19 +47,20 @@ export const sendContactEmail = async (formData: {
   if (!isEmailJSConfigured()) {
     const configError = {
       message: 'EmailJS配置未完成',
-      details: '请按照项目根目录下的"EmailJS配置说明.md"文档完成EmailJS配置后再使用邮件功能。',
+      details:
+        '请按照项目根目录下的"EmailJS配置说明.md"文档完成EmailJS配置后再使用邮件功能。',
       configSteps: [
         '1. 注册EmailJS账户并创建服务',
         '2. 创建邮件模板',
         '3. 获取Public Key',
-        '4. 更新src/lib/emailjs.ts中的配置信息'
-      ]
+        '4. 更新src/lib/emailjs.ts中的配置信息',
+      ],
     };
     console.error('EmailJS配置错误:', configError);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: configError,
-      needsConfiguration: true 
+      needsConfiguration: true,
     };
   }
 
@@ -77,8 +83,8 @@ export const sendContactEmail = async (formData: {
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit'
-      })
+        second: '2-digit',
+      }),
     };
 
     const response = await emailjs.send(
@@ -91,10 +97,13 @@ export const sendContactEmail = async (formData: {
     return { success: true, response };
   } catch (error: unknown) {
     console.error('邮件发送失败:', error);
-    
+
     // 提供更详细的错误信息
     let errorMessage = '邮件发送失败';
-    const errorText = error && typeof error === 'object' && 'text' in error ? (error as { text: string }).text : '';
+    const errorText =
+      error && typeof error === 'object' && 'text' in error
+        ? (error as { text: string }).text
+        : '';
     if (errorText.includes('Public Key is invalid')) {
       errorMessage = 'EmailJS Public Key无效，请检查配置';
     } else if (errorText.includes('Service ID')) {
@@ -102,14 +111,14 @@ export const sendContactEmail = async (formData: {
     } else if (errorText.includes('Template ID')) {
       errorMessage = 'EmailJS Template ID无效，请检查配置';
     }
-    
-    return { 
-      success: false, 
+
+    return {
+      success: false,
       error: {
         message: errorMessage,
         originalError: error,
-        suggestion: '请检查EmailJS配置说明.md文档，确保所有配置项正确设置'
-      }
+        suggestion: '请检查EmailJS配置说明.md文档，确保所有配置项正确设置',
+      },
     };
   }
 };
@@ -121,7 +130,7 @@ export const getEmailJSConfigStatus = () => {
     serviceId: EMAILJS_CONFIG.serviceId,
     templateId: EMAILJS_CONFIG.templateId,
     hasPublicKey: EMAILJS_CONFIG.publicKey !== 'YOUR_PUBLIC_KEY',
-    configFile: 'EmailJS配置说明.md'
+    configFile: 'EmailJS配置说明.md',
   };
 };
 

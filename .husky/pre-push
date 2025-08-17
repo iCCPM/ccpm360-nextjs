@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# CCPM360 推送前质量控制检查
+echo "🚀 执行推送前质量控制检查..."
+
+# 执行完整的部署前检查
+npm run pre-deploy
+
+# 如果检查失败，阻止推送
+if [ $? -ne 0 ]; then
+  echo "❌ 质量控制检查失败，推送已被阻止"
+  echo "💡 请修复问题后重新尝试推送"
+  echo "📖 查看 QUALITY_CONTROL.md 获取详细指南"
+  exit 1
+fi
+
+echo "✅ 质量控制检查通过，继续推送..."

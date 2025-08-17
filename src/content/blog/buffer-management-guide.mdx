@@ -1,4 +1,7 @@
-import { BufferConsumptionChart, ProjectTimelineChart } from '../../components/charts';
+import {
+  BufferConsumptionChart,
+  ProjectTimelineChart,
+} from '../../components/charts';
 
 # 缓冲区管理：项目风险控制的关键
 
@@ -15,6 +18,7 @@ import { BufferConsumptionChart, ProjectTimelineChart } from '../../components/c
 ### 2. 吸收不确定性影响
 
 项目执行过程中存在大量不确定性因素：
+
 - 技术难题
 - 资源变动
 - 需求变更
@@ -25,6 +29,7 @@ import { BufferConsumptionChart, ProjectTimelineChart } from '../../components/c
 ### 3. 提供决策支持
 
 通过监控缓冲区消耗情况，项目经理可以：
+
 - 及时发现问题
 - 评估项目健康状态
 - 制定应对策略
@@ -36,11 +41,13 @@ import { BufferConsumptionChart, ProjectTimelineChart } from '../../components/c
 **定义**：位于关键链末端，保护项目完成日期的缓冲区。
 
 **特点**：
+
 - 是最重要的缓冲区
 - 直接影响项目交付时间
 - 需要重点监控和管理
 
 **计算方法**：
+
 ```javascript
 // 项目缓冲区计算示例
 function calculateProjectBuffer(criticalChainTasks) {
@@ -49,11 +56,14 @@ function calculateProjectBuffer(criticalChainTasks) {
     return sum + Math.pow(task.duration, 2);
   }, 0);
   const sqrtMethod = Math.sqrt(sumOfSquares) * 0.5;
-  
+
   // 方法2：切割拼接法
-  const totalDuration = criticalChainTasks.reduce((sum, task) => sum + task.duration, 0);
+  const totalDuration = criticalChainTasks.reduce(
+    (sum, task) => sum + task.duration,
+    0
+  );
   const cutAndPasteMethod = totalDuration * 0.5;
-  
+
   // 选择较大值作为项目缓冲区
   return Math.max(sqrtMethod, cutAndPasteMethod);
 }
@@ -64,18 +74,19 @@ function calculateProjectBuffer(criticalChainTasks) {
 **定义**：保护关键链免受非关键链延误影响的缓冲区。
 
 **设置原则**：
+
 - 在非关键链汇入关键链的节点设置
 - 大小通常为非关键链长度的50%
 - 数量取决于项目复杂度
 
-<ProjectTimelineChart 
+<ProjectTimelineChart
   title="汇入缓冲区设置示例"
   data={[
     { task: '非关键任务A', planned: 8, actual: 10, buffer: 4 },
     { task: '非关键任务B', planned: 12, actual: 11, buffer: 6 },
     { task: '关键链任务1', planned: 15, actual: 15, buffer: 0 },
     { task: '关键链任务2', planned: 20, actual: 22, buffer: 0 },
-    { task: '项目缓冲区', planned: 0, actual: 0, buffer: 8 }
+    { task: '项目缓冲区', planned: 0, actual: 0, buffer: 8 },
   ]}
 />
 
@@ -84,6 +95,7 @@ function calculateProjectBuffer(criticalChainTasks) {
 **定义**：确保关键资源在需要时能够及时到位的机制。
 
 **特点**：
+
 - 不占用时间，主要是提醒机制
 - 关注资源可用性
 - 预防资源冲突
@@ -95,11 +107,13 @@ function calculateProjectBuffer(criticalChainTasks) {
 **公式**：Buffer = √(Σ(Ti²)) × Safety Factor
 
 **优点**：
+
 - 数学基础扎实
 - 考虑了任务时间的变异性
 - 适用于大多数项目
 
 **缺点**：
+
 - 可能过于保守
 - 不考虑任务间的相关性
 
@@ -108,17 +122,20 @@ function calculateProjectBuffer(criticalChainTasks) {
 **公式**：Buffer = Σ(Ti) × 50%
 
 **优点**：
+
 - 简单易懂
 - 实施方便
 - 与传统方法接近
 
 **缺点**：
+
 - 可能不够精确
 - 忽略了任务特性差异
 
 ### 3. 统计方法（Statistical Method）
 
 基于历史数据的统计分析，考虑：
+
 - 任务完成时间的概率分布
 - 项目类型的历史表现
 - 团队能力水平
@@ -127,7 +144,7 @@ function calculateProjectBuffer(criticalChainTasks) {
 
 ### 三色管理法
 
-<BufferConsumptionChart 
+<BufferConsumptionChart
   title="缓冲区三色监控示例"
   data={[
     { week: 1, consumption: 8, threshold: 33 },
@@ -141,16 +158,18 @@ function calculateProjectBuffer(criticalChainTasks) {
     { week: 9, consumption: 68, threshold: 33 },
     { week: 10, consumption: 75, threshold: 33 },
     { week: 11, consumption: 82, threshold: 33 },
-    { week: 12, consumption: 88, threshold: 33 }
+    { week: 12, consumption: 88, threshold: 33 },
   ]}
 />
 
 #### 绿色区域（0-33%消耗）
+
 - **状态**：安全
 - **行动**：正常监控，无需特殊措施
 - **频率**：每周检查一次
 
 #### 黄色区域（34-66%消耗）
+
 - **状态**：警告
 - **行动**：
   - 分析消耗原因
@@ -159,6 +178,7 @@ function calculateProjectBuffer(criticalChainTasks) {
 - **频率**：每日检查
 
 #### 红色区域（67-100%消耗）
+
 - **状态**：危险
 - **行动**：
   - 立即采取纠正措施
@@ -178,24 +198,24 @@ class BufferMonitor {
     this.consumedBuffer = 0;
     this.alerts = [];
   }
-  
+
   updateConsumption(consumed) {
     this.consumedBuffer = consumed;
     const consumptionRate = (consumed / this.totalBuffer) * 100;
-    
+
     if (consumptionRate > 66) {
       this.triggerAlert('RED', '缓冲区消耗过快，需要立即行动');
     } else if (consumptionRate > 33) {
       this.triggerAlert('YELLOW', '缓冲区消耗警告，需要关注');
     }
   }
-  
+
   triggerAlert(level, message) {
     this.alerts.push({
       level,
       message,
       timestamp: new Date(),
-      consumptionRate: (this.consumedBuffer / this.totalBuffer) * 100
+      consumptionRate: (this.consumedBuffer / this.totalBuffer) * 100,
     });
   }
 }
@@ -220,11 +240,13 @@ class BufferMonitor {
 **现象**：项目总是提前完成，缓冲区利用率很低
 
 **原因**：
+
 - 任务时间估算过于保守
 - 缓冲区计算方法不当
 - 团队能力提升
 
 **解决方案**：
+
 - 重新校准时间估算
 - 调整缓冲区计算参数
 - 基于历史数据优化模型
@@ -234,11 +256,13 @@ class BufferMonitor {
 **现象**：项目早期就大量消耗缓冲区
 
 **原因**：
+
 - 任务复杂度被低估
 - 资源能力不足
 - 外部依赖问题
 
 **解决方案**：
+
 - 重新评估剩余任务
 - 增加资源投入
 - 调整项目范围
@@ -249,6 +273,7 @@ class BufferMonitor {
 **现象**：团队成员仍然在任务中加入安全时间
 
 **解决方案**：
+
 - 加强CCPM培训
 - 建立激励机制
 - 定期沟通缓冲区状态
@@ -259,27 +284,30 @@ class BufferMonitor {
 ### 案例：软件开发项目缓冲区管理
 
 **项目背景**：
+
 - 团队规模：15人
 - 项目周期：6个月
 - 主要挑战：需求变更频繁
 
 **缓冲区设置**：
+
 - 项目缓冲区：4周
 - 汇入缓冲区：3个，各2周
 - 监控频率：每日
 
 **管理过程**：
 
-| 阶段 | 缓冲区消耗 | 状态 | 采取措施 |
-|------|------------|------|----------|
-| 第1月 | 15% | 绿色 | 正常监控 |
-| 第2月 | 28% | 绿色 | 正常监控 |
-| 第3月 | 45% | 黄色 | 增加代码审查，优化流程 |
-| 第4月 | 62% | 黄色 | 增加测试资源，延长工作时间 |
-| 第5月 | 78% | 红色 | 调整功能范围，增加人员 |
-| 第6月 | 95% | 红色 | 集中精力核心功能 |
+| 阶段  | 缓冲区消耗 | 状态 | 采取措施                   |
+| ----- | ---------- | ---- | -------------------------- |
+| 第1月 | 15%        | 绿色 | 正常监控                   |
+| 第2月 | 28%        | 绿色 | 正常监控                   |
+| 第3月 | 45%        | 黄色 | 增加代码审查，优化流程     |
+| 第4月 | 62%        | 黄色 | 增加测试资源，延长工作时间 |
+| 第5月 | 78%        | 红色 | 调整功能范围，增加人员     |
+| 第6月 | 95%        | 红色 | 集中精力核心功能           |
 
 **结果**：
+
 - 项目按时交付
 - 核心功能100%完成
 - 次要功能延后到下个版本
@@ -298,4 +326,4 @@ class BufferMonitor {
 
 ---
 
-*想了解更多CCPM实践经验？请关注我们的后续文章，或联系CCPM360专家团队获取个性化咨询服务。*
+_想了解更多CCPM实践经验？请关注我们的后续文章，或联系CCPM360专家团队获取个性化咨询服务。_

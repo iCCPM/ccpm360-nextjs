@@ -1,16 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  Calendar,
-  User,
-  Tag,
-} from 'lucide-react';
+import { Search, Plus, Edit, Eye, Calendar, User, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 

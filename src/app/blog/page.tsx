@@ -21,37 +21,38 @@ const mockBlogPosts: BlogPost[] = [
   {
     id: '1',
     title: '关键链项目管理（CCPM）方法论深度解析',
-    excerpt: '深入探讨关键链项目管理的核心理念、实施方法和实际应用案例，包含动态图表演示。',
+    excerpt:
+      '深入探讨关键链项目管理的核心理念、实施方法和实际应用案例，包含动态图表演示。',
     author: 'CCPM专家团队',
     publishDate: '2024-01-15',
     readTime: '12分钟',
     tags: ['CCPM', '项目管理', '约束理论', '缓冲区管理'],
     slug: 'ccpm-methodology-deep-dive',
-    featured: true
+    featured: true,
   },
   {
     id: '2',
     title: '缓冲区管理：项目风险控制的关键',
-    excerpt: '详细介绍CCPM中缓冲区的设置原理、计算方法和动态管理策略，包含实时监控图表。',
+    excerpt:
+      '详细介绍CCPM中缓冲区的设置原理、计算方法和动态管理策略，包含实时监控图表。',
     author: 'CCPM专家团队',
     publishDate: '2024-01-20',
     readTime: '15分钟',
     tags: ['缓冲区管理', 'CCPM', '风险控制', '项目监控'],
-    slug: 'buffer-management-guide'
+    slug: 'buffer-management-guide',
   },
   {
     id: '3',
     title: '多项目环境下的资源优化策略',
-    excerpt: '探讨在多项目并行执行的复杂环境中，如何运用关键链方法优化资源配置，提高整体项目组合的执行效率。',
+    excerpt:
+      '探讨在多项目并行执行的复杂环境中，如何运用关键链方法优化资源配置，提高整体项目组合的执行效率。',
     author: 'CCPM专家团队',
     publishDate: '2024-01-05',
     readTime: '10分钟',
     tags: ['多项目管理', '资源优化', 'CCPM'],
-    slug: 'multi-project-resource-optimization'
-  }
+    slug: 'multi-project-resource-optimization',
+  },
 ];
-
-
 
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -66,11 +67,11 @@ export default function BlogPage() {
     }, 500);
   }, []);
 
-  const filteredPosts = selectedTag 
-    ? posts.filter(post => post.tags.includes(selectedTag))
+  const filteredPosts = selectedTag
+    ? posts.filter((post) => post.tags.includes(selectedTag))
     : posts;
 
-  const allTags = Array.from(new Set(posts.flatMap(post => post.tags)));
+  const allTags = Array.from(new Set(posts.flatMap((post) => post.tags)));
 
   if (loading) {
     return (
@@ -80,7 +81,7 @@ export default function BlogPage() {
             <div className="h-8 bg-gray-300 rounded w-1/4 mb-4"></div>
             <div className="h-4 bg-gray-300 rounded w-1/2 mb-8"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1, 2, 3].map(i => (
+              {[1, 2, 3].map((i) => (
                 <div key={i} className="bg-white rounded-lg shadow-md p-6">
                   <div className="h-6 bg-gray-300 rounded mb-4"></div>
                   <div className="h-4 bg-gray-300 rounded mb-2"></div>
@@ -114,20 +115,20 @@ export default function BlogPage() {
             <button
               onClick={() => setSelectedTag('')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedTag === '' 
-                  ? 'bg-blue-600 text-white' 
+                selectedTag === ''
+                  ? 'bg-blue-600 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100'
               }`}
             >
               全部
             </button>
-            {allTags.map(tag => (
+            {allTags.map((tag) => (
               <button
                 key={tag}
                 onClick={() => setSelectedTag(tag)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedTag === tag 
-                    ? 'bg-blue-600 text-white' 
+                  selectedTag === tag
+                    ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -139,32 +140,35 @@ export default function BlogPage() {
 
         {/* 文章列表 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPosts.map(post => (
-            <article key={post.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+          {filteredPosts.map((post) => (
+            <article
+              key={post.id}
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+            >
               {post.featured && (
                 <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-semibold px-3 py-1">
                   精选文章
                 </div>
               )}
-              
+
               <div className="p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
-                  <Link 
+                  <Link
                     href={`/blog/${post.slug}`}
                     className="hover:text-blue-600 transition-colors"
                   >
                     {post.title}
                   </Link>
                 </h2>
-                
+
                 <p className="text-gray-600 mb-4 line-clamp-3">
                   {post.excerpt}
                 </p>
-                
+
                 {/* 标签 */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {post.tags.map(tag => (
-                    <span 
+                  {post.tags.map((tag) => (
+                    <span
                       key={tag}
                       className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                     >
@@ -173,7 +177,7 @@ export default function BlogPage() {
                     </span>
                   ))}
                 </div>
-                
+
                 {/* 元信息 */}
                 <div className="flex items-center justify-between text-sm text-gray-500">
                   <div className="flex items-center space-x-4">
@@ -198,9 +202,7 @@ export default function BlogPage() {
 
         {filteredPosts.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              暂无符合条件的文章
-            </p>
+            <p className="text-gray-500 text-lg">暂无符合条件的文章</p>
           </div>
         )}
       </div>

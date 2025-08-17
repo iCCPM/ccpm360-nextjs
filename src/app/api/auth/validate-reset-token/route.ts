@@ -14,10 +14,13 @@ export async function POST(request: NextRequest) {
   try {
     // 检查Supabase配置
     if (!supabase) {
-      return NextResponse.json({ 
-        valid: false, 
-        error: 'Service temporarily unavailable' 
-      }, { status: 503 });
+      return NextResponse.json(
+        {
+          valid: false,
+          error: 'Service temporarily unavailable',
+        },
+        { status: 503 }
+      );
     }
 
     const { token } = await request.json();
@@ -29,7 +32,8 @@ export async function POST(request: NextRequest) {
     // 查询令牌信息
     const { data: resetToken, error: tokenError } = await supabase
       .from('password_reset_tokens')
-      .select(`
+      .select(
+        `
         id,
         admin_user_id,
         expires_at,
@@ -40,42 +44,55 @@ export async function POST(request: NextRequest) {
           full_name,
           is_active
         )
-      `)
+      `
+      )
       .eq('token', token)
       .single();
 
     if (tokenError || !resetToken) {
-      return NextResponse.json({ 
-        valid: false, 
-        error: '无效的重置令牌' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          valid: false,
+          error: '无效的重置令牌',
+        },
+        { status: 400 }
+      );
     }
 
     // 检查令牌是否已使用
     if (resetToken.used) {
-      return NextResponse.json({ 
-        valid: false, 
-        error: '重置令牌已被使用' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          valid: false,
+          error: '重置令牌已被使用',
+        },
+        { status: 400 }
+      );
     }
 
     // 检查令牌是否过期
     const now = new Date();
     const expiresAt = new Date(resetToken.expires_at);
-    
+
     if (now > expiresAt) {
-      return NextResponse.json({ 
-        valid: false, 
-        error: '重置令牌已过期' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          valid: false,
+          error: '重置令牌已过期',
+        },
+        { status: 400 }
+      );
     }
 
     // 检查关联的管理员用户是否有效
     if (!resetToken.admin_users[0]?.is_active) {
-      return NextResponse.json({
-        valid: false,
-        error: '关联的管理员账户已被禁用'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          valid: false,
+          error: '关联的管理员账户已被禁用',
+        },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({
@@ -83,15 +100,17 @@ export async function POST(request: NextRequest) {
       user: {
         id: resetToken.admin_users[0]?.id,
         email: resetToken.admin_users[0]?.email,
-        full_name: resetToken.admin_users[0]?.full_name
-      }
+        full_name: resetToken.admin_users[0]?.full_name,
+      },
     });
-
   } catch (error) {
     console.error('Validate reset token error:', error);
-    return NextResponse.json({ 
-      valid: false, 
-      error: '服务器内部错误' 
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        valid: false,
+        error: '服务器内部错误',
+      },
+      { status: 500 }
+    );
   }
 }

@@ -23,7 +23,8 @@ const mockBlogPosts: Record<string, BlogPost> = {
   'ccpm-methodology-deep-dive': {
     id: '1',
     title: '关键链项目管理（CCPM）方法论深度解析',
-    excerpt: '深入探讨关键链项目管理的核心理念、实施方法和实际应用案例，包含动态图表演示。',
+    excerpt:
+      '深入探讨关键链项目管理的核心理念、实施方法和实际应用案例，包含动态图表演示。',
     author: 'CCPM专家团队',
     publishDate: '2024-01-15',
     readTime: '12分钟',
@@ -93,12 +94,13 @@ CCPM是基于约束理论（Theory of Constraints, TOC）的项目管理方法�
 CCPM作为一种先进的项目管理方法论，在处理复杂项目和多项目环境中展现出显著优势。通过合理应用约束理论、缓冲区管理和资源优化策略，企业可以显著提升项目管理效率和成功率。
 
 成功实施CCPM需要组织的全面支持、团队的深入理解以及持续的实践改进。随着项目管理实践的不断发展，CCPM将继续为企业创造更大的价值。
-    `
+    `,
   },
   'buffer-management-guide': {
     id: '2',
     title: '缓冲区管理：项目风险控制的关键',
-    excerpt: '详细介绍CCPM中缓冲区的设置原理、计算方法和动态管理策略，包含实时监控图表。',
+    excerpt:
+      '详细介绍CCPM中缓冲区的设置原理、计算方法和动态管理策略，包含实时监控图表。',
     author: 'CCPM专家团队',
     publishDate: '2024-01-20',
     readTime: '15分钟',
@@ -270,12 +272,13 @@ CCPM作为一种先进的项目管理方法论，在处理复杂项目和多项�
 - 持续的改进优化
 
 随着项目管理实践的不断发展，缓冲区管理技术也在不断完善，为企业项目成功提供更强有力的保障。
-    `
+    `,
   },
   'multi-project-resource-optimization': {
     id: '3',
     title: '多项目环境下的资源优化策略',
-    excerpt: '探讨在多项目并行执行的复杂环境中，如何运用关键链方法优化资源配置，提高整体项目组合的执行效率。',
+    excerpt:
+      '探讨在多项目并行执行的复杂环境中，如何运用关键链方法优化资源配置，提高整体项目组合的执行效率。',
     author: 'CCPM专家团队',
     publishDate: '2024-01-05',
     readTime: '10分钟',
@@ -534,8 +537,8 @@ CCPM作为一种先进的项目管理方法论，在处理复杂项目和多项�
 - 持续的监控和改进
 
 随着技术的不断发展，多项目资源优化将变得更加智能化和自动化，为企业创造更大的价值。
-    `
-  }
+    `,
+  },
 };
 
 export default function BlogPostPage() {
@@ -566,7 +569,7 @@ export default function BlogPostPage() {
             <div className="h-8 bg-gray-300 rounded w-3/4 mb-4"></div>
             <div className="h-4 bg-gray-300 rounded w-1/2 mb-8"></div>
             <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map(i => (
+              {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="h-4 bg-gray-300 rounded"></div>
               ))}
             </div>
@@ -581,8 +584,10 @@ export default function BlogPostPage() {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">文章未找到</h1>
-          <p className="text-xl text-gray-600 mb-8">抱歉，您访问的文章不存在。</p>
-          <Link 
+          <p className="text-xl text-gray-600 mb-8">
+            抱歉，您访问的文章不存在。
+          </p>
+          <Link
             href="/blog"
             className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
@@ -601,7 +606,7 @@ export default function BlogPostPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 返回按钮 */}
         <div className="mb-8">
-          <Link 
+          <Link
             href="/blog"
             className="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors"
           >
@@ -615,7 +620,7 @@ export default function BlogPostPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
             {post.title}
           </h1>
-          
+
           <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-6">
             <div className="flex items-center">
               <User className="w-4 h-4 mr-2" />
@@ -633,8 +638,8 @@ export default function BlogPostPage() {
 
           {/* 标签 */}
           <div className="flex flex-wrap gap-2">
-            {post.tags.map(tag => (
-              <span 
+            {post.tags.map((tag) => (
+              <span
                 key={tag}
                 className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
               >
@@ -655,14 +660,14 @@ export default function BlogPostPage() {
         {/* 文章底部 */}
         <footer className="mt-12 pt-8 border-t border-gray-200">
           <div className="flex justify-between items-center">
-            <Link 
+            <Link
               href="/blog"
               className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回博客列表
             </Link>
-            
+
             <div className="text-sm text-gray-500">
               发布于 {post.publishDate}
             </div>

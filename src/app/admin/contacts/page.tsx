@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import {
   Search,
-  Filter,
   Mail,
   Phone,
   Calendar,
@@ -27,7 +26,7 @@ interface Contact {
   status: 'new' | 'replied' | 'closed';
   priority: 'low' | 'medium' | 'high';
   createdAt: string;
-  repliedAt?: string;
+  repliedAt?: string | undefined;
 }
 
 const mockContacts: Contact[] = [
@@ -177,7 +176,7 @@ export default function ContactsPage() {
                 repliedAt:
                   newStatus === 'replied'
                     ? new Date().toISOString()
-                    : contact.repliedAt,
+                    : undefined,
               }
             : contact
         )

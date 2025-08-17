@@ -2,7 +2,16 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Users, Target, TrendingUp, CheckCircle, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ArrowRight,
+  Users,
+  Target,
+  TrendingUp,
+  CheckCircle,
+  Star,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -10,21 +19,23 @@ const services = [
   {
     icon: Users,
     title: '关键链项目管理培训',
-    description: '专业的CCPM培训课程，帮助团队掌握关键链项目管理方法，提升项目执行效率。',
-    features: ['理论基础', '实战案例', '工具应用', '认证考试']
+    description:
+      '专业的CCPM培训课程，帮助团队掌握关键链项目管理方法，提升项目执行效率。',
+    features: ['理论基础', '实战案例', '工具应用', '认证考试'],
   },
   {
     icon: Target,
     title: '项目管理咨询服务',
-    description: '为企业提供定制化的项目管理咨询，优化项目流程，提升项目成功率。',
-    features: ['流程诊断', '方案设计', '实施指导', '效果评估']
+    description:
+      '为企业提供定制化的项目管理咨询，优化项目流程，提升项目成功率。',
+    features: ['流程诊断', '方案设计', '实施指导', '效果评估'],
   },
   {
     icon: TrendingUp,
     title: '定制化解决方案',
     description: '根据企业特点和需求，提供个性化的关键链项目管理解决方案。',
-    features: ['需求分析', '方案定制', '系统集成', '持续优化']
-  }
+    features: ['需求分析', '方案定制', '系统集成', '持续优化'],
+  },
 ];
 
 const caseStudies = [
@@ -36,10 +47,11 @@ const caseStudies = [
     results: {
       efficiency: '30%',
       utilization: '25%',
-      delivery: '95%'
+      delivery: '95%',
     },
-    description: '通过关键链项目管理方法，成功管理多条生产线同时改造的复杂项目。',
-    image: '/placeholder-manufacturing.svg'
+    description:
+      '通过关键链项目管理方法，成功管理多条生产线同时改造的复杂项目。',
+    image: '/placeholder-manufacturing.svg',
   },
   {
     id: 2,
@@ -49,10 +61,10 @@ const caseStudies = [
     results: {
       efficiency: '40%',
       timeToMarket: '20%',
-      collaboration: '显著改善'
+      collaboration: '显著改善',
     },
     description: '优化多个产品线的研发项目管理流程，提升团队协作效率。',
-    image: '/placeholder-software.jpg'
+    image: '/placeholder-software.jpg',
   },
   {
     id: 3,
@@ -62,11 +74,11 @@ const caseStudies = [
     results: {
       schedule: '35%',
       cost: '15%',
-      quality: '有效提升'
+      quality: '有效提升',
     },
     description: '在复杂的基础设施建设项目中应用关键链项目管理理念。',
-    image: '/placeholder-construction.jpg'
-  }
+    image: '/placeholder-construction.jpg',
+  },
 ];
 
 interface HomepageConfig {
@@ -82,7 +94,9 @@ interface HomepageConfig {
 
 export default function Home() {
   const [currentCase, setCurrentCase] = useState(0);
-  const [homepageConfig, setHomepageConfig] = useState<HomepageConfig | null>(null);
+  const [homepageConfig, setHomepageConfig] = useState<HomepageConfig | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -103,8 +117,15 @@ export default function Home() {
       if (data) {
         setHomepageConfig({
           hero_title: data.hero_title || 'CCPM360 - 更专业的项目管理解决方案',
-          hero_subtitle: data.hero_subtitle || '专业的关键链项目管理培训与咨询服务，帮助企业提升项目管理效率，实现项目成功交付。基于约束理论的科学方法，让项目管理更简单、更高效。',
-          statistics: data.statistics || { projects: 500, clients: 200, success_rate: 95, experience: 10 }
+          hero_subtitle:
+            data.hero_subtitle ||
+            '专业的关键链项目管理培训与咨询服务，帮助企业提升项目管理效率，实现项目成功交付。基于约束理论的科学方法，让项目管理更简单、更高效。',
+          statistics: data.statistics || {
+            projects: 500,
+            clients: 200,
+            success_rate: 95,
+            experience: 10,
+          },
         });
       }
     } catch (error) {
@@ -119,7 +140,9 @@ export default function Home() {
   };
 
   const prevCase = () => {
-    setCurrentCase((prev) => (prev - 1 + caseStudies.length) % caseStudies.length);
+    setCurrentCase(
+      (prev) => (prev - 1 + caseStudies.length) % caseStudies.length
+    );
   };
 
   return (
@@ -134,9 +157,9 @@ export default function Home() {
             <div className="flex justify-center mb-12">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
-                <Image 
-                  src="/ccpm360-logo.png" 
-                  alt="CCMP360" 
+                <Image
+                  src="/ccpm360-logo.png"
+                  alt="CCMP360"
                   width={160}
                   height={160}
                   priority={true}
@@ -171,7 +194,8 @@ export default function Home() {
               </div>
             ) : (
               <p className="mt-8 text-xl leading-9 text-blue-100 max-w-3xl mx-auto">
-                {homepageConfig?.hero_subtitle || '专业的关键链项目管理培训与咨询服务，帮助企业提升项目管理效率，实现项目成功交付。基于约束理论的科学方法，让项目管理更简单、更高效。'}
+                {homepageConfig?.hero_subtitle ||
+                  '专业的关键链项目管理培训与咨询服务，帮助企业提升项目管理效率，实现项目成功交付。基于约束理论的科学方法，让项目管理更简单、更高效。'}
               </p>
             )}
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -186,7 +210,13 @@ export default function Home() {
                 href="/services"
                 className="group border-2 border-white/30 backdrop-blur-sm text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 hover:border-white/50 transition-all duration-300 transform hover:scale-105"
               >
-                了解服务 <span aria-hidden="true" className="group-hover:translate-x-1 inline-block transition-transform">→</span>
+                了解服务{' '}
+                <span
+                  aria-hidden="true"
+                  className="group-hover:translate-x-1 inline-block transition-transform"
+                >
+                  →
+                </span>
               </Link>
             </div>
           </div>
@@ -215,10 +245,7 @@ export default function Home() {
             {services.map((service, index) => {
               const Icon = service.icon;
               return (
-                <div
-                  key={index}
-                  className="card-modern group"
-                >
+                <div key={index} className="card-modern group">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   <div className="relative z-10">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -232,7 +259,10 @@ export default function Home() {
                     </p>
                     <ul className="space-y-3 mb-8">
                       {service.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-center text-sm text-gray-600">
+                        <li
+                          key={featureIndex}
+                          className="flex items-center text-sm text-gray-600"
+                        >
                           <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
                           {feature}
                         </li>
@@ -270,7 +300,7 @@ export default function Home() {
               真实案例见证CCPM360的专业实力，为各行业客户创造价值
             </p>
           </div>
-          
+
           <div className="relative">
             <div className="overflow-hidden rounded-3xl bg-white shadow-2xl">
               <div className="grid lg:grid-cols-2 gap-0">
@@ -302,43 +332,48 @@ export default function Home() {
                       {caseStudies[currentCase].description}
                     </p>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-6">
-                    {Object.entries(caseStudies[currentCase].results).map(([key, value]) => {
-                      const labels: Record<string, string> = {
-                        efficiency: '效率提升',
-                        utilization: '资源利用率提升',
-                        delivery: '按时交付率',
-                        timeToMarket: '上市时间缩短',
-                        collaboration: '团队协作',
-                        schedule: '工期控制精度提升',
-                        cost: '成本节约',
-                        quality: '质量管控'
-                      };
-                      return (
-                        <div key={key} className="text-center p-4 bg-gradient-to-r from-orange-50 to-pink-50 rounded-xl">
-                          <div className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
-                            {value.includes('%') ? value : value}
+                    {Object.entries(caseStudies[currentCase].results).map(
+                      ([key, value]) => {
+                        const labels: Record<string, string> = {
+                          efficiency: '效率提升',
+                          utilization: '资源利用率提升',
+                          delivery: '按时交付率',
+                          timeToMarket: '上市时间缩短',
+                          collaboration: '团队协作',
+                          schedule: '工期控制精度提升',
+                          cost: '成本节约',
+                          quality: '质量管控',
+                        };
+                        return (
+                          <div
+                            key={key}
+                            className="text-center p-4 bg-gradient-to-r from-orange-50 to-pink-50 rounded-xl"
+                          >
+                            <div className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
+                              {value.includes('%') ? value : value}
+                            </div>
+                            <div className="text-sm font-medium text-gray-600 mt-1">
+                              {labels[key]}
+                            </div>
                           </div>
-                          <div className="text-sm font-medium text-gray-600 mt-1">
-                            {labels[key]}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      }
+                    )}
                   </div>
-                  
+
                   <Link
-                      href="/cases"
-                      className="btn-gradient-secondary inline-flex items-center gap-3"
-                    >
+                    href="/cases"
+                    className="btn-gradient-secondary inline-flex items-center gap-3"
+                  >
                     查看更多案例
                     <ArrowRight className="h-5 w-5" />
                   </Link>
                 </div>
               </div>
             </div>
-            
+
             {/* 轮播控制按钮 */}
             <button
               onClick={prevCase}
@@ -352,7 +387,7 @@ export default function Home() {
             >
               <ChevronRight className="h-6 w-6 text-gray-600 group-hover:text-blue-600" />
             </button>
-            
+
             {/* 轮播指示器 */}
             <div className="flex justify-center mt-12 space-x-3">
               {caseStudies.map((_, index) => (
@@ -385,7 +420,7 @@ export default function Home() {
               多年来我们用专业和实力赢得了客户的信任
             </p>
           </div>
-          
+
           {loading ? (
             <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
               {[...Array(4)].map((_, index) => (
@@ -404,7 +439,9 @@ export default function Home() {
                   <div className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent group-hover:from-yellow-400 group-hover:to-orange-400 transition-all duration-300">
                     {homepageConfig?.statistics.projects || 500}+
                   </div>
-                  <div className="text-blue-200 text-lg font-medium">服务项目</div>
+                  <div className="text-blue-200 text-lg font-medium">
+                    服务项目
+                  </div>
                 </div>
               </div>
               <div className="group text-center">
@@ -412,7 +449,9 @@ export default function Home() {
                   <div className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent group-hover:from-emerald-400 group-hover:to-cyan-400 transition-all duration-300">
                     {homepageConfig?.statistics.clients || 200}+
                   </div>
-                  <div className="text-blue-200 text-lg font-medium">合作客户</div>
+                  <div className="text-blue-200 text-lg font-medium">
+                    合作客户
+                  </div>
                 </div>
               </div>
               <div className="group text-center">
@@ -420,7 +459,9 @@ export default function Home() {
                   <div className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent group-hover:from-violet-400 group-hover:to-fuchsia-400 transition-all duration-300">
                     {homepageConfig?.statistics.success_rate || 95}%
                   </div>
-                  <div className="text-blue-200 text-lg font-medium">成功率</div>
+                  <div className="text-blue-200 text-lg font-medium">
+                    成功率
+                  </div>
                 </div>
               </div>
               <div className="group text-center">
@@ -428,7 +469,9 @@ export default function Home() {
                   <div className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent group-hover:from-sky-400 group-hover:to-blue-400 transition-all duration-300">
                     {homepageConfig?.statistics.experience || 10}+
                   </div>
-                  <div className="text-blue-200 text-lg font-medium">年经验</div>
+                  <div className="text-blue-200 text-lg font-medium">
+                    年经验
+                  </div>
                 </div>
               </div>
             </div>
@@ -449,9 +492,7 @@ export default function Home() {
                 准备开始您的
               </span>
               <br />
-              <span className="text-white">
-                项目管理转型之旅？
-              </span>
+              <span className="text-white">项目管理转型之旅？</span>
             </h2>
             <p className="mx-auto mt-8 max-w-2xl text-xl leading-9 text-blue-100">
               联系我们的专家团队，获取专业的关键链项目管理解决方案，让您的项目管理更高效、更成功
@@ -468,7 +509,13 @@ export default function Home() {
                 href="/about"
                 className="group border-2 border-white/30 backdrop-blur-sm text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 hover:border-white/50 transition-all duration-300 transform hover:scale-105"
               >
-                了解我们 <span aria-hidden="true" className="group-hover:translate-x-1 inline-block transition-transform">→</span>
+                了解我们{' '}
+                <span
+                  aria-hidden="true"
+                  className="group-hover:translate-x-1 inline-block transition-transform"
+                >
+                  →
+                </span>
               </Link>
             </div>
             <div className="mt-16 flex items-center justify-center space-x-8 text-blue-200">
