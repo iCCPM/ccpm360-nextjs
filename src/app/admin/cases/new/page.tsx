@@ -42,7 +42,7 @@ const initialForm: CaseForm = {
   solution: '',
   results: '',
   technologies: [],
-  projectDate: new Date().toISOString().split('T')[0],
+  projectDate: new Date().toISOString().split('T')[0] || '',
   duration: '',
   teamSize: '',
   location: '',
