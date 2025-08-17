@@ -6,9 +6,10 @@
  */
 
 import { execSync } from 'child_process';
-import { existsSync, statSync } from 'fs';
+import { existsSync, statSync, readFileSync } from 'fs';
 import { join } from 'path';
 import chalk from 'chalk';
+import { glob } from 'glob';
 
 const PROJECT_ROOT = process.cwd();
 
@@ -306,10 +307,6 @@ function checkPackageConsistency() {
  */
 function checkDependencyIntegrity() {
   try {
-    const { readFileSync } = require('fs');
-    const { glob } = require('glob');
-    const path = require('path');
-    
     // 读取package.json
     const packageJsonPath = join(PROJECT_ROOT, 'package.json');
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
@@ -320,9 +317,9 @@ function checkDependencyIntegrity() {
 
     // 扫描所有TypeScript和JavaScript文件
     const files = [
-      ...require('glob').sync('src/**/*.{ts,tsx,js,jsx}', { cwd: PROJECT_ROOT }),
-      ...require('glob').sync('app/**/*.{ts,tsx,js,jsx}', { cwd: PROJECT_ROOT }),
-      ...require('glob').sync('components/**/*.{ts,tsx,js,jsx}', { cwd: PROJECT_ROOT }),
+      ...glob.sync('src/**/*.{ts,tsx,js,jsx}', { cwd: PROJECT_ROOT }),
+      ...glob.sync('app/**/*.{ts,tsx,js,jsx}', { cwd: PROJECT_ROOT }),
+      ...glob.sync('components/**/*.{ts,tsx,js,jsx}', { cwd: PROJECT_ROOT }),
     ];
 
     const missingDependencies = new Set();
@@ -389,8 +386,6 @@ function checkDependencyIntegrity() {
  */
 function checkRadixDependencies() {
   try {
-    const { readFileSync } = require('fs');
-    
     // 读取package.json
     const packageJsonPath = join(PROJECT_ROOT, 'package.json');
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
@@ -414,7 +409,7 @@ function checkRadixDependencies() {
     ];
 
     // 扫描UI组件文件，检查是否使用了Radix组件
-    const uiFiles = require('glob').sync('src/components/ui/*.{ts,tsx}', { cwd: PROJECT_ROOT });
+    const uiFiles = glob.sync('src/components/ui/*.{ts,tsx}', { cwd: PROJECT_ROOT });
     const usedRadixComponents = new Set();
     const missingRadixDeps = [];
 
@@ -482,8 +477,6 @@ function checkNodeVersion() {
  */
 function checkVercelEnvVars() {
   try {
-    const { readFileSync } = require('fs');
-    
     // 检查.env.example文件
     const envExamplePath = join(PROJECT_ROOT, '.env.example');
     if (!existsSync(envExamplePath)) {
@@ -597,7 +590,6 @@ function simulateVercelBuild() {
     }
     
     // 5. 检查构建大小
-    const { statSync } = require('fs');
     const buildSize = statSync(buildDir).size;
     const maxSize = 250 * 1024 * 1024; // 250MB Vercel限制
     
