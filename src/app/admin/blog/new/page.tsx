@@ -22,7 +22,7 @@ const initialForm: BlogPostForm = {
   content: '',
   tags: [],
   status: 'draft',
-  publishDate: new Date().toISOString().split('T')[0],
+  publishDate: new Date().toISOString().split('T')[0] || '',
   featuredImage: '',
 };
 
