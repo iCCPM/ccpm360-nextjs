@@ -26,7 +26,7 @@ interface CaseStudy {
 const AdminCaseEdit = () => {
   const params = useParams();
   const router = useRouter();
-  const id = params?.id as string;
+  const id = params?.['id'] as string;
   const isNew = id === 'new';
   const { user } = useAuth();
 
