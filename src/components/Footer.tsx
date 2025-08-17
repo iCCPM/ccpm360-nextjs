@@ -24,6 +24,8 @@ export default function Footer() {
     contact_email: 'info@ccpm360.com',
     contact_phone: '400-123-4567',
     contact_address: '北京市朝阳区商务中心区',
+    business_hours_weekday: '周一至周五 9:00-18:00',
+    business_hours_weekend: '周六日及节假日 08:00~22:00',
   });
 
   // 加载联系信息
@@ -42,6 +44,8 @@ export default function Footer() {
           contact_email: data.email || prev.contact_email,
           contact_phone: data.phone || prev.contact_phone,
           contact_address: data.address || prev.contact_address,
+          business_hours_weekday: data.working_hours || prev.business_hours_weekday,
+          business_hours_weekend: data.weekend_hours || prev.business_hours_weekend,
         }));
       } catch (error) {
         console.error('加载联系信息失败:', error);
@@ -140,13 +144,14 @@ export default function Footer() {
                   {contactInfo.contact_address.split('\n')[0]}
                 </span>
               </div>
-              <div className="group flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all duration-300">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="group flex items-start gap-4 p-3 rounded-xl hover:bg-white/5 transition-all duration-300">
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
                   <Clock className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-gray-300 group-hover:text-white transition-colors">
-                  周一至周五 9:00-18:00
-                </span>
+                <div className="text-gray-300 group-hover:text-white transition-colors">
+                  <div className="mb-1">{contactInfo.business_hours_weekday}</div>
+                  <div>{contactInfo.business_hours_weekend}</div>
+                </div>
               </div>
             </div>
           </div>

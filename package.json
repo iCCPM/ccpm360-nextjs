@@ -20,6 +20,8 @@
     "test:components": "vitest run --reporter=verbose src/components",
     "security:audit": "npm audit --audit-level=high",
     "security:fix": "npm audit fix",
+    "deps:check": "node scripts/check-dependencies.js",
+    "deps:unused": "npx depcheck",
     "check": "npm run lint && npm run type-check && npm run test:run && npm run build",
     "pre-deploy": "node scripts/pre-deploy-check.js",
     "pre-deploy:quick": "npm run lint && npm run type-check && npm run build"
@@ -44,6 +46,7 @@
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "glob": "^11.0.3",
     "lucide-react": "^0.539.0",
     "next": "15.4.6",
     "nodemailer": "^7.0.5",

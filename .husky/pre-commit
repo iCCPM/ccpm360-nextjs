@@ -1,2 +1,47 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 运行lint-staged进行代码格式化和基础检查
 npx lint-staged
+
+# 运行ESLint检查
 npm run lint
+
+# 运行TypeScript严格类型检查
+echo "🔍 Running strict TypeScript check..."
+npx tsc --noEmit --strict
+
+# 检查依赖完整性
+echo "📦 Checking dependency integrity..."
+node -e "
+const fs = require('fs');
+const path = require('path');
+const glob = require('glob');
+
+const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+
+const files = glob.sync('src/**/*.{ts,tsx,js,jsx}');
+const missingDeps = [];
+
+files.forEach(file => {
+  const content = fs.readFileSync(file, 'utf8');
+  const importMatches = content.match(/import.*from\s+['\"]([^'\"]+)['\"]/g) || [];
+  
+  importMatches.forEach(match => {
+    const dep = match.match(/from\s+['\"]([^'\"]+)['\"]/)[1];
+    if (!dep.startsWith('.') && !dep.startsWith('/') && !allDeps[dep] && !allDeps[dep.split('/')[0]]) {
+      missingDeps.push(dep);
+    }
+  });
+});
+
+if (missingDeps.length > 0) {
+  console.error('❌ Missing dependencies:', [...new Set(missingDeps)]);
+  process.exit(1);
+} else {
+  console.log('✅ All dependencies are properly declared');
+}
+"
+
+echo "✅ Pre-commit checks completed successfully!"

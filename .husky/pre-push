@@ -4,7 +4,21 @@
 # CCPM360 推送前质量控制检查
 echo "🚀 执行推送前质量控制检查..."
 
+# 检查工作目录是否干净
+echo "📋 检查工作目录状态..."
+if [ -n "$(git status --porcelain)" ]; then
+  echo "❌ 工作目录不干净，存在未提交的更改"
+  echo "💡 请先提交或暂存所有更改"
+  exit 1
+fi
+
+# 检查当前分支
+echo "🌿 检查当前分支..."
+current_branch=$(git branch --show-current)
+echo "当前分支: $current_branch"
+
 # 执行完整的部署前检查
+echo "🔍 执行完整的部署前检查..."
 npm run pre-deploy
 
 # 如果检查失败，阻止推送
@@ -14,5 +28,29 @@ if [ $? -ne 0 ]; then
   echo "📖 查看 QUALITY_CONTROL.md 获取详细指南"
   exit 1
 fi
+
+# 额外的安全检查
+echo "🔒 执行安全检查..."
+
+# 检查是否有敏感信息
+echo "🔍 检查敏感信息..."
+if grep -r "API_KEY\|SECRET\|PASSWORD\|TOKEN" src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" | grep -v "process.env" | grep -v "//" | grep -v "\*" > /dev/null; then
+  echo "❌ 发现可能的敏感信息硬编码"
+  echo "💡 请使用环境变量存储敏感信息"
+  exit 1
+fi
+
+# 检查构建产物大小
+echo "📦 检查构建产物大小..."
+build_size=$(du -sh .next 2>/dev/null | cut -f1 || echo "未知")
+echo "构建产物大小: $build_size"
+
+# 最终确认
+echo "✅ 所有质量控制检查通过！"
+echo "📊 推送摘要:"
+echo "  - 分支: $current_branch"
+echo "  - 构建大小: $build_size"
+echo "  - 检查项目: 代码质量、类型安全、依赖完整性、安全性"
+echo "🚀 继续推送到远程仓库..."
 
 echo "✅ 质量控制检查通过，继续推送..."

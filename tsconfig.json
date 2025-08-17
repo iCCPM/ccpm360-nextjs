@@ -1,32 +1,94 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    // 目标版本 - 与Vercel Node.js 18+兼容
+    "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
+    
+    // 基础配置
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    // 模块解析
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    
+    // JSX配置
     "jsx": "preserve",
+    "jsxImportSource": "react",
+    
+    // 性能优化
     "incremental": true,
+    "tsBuildInfoFile": ".next/cache/tsconfig.tsbuildinfo",
+    
+    // 严格类型检查
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
+    
+    // 额外的严格检查
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    
+    // Next.js插件
     "plugins": [
       {
         "name": "next"
       }
     ],
+    
+    // 路径映射
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/styles/*": ["./src/styles/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/**/*",
+    "pages/**/*",
+    "components/**/*",
+    "lib/**/*",
+    "utils/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out",
+    "dist",
+    "build",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ],
+  "ts-node": {
+    "esm": true
+  }
 }

@@ -82,8 +82,65 @@ const CHECKS = {
       {
         name: 'package.json一致性',
         command: null,
-        required: false,
+        required: true,
         custom: checkPackageConsistency,
+      },
+      {
+        name: '依赖完整性验证',
+        command: null,
+        required: true,
+        custom: checkDependencyIntegrity,
+      },
+      {
+        name: 'Radix UI组件依赖检查',
+        command: null,
+        required: true,
+        custom: checkRadixDependencies,
+      },
+    ],
+  },
+  // TypeScript严格检查
+  typeScriptCheck: {
+    name: 'TypeScript严格检查',
+    checks: [
+      {
+        name: '严格类型检查',
+        command: 'npx tsc --noEmit --strict',
+        required: true,
+      },
+      {
+        name: '生产环境构建检查',
+        command: 'npm run build',
+        required: true,
+      },
+    ],
+  },
+  // Vercel环境模拟
+  vercelSimulation: {
+    name: 'Vercel环境模拟',
+    checks: [
+      {
+        name: 'Node.js版本检查',
+        command: null,
+        required: true,
+        custom: checkNodeVersion,
+      },
+      {
+        name: '环境变量验证',
+        command: null,
+        required: true,
+        custom: checkVercelEnvVars,
+      },
+      {
+        name: '构建缓存清理',
+        command: 'npm run clean',
+        required: false,
+      },
+      {
+        name: 'Vercel构建模拟',
+        command: null,
+        required: true,
+        custom: simulateVercelBuild,
       },
     ],
   },
@@ -241,6 +298,322 @@ function checkPackageConsistency() {
     return { success: true, message: 'package.json 一致性检查通过' };
   } catch (error) {
     return { success: false, error: `依赖检查失败: ${error.message}` };
+  }
+}
+
+/**
+ * 检查依赖完整性 - 扫描代码中的import语句并验证依赖是否在package.json中
+ */
+function checkDependencyIntegrity() {
+  try {
+    const { readFileSync } = require('fs');
+    const { glob } = require('glob');
+    const path = require('path');
+    
+    // 读取package.json
+    const packageJsonPath = join(PROJECT_ROOT, 'package.json');
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+    const allDependencies = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+    };
+
+    // 扫描所有TypeScript和JavaScript文件
+    const files = [
+      ...require('glob').sync('src/**/*.{ts,tsx,js,jsx}', { cwd: PROJECT_ROOT }),
+      ...require('glob').sync('app/**/*.{ts,tsx,js,jsx}', { cwd: PROJECT_ROOT }),
+      ...require('glob').sync('components/**/*.{ts,tsx,js,jsx}', { cwd: PROJECT_ROOT }),
+    ];
+
+    const missingDependencies = new Set();
+    const importRegex = /import\s+.*?\s+from\s+['"]([^'"]+)['"]/g;
+    const requireRegex = /require\(['"]([^'"]+)['"]\)/g;
+
+    for (const file of files) {
+      const filePath = join(PROJECT_ROOT, file);
+      if (!existsSync(filePath)) continue;
+      
+      const content = readFileSync(filePath, 'utf8');
+      
+      // 检查import语句
+      let match;
+      while ((match = importRegex.exec(content)) !== null) {
+        const importPath = match[1];
+        
+        // 跳过相对路径和内置模块
+        if (importPath.startsWith('.') || importPath.startsWith('/')) continue;
+        if (['fs', 'path', 'crypto', 'util', 'os', 'child_process'].includes(importPath)) continue;
+        
+        // 提取包名（处理scoped packages）
+        const packageName = importPath.startsWith('@') 
+          ? importPath.split('/').slice(0, 2).join('/')
+          : importPath.split('/')[0];
+        
+        if (!allDependencies[packageName]) {
+          missingDependencies.add(packageName);
+        }
+      }
+      
+      // 检查require语句
+      while ((match = requireRegex.exec(content)) !== null) {
+        const requirePath = match[1];
+        
+        if (requirePath.startsWith('.') || requirePath.startsWith('/')) continue;
+        if (['fs', 'path', 'crypto', 'util', 'os', 'child_process'].includes(requirePath)) continue;
+        
+        const packageName = requirePath.startsWith('@') 
+          ? requirePath.split('/').slice(0, 2).join('/')
+          : requirePath.split('/')[0];
+        
+        if (!allDependencies[packageName]) {
+          missingDependencies.add(packageName);
+        }
+      }
+    }
+
+    if (missingDependencies.size > 0) {
+      return {
+        success: false,
+        error: `缺失依赖: ${Array.from(missingDependencies).join(', ')}`,
+      };
+    }
+
+    return { success: true, message: '依赖完整性检查通过' };
+  } catch (error) {
+    return { success: false, error: `依赖完整性检查失败: ${error.message}` };
+  }
+}
+
+/**
+ * 检查Radix UI组件依赖
+ */
+function checkRadixDependencies() {
+  try {
+    const { readFileSync } = require('fs');
+    
+    // 读取package.json
+    const packageJsonPath = join(PROJECT_ROOT, 'package.json');
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+    const allDependencies = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+    };
+
+    // 常用的Radix UI组件依赖
+    const radixComponents = [
+      '@radix-ui/react-switch',
+      '@radix-ui/react-checkbox',
+      '@radix-ui/react-radio-group',
+      '@radix-ui/react-select',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tooltip',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-accordion',
+    ];
+
+    // 扫描UI组件文件，检查是否使用了Radix组件
+    const uiFiles = require('glob').sync('src/components/ui/*.{ts,tsx}', { cwd: PROJECT_ROOT });
+    const usedRadixComponents = new Set();
+    const missingRadixDeps = [];
+
+    for (const file of uiFiles) {
+      const filePath = join(PROJECT_ROOT, file);
+      if (!existsSync(filePath)) continue;
+      
+      const content = readFileSync(filePath, 'utf8');
+      
+      for (const component of radixComponents) {
+        if (content.includes(component)) {
+          usedRadixComponents.add(component);
+          if (!allDependencies[component]) {
+            missingRadixDeps.push(component);
+          }
+        }
+      }
+    }
+
+    if (missingRadixDeps.length > 0) {
+      return {
+        success: false,
+        error: `缺失Radix UI依赖: ${missingRadixDeps.join(', ')}`,
+      };
+    }
+
+    return { 
+      success: true, 
+      message: `Radix UI依赖检查通过 (使用了 ${usedRadixComponents.size} 个组件)` 
+    };
+  } catch (error) {
+    return { success: false, error: `Radix UI依赖检查失败: ${error.message}` };
+  }
+}
+
+/**
+ * 检查Node.js版本是否与Vercel兼容
+ */
+function checkNodeVersion() {
+  try {
+    const nodeVersion = process.version;
+    const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0]);
+    
+    // Vercel支持的Node.js版本
+    const supportedVersions = [18, 20, 22];
+    
+    if (!supportedVersions.includes(majorVersion)) {
+      return {
+        success: false,
+        error: `当前Node.js版本 ${nodeVersion} 不被Vercel支持。支持的版本: ${supportedVersions.map(v => `${v}.x`).join(', ')}`,
+      };
+    }
+    
+    return {
+      success: true,
+      message: `Node.js版本 ${nodeVersion} 与Vercel兼容`,
+    };
+  } catch (error) {
+    return { success: false, error: `Node.js版本检查失败: ${error.message}` };
+  }
+}
+
+/**
+ * 检查Vercel环境变量
+ */
+function checkVercelEnvVars() {
+  try {
+    const { readFileSync } = require('fs');
+    
+    // 检查.env.example文件
+    const envExamplePath = join(PROJECT_ROOT, '.env.example');
+    if (!existsSync(envExamplePath)) {
+      return {
+        success: false,
+        error: '.env.example 文件不存在，无法验证环境变量配置',
+      };
+    }
+    
+    const envExample = readFileSync(envExamplePath, 'utf8');
+    const requiredVars = [];
+    
+    // 提取必需的环境变量
+    const lines = envExample.split('\n');
+    for (const line of lines) {
+      if (line.trim() && !line.trim().startsWith('#')) {
+        const varName = line.split('=')[0].trim();
+        if (varName) {
+          requiredVars.push(varName);
+        }
+      }
+    }
+    
+    // 检查.env.local文件
+    const envLocalPath = join(PROJECT_ROOT, '.env.local');
+    const missingVars = [];
+    
+    if (existsSync(envLocalPath)) {
+      const envLocal = readFileSync(envLocalPath, 'utf8');
+      for (const varName of requiredVars) {
+        if (!envLocal.includes(`${varName}=`)) {
+          missingVars.push(varName);
+        }
+      }
+    } else {
+      missingVars.push(...requiredVars);
+    }
+    
+    if (missingVars.length > 0) {
+      return {
+        success: false,
+        error: `缺失环境变量: ${missingVars.join(', ')}`,
+      };
+    }
+    
+    return {
+      success: true,
+      message: `环境变量配置完整 (${requiredVars.length} 个变量)`,
+    };
+  } catch (error) {
+    return { success: false, error: `环境变量检查失败: ${error.message}` };
+  }
+}
+
+/**
+ * 模拟Vercel构建过程
+ */
+function simulateVercelBuild() {
+  try {
+    console.log('\n🔄 模拟Vercel构建过程...');
+    
+    // 1. 清理构建缓存
+    console.log('1. 清理构建缓存...');
+    const cleanResult = executeCommand('rm -rf .next', { silent: true });
+    
+    // 2. 安装依赖（模拟Vercel的npm ci）
+    console.log('2. 验证依赖安装...');
+    const installResult = executeCommand('npm ci --production=false', { silent: true });
+    if (!installResult.success) {
+      return {
+        success: false,
+        error: `依赖安装失败: ${installResult.error}`,
+      };
+    }
+    
+    // 3. 运行构建
+    console.log('3. 执行生产构建...');
+    const buildResult = executeCommand('npm run build', { silent: true });
+    if (!buildResult.success) {
+      return {
+        success: false,
+        error: `构建失败: ${buildResult.error}`,
+      };
+    }
+    
+    // 4. 检查构建产物
+    console.log('4. 验证构建产物...');
+    const buildDir = join(PROJECT_ROOT, '.next');
+    if (!existsSync(buildDir)) {
+      return {
+        success: false,
+        error: '构建目录不存在',
+      };
+    }
+    
+    // 检查关键文件
+    const criticalFiles = [
+      '.next/build-manifest.json',
+      '.next/static',
+      '.next/server',
+    ];
+    
+    for (const file of criticalFiles) {
+      const filePath = join(PROJECT_ROOT, file);
+      if (!existsSync(filePath)) {
+        return {
+          success: false,
+          error: `关键构建文件缺失: ${file}`,
+        };
+      }
+    }
+    
+    // 5. 检查构建大小
+    const { statSync } = require('fs');
+    const buildSize = statSync(buildDir).size;
+    const maxSize = 250 * 1024 * 1024; // 250MB Vercel限制
+    
+    if (buildSize > maxSize) {
+      return {
+        success: false,
+        error: `构建产物过大: ${(buildSize / 1024 / 1024).toFixed(2)}MB (限制: 250MB)`,
+      };
+    }
+    
+    return {
+      success: true,
+      message: `Vercel构建模拟成功 (构建大小: ${(buildSize / 1024 / 1024).toFixed(2)}MB)`,
+    };
+  } catch (error) {
+    return { success: false, error: `Vercel构建模拟失败: ${error.message}` };
   }
 }
 
