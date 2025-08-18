@@ -1,5 +1,6 @@
 'use client';
 
+// @ts-expect-error: React is required for JSX
 import React, {
   createContext,
   useContext,

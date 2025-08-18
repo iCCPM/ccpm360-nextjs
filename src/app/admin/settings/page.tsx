@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+// @ts-expect-error: React is required for JSX
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
   Settings as SettingsIcon,
@@ -90,14 +91,14 @@ export default function SettingsPage() {
         setUser(user);
 
         // 从用户元数据加载设置（如果存在）
-        const metadata = user.user_metadata || {};
+        const metadata = user?.user_metadata || {};
 
-        if (metadata.security_settings) {
-          setSecuritySettings(metadata.security_settings);
+        if (metadata?.['security_settings']) {
+          setSecuritySettings(metadata?.['security_settings']);
         }
 
-        if (metadata.notification_settings) {
-          setNotificationSettings(metadata.notification_settings);
+        if (metadata?.['notification_settings']) {
+          setNotificationSettings(metadata?.['notification_settings']);
         }
       }
     } catch (error) {
@@ -595,7 +596,7 @@ export default function SettingsPage() {
               <label className="text-sm font-medium text-gray-700">
                 邮箱地址
               </label>
-              <p className="mt-1 text-gray-900">{user?.email}</p>
+              <p className="mt-1 text-gray-900">{user?.email || '未知'}</p>
             </div>
 
             <div>

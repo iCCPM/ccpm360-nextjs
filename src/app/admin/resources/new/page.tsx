@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Save, ArrowLeft, Eye, Upload, Tag, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -34,7 +34,7 @@ const initialForm: ResourceForm = {
   fileUrl: '',
   downloadUrl: '',
   externalUrl: '',
-  publishDate: new Date().toISOString().split('T')[0],
+  publishDate: new Date().toISOString().split('T')[0] || '',
   status: 'draft',
   featured: false,
   fileSize: '',

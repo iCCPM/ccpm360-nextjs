@@ -1,5 +1,7 @@
 'use client';
 
+// @ts-expect-error: React is required for JSX
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -12,7 +14,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
 const services = [
@@ -307,8 +308,8 @@ export default function Home() {
                 <div className="relative h-80 lg:h-96">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-purple-600/20 z-10"></div>
                   <Image
-                    src={caseStudies[currentCase].image}
-                    alt={caseStudies[currentCase].project}
+                    src={caseStudies[currentCase]?.image || ''}
+                    alt={caseStudies[currentCase]?.project || ''}
                     fill
                     className="object-cover transition-transform duration-700 hover:scale-110"
                   />
@@ -318,49 +319,49 @@ export default function Home() {
                 <div className="p-8 lg:p-12 space-y-6">
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-100 to-purple-100 px-4 py-2 text-sm font-medium text-blue-800">
-                      {caseStudies[currentCase].industry}
+                      {caseStudies[currentCase]?.industry}
                     </span>
                   </div>
                   <div>
                     <h3 className="text-3xl font-bold text-gray-900 mb-3 leading-tight">
-                      {caseStudies[currentCase].client}
+                      {caseStudies[currentCase]?.client}
                     </h3>
                     <h4 className="text-xl font-semibold text-gray-700 mb-4">
-                      {caseStudies[currentCase].project}
+                      {caseStudies[currentCase]?.project}
                     </h4>
                     <p className="text-lg text-gray-600 leading-relaxed">
-                      {caseStudies[currentCase].description}
+                      {caseStudies[currentCase]?.description}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-6">
-                    {Object.entries(caseStudies[currentCase].results).map(
-                      ([key, value]) => {
-                        const labels: Record<string, string> = {
-                          efficiency: '效率提升',
-                          utilization: '资源利用率提升',
-                          delivery: '按时交付率',
-                          timeToMarket: '上市时间缩短',
-                          collaboration: '团队协作',
-                          schedule: '工期控制精度提升',
-                          cost: '成本节约',
-                          quality: '质量管控',
-                        };
-                        return (
-                          <div
-                            key={key}
-                            className="text-center p-4 bg-gradient-to-r from-orange-50 to-pink-50 rounded-xl"
-                          >
-                            <div className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
-                              {value.includes('%') ? value : value}
-                            </div>
-                            <div className="text-sm font-medium text-gray-600 mt-1">
-                              {labels[key]}
-                            </div>
+                    {Object.entries(
+                      caseStudies[currentCase]?.results || {}
+                    ).map(([key, value]) => {
+                      const labels: Record<string, string> = {
+                        efficiency: '效率提升',
+                        utilization: '资源利用率提升',
+                        delivery: '按时交付率',
+                        timeToMarket: '上市时间缩短',
+                        collaboration: '团队协作',
+                        schedule: '工期控制精度提升',
+                        cost: '成本节约',
+                        quality: '质量管控',
+                      };
+                      return (
+                        <div
+                          key={key}
+                          className="text-center p-4 bg-gradient-to-r from-orange-50 to-pink-50 rounded-xl"
+                        >
+                          <div className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
+                            {value.includes('%') ? value : value}
                           </div>
-                        );
-                      }
-                    )}
+                          <div className="text-sm font-medium text-gray-600 mt-1">
+                            {labels[key]}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <Link
@@ -437,7 +438,7 @@ export default function Home() {
               <div className="group text-center">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
                   <div className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent group-hover:from-yellow-400 group-hover:to-orange-400 transition-all duration-300">
-                    {homepageConfig?.statistics.projects || 500}+
+                    {homepageConfig?.statistics?.projects || 500}+
                   </div>
                   <div className="text-blue-200 text-lg font-medium">
                     服务项目
@@ -447,7 +448,7 @@ export default function Home() {
               <div className="group text-center">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
                   <div className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent group-hover:from-emerald-400 group-hover:to-cyan-400 transition-all duration-300">
-                    {homepageConfig?.statistics.clients || 200}+
+                    {homepageConfig?.statistics?.clients || 200}+
                   </div>
                   <div className="text-blue-200 text-lg font-medium">
                     合作客户
@@ -457,7 +458,7 @@ export default function Home() {
               <div className="group text-center">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
                   <div className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent group-hover:from-violet-400 group-hover:to-fuchsia-400 transition-all duration-300">
-                    {homepageConfig?.statistics.success_rate || 95}%
+                    {homepageConfig?.statistics?.success_rate || 95}%
                   </div>
                   <div className="text-blue-200 text-lg font-medium">
                     成功率
@@ -467,7 +468,7 @@ export default function Home() {
               <div className="group text-center">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
                   <div className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent group-hover:from-sky-400 group-hover:to-blue-400 transition-all duration-300">
-                    {homepageConfig?.statistics.experience || 10}+
+                    {homepageConfig?.statistics?.experience || 10}+
                   </div>
                   <div className="text-blue-200 text-lg font-medium">
                     年经验

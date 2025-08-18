@@ -1,19 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useAuthStore } from '../authStore';
-import { supabase } from '@/lib/supabase';
+import { AuthService } from '@/services/authService';
 
-// Mock Supabase
-vi.mock('@/lib/supabase');
-
-// Mock error handler
-vi.mock('@/utils/errorHandler', () => ({
-  handleSupabaseError: vi.fn((error) => ({
-    message: error.message || 'Unknown error',
-  })),
+// Mock AuthService
+vi.mock('@/services/authService', () => ({
+  AuthService: {
+    login: vi.fn(),
+    logout: vi.fn(),
+    getCurrentUser: vi.fn(),
+    onAuthStateChange: vi.fn(() => ({ data: {} })),
+  },
 }));
 
 describe('authStore', () => {
-  const mockSupabase = vi.mocked(supabase);
+  const mockAuthService = vi.mocked(AuthService);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -21,7 +21,6 @@ describe('authStore', () => {
     useAuthStore.setState({
       user: null,
       isLoading: false,
-      isAuthenticated: false,
     });
   });
 
@@ -34,7 +33,7 @@ describe('authStore', () => {
       const mockUser = {
         id: '1',
         email: 'admin@test.com',
-        role: 'admin',
+        role: 'admin' as const,
         name: 'Admin User',
         avatar_url: null,
         created_at: new Date().toISOString(),
@@ -42,39 +41,29 @@ describe('authStore', () => {
         is_active: true,
       };
 
-      // Mock successful auth
-      mockSupabase.auth.signInWithPassword.mockResolvedValue({
-        data: {
-          user: { id: '1', email: 'admin@test.com' },
-          session: { access_token: 'token' },
-        },
-        error: null,
+      // Mock successful login
+      mockAuthService.login.mockResolvedValue({
+        success: true,
+        user: mockUser,
       });
-
-      // Mock successful admin user fetch
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: mockUser,
-          error: null,
-        }),
-      } as any);
 
       const { login } = useAuthStore.getState();
       const result = await login('admin@test.com', 'password');
 
       expect(result.success).toBe(true);
       expect(useAuthStore.getState().user).toEqual(mockUser);
-      expect(useAuthStore.getState().isAuthenticated).toBe(true);
       expect(useAuthStore.getState().isLoading).toBe(false);
+      expect(mockAuthService.login).toHaveBeenCalledWith(
+        'admin@test.com',
+        'password'
+      );
     });
 
     it('should handle authentication error', async () => {
-      // Mock auth error
-      mockSupabase.auth.signInWithPassword.mockResolvedValue({
-        data: { user: null, session: null },
-        error: { message: 'Invalid credentials' },
+      // Mock login error
+      mockAuthService.login.mockResolvedValue({
+        success: false,
+        error: 'Invalid credentials',
       });
 
       const { login } = useAuthStore.getState();
@@ -83,53 +72,50 @@ describe('authStore', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe('Invalid credentials');
       expect(useAuthStore.getState().user).toBeNull();
-      expect(useAuthStore.getState().isAuthenticated).toBe(false);
       expect(useAuthStore.getState().isLoading).toBe(false);
+      expect(mockAuthService.login).toHaveBeenCalledWith(
+        'admin@test.com',
+        'wrongpassword'
+      );
     });
 
     it('should handle non-admin user', async () => {
-      // Mock successful auth but no admin user
-      mockSupabase.auth.signInWithPassword.mockResolvedValue({
-        data: {
-          user: { id: '1', email: 'user@test.com' },
-          session: { access_token: 'token' },
-        },
-        error: null,
+      // Mock login failure for non-admin user
+      mockAuthService.login.mockResolvedValue({
+        success: false,
+        error: '您没有管理员权限',
       });
-
-      // Mock no admin user found
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: null,
-          error: null,
-        }),
-      } as any);
-
-      // Mock signOut
-      mockSupabase.auth.signOut.mockResolvedValue({ error: null });
 
       const { login } = useAuthStore.getState();
       const result = await login('user@test.com', 'password');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('无效的管理员账户');
-      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
+      expect(result.error).toBe('您没有管理员权限');
+      expect(useAuthStore.getState().user).toBeNull();
+      expect(useAuthStore.getState().isLoading).toBe(false);
+      expect(mockAuthService.login).toHaveBeenCalledWith(
+        'user@test.com',
+        'password'
+      );
     });
 
     it('should handle network error', async () => {
       // Mock network error
-      mockSupabase.auth.signInWithPassword.mockRejectedValue(
-        new Error('Network error')
-      );
+      mockAuthService.login.mockRejectedValue(new Error('Network error'));
 
       const { login } = useAuthStore.getState();
-      const result = await login('admin@test.com', 'password');
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Network error');
+      // Expect the login method to throw the error
+      await expect(login('admin@test.com', 'password')).rejects.toThrow(
+        'Network error'
+      );
+
+      expect(useAuthStore.getState().user).toBeNull();
       expect(useAuthStore.getState().isLoading).toBe(false);
+      expect(mockAuthService.login).toHaveBeenCalledWith(
+        'admin@test.com',
+        'password'
+      );
     });
   });
 
@@ -150,15 +136,14 @@ describe('authStore', () => {
         isAuthenticated: true,
       });
 
-      // Mock successful signOut
-      mockSupabase.auth.signOut.mockResolvedValue({ error: null });
+      // Mock successful logout
+      mockAuthService.logout.mockResolvedValue();
 
       const { logout } = useAuthStore.getState();
       await logout();
 
       expect(useAuthStore.getState().user).toBeNull();
-      expect(useAuthStore.getState().isAuthenticated).toBe(false);
-      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
+      expect(mockAuthService.logout).toHaveBeenCalled();
     });
   });
 
@@ -175,44 +160,24 @@ describe('authStore', () => {
         is_active: true,
       };
 
-      // Mock getUser
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: {
-          user: { id: '1', email: 'admin@test.com' },
-        },
-        error: null,
-      });
-
-      // Mock admin user fetch
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: mockUser,
-          error: null,
-        }),
-      } as any);
+      // Mock getCurrentUser
+      mockAuthService.getCurrentUser.mockResolvedValue(mockUser);
 
       const { checkAuth } = useAuthStore.getState();
       await checkAuth();
 
       expect(useAuthStore.getState().user).toEqual(mockUser);
-      expect(useAuthStore.getState().isAuthenticated).toBe(true);
       expect(useAuthStore.getState().isLoading).toBe(false);
     });
 
     it('should clear state when no user', async () => {
       // Mock no user
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      });
+      mockAuthService.getCurrentUser.mockResolvedValue(null);
 
       const { checkAuth } = useAuthStore.getState();
       await checkAuth();
 
       expect(useAuthStore.getState().user).toBeNull();
-      expect(useAuthStore.getState().isAuthenticated).toBe(false);
       expect(useAuthStore.getState().isLoading).toBe(false);
     });
   });

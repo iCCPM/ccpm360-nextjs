@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+// @ts-expect-error: React is required for JSX
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock, User, Tag } from 'lucide-react';
@@ -543,7 +544,7 @@ CCPM作为一种先进的项目管理方法论，在处理复杂项目和多项�
 
 export default function BlogPostPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params['slug'] as string;
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);

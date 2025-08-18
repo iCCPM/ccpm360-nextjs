@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+// @ts-expect-error: React is required for JSX
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -335,7 +336,7 @@ export default function RolesPage() {
       if (!categories[permission.category]) {
         categories[permission.category] = [];
       }
-      categories[permission.category].push(permission);
+      categories[permission.category]?.push(permission);
     });
     return categories;
   };

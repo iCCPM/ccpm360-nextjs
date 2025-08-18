@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({
       error,
       errorInfo,
@@ -45,7 +45,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
     });
 
     // 在生产环境中，可以将错误发送到错误监控服务
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env['NODE_ENV'] === 'production') {
       // 这里可以集成 Sentry、LogRocket 等错误监控服务
       // reportErrorToService(error, errorInfo);
     }
@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
     window.location.href = '/';
   };
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       // 如果提供了自定义fallback，使用它
       if (this.props.fallback) {
@@ -83,7 +83,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
             </p>
 
             {/* 开发环境显示错误详情 */}
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {process.env['NODE_ENV'] === 'development' && this.state.error && (
               <div className="mb-6 p-4 bg-gray-100 rounded-lg text-left">
                 <h3 className="font-medium text-gray-900 mb-2">错误详情：</h3>
                 <p className="text-sm text-red-600 font-mono break-all">

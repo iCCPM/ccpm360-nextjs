@@ -65,8 +65,8 @@ const defaultConfig: CasesPageConfig = {
 
 // 初始化 Supabase 客户端
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env['NEXT_PUBLIC_SUPABASE_URL']!,
+  process.env['SUPABASE_SERVICE_ROLE_KEY']!
 );
 
 // GET 方法 - 获取案例页面配置

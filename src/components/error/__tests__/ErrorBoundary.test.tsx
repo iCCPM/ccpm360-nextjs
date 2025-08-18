@@ -132,8 +132,8 @@ describe('ErrorBoundary', () => {
   });
 
   it('should show error details in development mode', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    const originalEnv = process.env['NODE_ENV'];
+    process.env['NODE_ENV'] = 'development';
 
     render(
       <ErrorBoundary>
@@ -145,12 +145,12 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('Test error')).toBeInTheDocument();
     expect(screen.getByText('查看堆栈跟踪')).toBeInTheDocument();
 
-    process.env.NODE_ENV = originalEnv;
+    process.env['NODE_ENV'] = originalEnv;
   });
 
   it('should not show error details in production mode', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    const originalEnv = process.env['NODE_ENV'];
+    process.env['NODE_ENV'] = 'production';
 
     render(
       <ErrorBoundary>
@@ -161,7 +161,7 @@ describe('ErrorBoundary', () => {
     expect(screen.queryByText('错误详情：')).not.toBeInTheDocument();
     expect(screen.queryByText('Test error')).not.toBeInTheDocument();
 
-    process.env.NODE_ENV = originalEnv;
+    process.env['NODE_ENV'] = originalEnv;
   });
 });
 

@@ -73,10 +73,10 @@ export default function ProfilePage() {
         const userProfile: UserProfile = {
           id: user.id,
           email: user.email || '',
-          full_name: user.user_metadata?.full_name || '',
-          avatar_url: user.user_metadata?.avatar_url || '',
-          bio: user.user_metadata?.bio || '',
-          phone: user.user_metadata?.phone || '',
+          full_name: user.user_metadata?.['full_name'] || '',
+          avatar_url: user.user_metadata?.['avatar_url'] || '',
+          bio: user.user_metadata?.['bio'] || '',
+          phone: user.user_metadata?.['phone'] || '',
           created_at: user.created_at,
           updated_at: user.updated_at || undefined,
         };

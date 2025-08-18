@@ -3,7 +3,7 @@
     // 目标版本 - 与Vercel Node.js 18+兼容
     "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
-    
+
     // 基础配置
     "allowJs": true,
     "skipLibCheck": true,
@@ -12,21 +12,21 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    
+
     // 模块解析
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    
+
     // JSX配置
     "jsx": "preserve",
     "jsxImportSource": "react",
-    
+
     // 性能优化
     "incremental": true,
     "tsBuildInfoFile": ".next/cache/tsconfig.tsbuildinfo",
-    
+
     // 严格类型检查
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -36,7 +36,7 @@
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    
+
     // 额外的严格检查
     "strictNullChecks": true,
     "strictFunctionTypes": true,
@@ -45,14 +45,14 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
-    
+
     // Next.js插件
     "plugins": [
       {
         "name": "next"
       }
     ],
-    
+
     // 路径映射
     "baseUrl": ".",
     "paths": {

@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // 创建管理员客户端（使用service role key绕过RLS）
 const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env['NEXT_PUBLIC_SUPABASE_URL']!,
+  process.env['SUPABASE_SERVICE_ROLE_KEY']!
 );
 
 // 首页配置的数据类型

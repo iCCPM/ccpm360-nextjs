@@ -23,10 +23,10 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body className="antialiased">
         {/* Umami Analytics 追踪 */}
-        {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
+        {process.env['NEXT_PUBLIC_UMAMI_WEBSITE_ID'] && (
           <UmamiTracker
-            websiteId={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-            src={process.env.NEXT_PUBLIC_UMAMI_SRC || '/umami.js'}
+            websiteId={process.env['NEXT_PUBLIC_UMAMI_WEBSITE_ID']}
+            src={process.env['NEXT_PUBLIC_UMAMI_SRC'] || '/umami.js'}
           />
         )}
 

@@ -1,5 +1,6 @@
 'use client';
 
+// @ts-expect-error: React is required for JSX
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -44,8 +45,10 @@ export default function Footer() {
           contact_email: data.email || prev.contact_email,
           contact_phone: data.phone || prev.contact_phone,
           contact_address: data.address || prev.contact_address,
-          business_hours_weekday: data.working_hours || prev.business_hours_weekday,
-          business_hours_weekend: data.weekend_hours || prev.business_hours_weekend,
+          business_hours_weekday:
+            data.working_hours || prev.business_hours_weekday,
+          business_hours_weekend:
+            data.weekend_hours || prev.business_hours_weekend,
         }));
       } catch (error) {
         console.error('加载联系信息失败:', error);
@@ -149,7 +152,9 @@ export default function Footer() {
                   <Clock className="h-5 w-5 text-white" />
                 </div>
                 <div className="text-gray-300 group-hover:text-white transition-colors">
-                  <div className="mb-1">{contactInfo.business_hours_weekday}</div>
+                  <div className="mb-1">
+                    {contactInfo.business_hours_weekday}
+                  </div>
                   <div>{contactInfo.business_hours_weekend}</div>
                 </div>
               </div>

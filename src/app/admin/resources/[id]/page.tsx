@@ -37,7 +37,7 @@ const AdminResourceEditPage = () => {
   const router = useRouter();
   const params = useParams();
   const { user } = useAuth();
-  const isNew = params.id === 'new';
+  const isNew = params?.['id'] === 'new';
 
   const [form, setForm] = useState<ResourceForm>({
     title: '',
@@ -67,17 +67,17 @@ const AdminResourceEditPage = () => {
     if (!isNew) {
       loadResource();
     }
-  }, [params.id, isNew]);
+  }, [params?.['id'], isNew]);
 
   const loadResource = async () => {
-    if (!params.id || params.id === 'new') return;
+    if (!params?.['id'] || params?.['id'] === 'new') return;
 
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('download_resources')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', params?.['id'])
         .single();
 
       if (error) {
@@ -112,19 +112,19 @@ const AdminResourceEditPage = () => {
     const newErrors: Record<string, string> = {};
 
     if (!form.title.trim()) {
-      newErrors.title = '请输入资源标题';
+      newErrors['title'] = '请输入资源标题';
     }
 
     if (!form.description.trim()) {
-      newErrors.description = '请输入资源描述';
+      newErrors['description'] = '请输入资源描述';
     }
 
     if (!form.category) {
-      newErrors.category = '请选择资源分类';
+      newErrors['category'] = '请选择资源分类';
     }
 
     if (isNew && !form.file) {
-      newErrors.file = '请上传资源文件';
+      newErrors['file'] = '请上传资源文件';
     }
 
     setErrors(newErrors);
@@ -134,7 +134,7 @@ const AdminResourceEditPage = () => {
   const handleFileSelect = (file: File) => {
     if (file.size > 50 * 1024 * 1024) {
       // 50MB limit
-      setErrors({ ...errors, file: '文件大小不能超过50MB' });
+      setErrors({ ...errors, ['file']: '文件大小不能超过50MB' });
       return;
     }
 
@@ -148,7 +148,7 @@ const AdminResourceEditPage = () => {
 
     // Clear file error
     const newErrors = { ...errors };
-    delete newErrors.file;
+    delete newErrors['file'];
     setErrors(newErrors);
   };
 
@@ -243,7 +243,7 @@ const AdminResourceEditPage = () => {
         const { error } = await supabase
           .from('download_resources')
           .update(resourceData)
-          .eq('id', params.id);
+          .eq('id', params?.['id']);
 
         if (error) {
           throw error;
@@ -253,7 +253,7 @@ const AdminResourceEditPage = () => {
       router.push('/admin/resources');
     } catch (error: any) {
       console.error('Failed to save resource:', error);
-      setErrors({ submit: error.message || '保存失败，请重试' });
+      setErrors({ ['submit']: error.message || '保存失败，请重试' });
     } finally {
       setLoading(false);
       setUploading(false);
@@ -346,14 +346,14 @@ const AdminResourceEditPage = () => {
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.title ? 'border-red-300' : 'border-gray-300'
+                    errors['title'] ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="请输入资源标题"
                 />
-                {errors.title && (
+                {errors['title'] && (
                   <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
-                    {errors.title}
+                    {errors['title']}
                   </p>
                 )}
               </div>
@@ -370,14 +370,14 @@ const AdminResourceEditPage = () => {
                   }
                   rows={4}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.description ? 'border-red-300' : 'border-gray-300'
+                    errors['description'] ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="请输入资源描述"
                 />
-                {errors.description && (
+                {errors['description'] && (
                   <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
-                    {errors.description}
+                    {errors['description']}
                   </p>
                 )}
               </div>
@@ -393,7 +393,7 @@ const AdminResourceEditPage = () => {
                     setForm({ ...form, category: e.target.value })
                   }
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.category ? 'border-red-300' : 'border-gray-300'
+                    errors['category'] ? 'border-red-300' : 'border-gray-300'
                   }`}
                 >
                   {categories.map((category) => (
@@ -402,10 +402,10 @@ const AdminResourceEditPage = () => {
                     </option>
                   ))}
                 </select>
-                {errors.category && (
+                {errors['category'] && (
                   <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
-                    {errors.category}
+                    {errors['category']}
                   </p>
                 )}
               </div>
@@ -499,7 +499,7 @@ const AdminResourceEditPage = () => {
               className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                 dragActive
                   ? 'border-blue-400 bg-blue-50'
-                  : errors.file
+                  : errors['file']
                     ? 'border-red-300 bg-red-50'
                     : 'border-gray-300 hover:border-gray-400'
               }`}
@@ -539,10 +539,10 @@ const AdminResourceEditPage = () => {
               </p>
             </div>
 
-            {errors.file && (
+            {errors['file'] && (
               <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" />
-                {errors.file}
+                {errors['file']}
               </p>
             )}
           </div>
@@ -593,11 +593,11 @@ const AdminResourceEditPage = () => {
           </div>
 
           {/* 错误信息 */}
-          {errors.submit && (
+          {errors['submit'] && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-red-500" />
-                <p className="text-sm text-red-700">{errors.submit}</p>
+                <p className="text-sm text-red-700">{errors['submit']}</p>
               </div>
             </div>
           )}

@@ -1,5 +1,7 @@
 'use client';
 
+// @ts-expect-error: React is required for JSX
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Users,
@@ -12,7 +14,6 @@ import {
   Building,
   Award,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import { caseStudiesAPI, type CaseStudy } from '@/lib/supabase';
 
 // 案例页面配置接口
@@ -108,7 +109,7 @@ export default function CasesPage() {
         const casesData = await caseStudiesAPI.getPublishedCaseStudies();
         setCases(casesData);
         if (casesData.length > 0) {
-          setSelectedCase(casesData[0]);
+          setSelectedCase(casesData[0] || null);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : '加载案例数据失败');

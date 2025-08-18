@@ -30,7 +30,8 @@ files.forEach(file => {
   
   importMatches.forEach(match => {
     const dep = match.match(/from\s+['\"]([^'\"]+)['\"]/)[1];
-    if (!dep.startsWith('.') && !dep.startsWith('/') && !allDeps[dep] && !allDeps[dep.split('/')[0]]) {
+    // 跳过相对路径、绝对路径和TypeScript路径别名
+    if (!dep.startsWith('.') && !dep.startsWith('/') && !dep.startsWith('@/') && !allDeps[dep] && !allDeps[dep.split('/')[0]]) {
       missingDeps.push(dep);
     }
   });

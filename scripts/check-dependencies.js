@@ -15,7 +15,7 @@ class DependencyChecker {
     this.packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
     this.allDeps = {
       ...this.packageJson.dependencies,
-      ...this.packageJson.devDependencies
+      ...this.packageJson.devDependencies,
     };
     this.missingDeps = new Set();
     this.unusedDeps = new Set(Object.keys(this.allDeps));
@@ -28,15 +28,15 @@ class DependencyChecker {
   checkFileImports(filePath) {
     try {
       const content = fs.readFileSync(filePath, 'utf8');
-      
+
       // 匹配各种import语句
       const importPatterns = [
         /import.*from\s+['"]([^'"]+)['"]/g,
         /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-        /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g
+        /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
       ];
 
-      importPatterns.forEach(pattern => {
+      importPatterns.forEach((pattern) => {
         let match;
         while ((match = pattern.exec(content)) !== null) {
           const importPath = match[1];
@@ -57,10 +57,27 @@ class DependencyChecker {
       return;
     }
 
+    // 跳过TypeScript路径别名
+    if (importPath.startsWith('@/')) {
+      return;
+    }
+
     // 跳过Node.js内置模块
     const builtinModules = [
-      'fs', 'path', 'http', 'https', 'url', 'crypto', 'os', 'util',
-      'events', 'stream', 'buffer', 'querystring', 'zlib', 'child_process'
+      'fs',
+      'path',
+      'http',
+      'https',
+      'url',
+      'crypto',
+      'os',
+      'util',
+      'events',
+      'stream',
+      'buffer',
+      'querystring',
+      'zlib',
+      'child_process',
     ];
     if (builtinModules.includes(importPath)) {
       return;
@@ -68,7 +85,7 @@ class DependencyChecker {
 
     // 获取包名（处理scoped packages）
     const packageName = this.getPackageName(importPath);
-    
+
     // 检查是否在依赖中声明
     if (this.allDeps[packageName]) {
       this.unusedDeps.delete(packageName);
@@ -96,20 +113,22 @@ class DependencyChecker {
    */
   async scanFiles() {
     console.log(chalk.blue('🔍 扫描项目文件...'));
-    
+
     const patterns = [
       'src/**/*.{ts,tsx,js,jsx}',
       'pages/**/*.{ts,tsx,js,jsx}',
       'components/**/*.{ts,tsx,js,jsx}',
       'lib/**/*.{ts,tsx,js,jsx}',
       'utils/**/*.{ts,tsx,js,jsx}',
-      '*.{ts,tsx,js,jsx}'
+      '*.{ts,tsx,js,jsx}',
     ];
 
     const files = [];
     for (const pattern of patterns) {
       try {
-        const matchedFiles = await glob(pattern, { ignore: ['node_modules/**', '.next/**', 'dist/**'] });
+        const matchedFiles = await glob(pattern, {
+          ignore: ['node_modules/**', '.next/**', 'dist/**'],
+        });
         files.push(...matchedFiles);
       } catch (error) {
         // 忽略不存在的目录
@@ -119,7 +138,7 @@ class DependencyChecker {
     const uniqueFiles = [...new Set(files)];
     console.log(chalk.gray(`找到 ${uniqueFiles.length} 个文件`));
 
-    uniqueFiles.forEach(file => {
+    uniqueFiles.forEach((file) => {
       this.checkFileImports(file);
     });
   }
@@ -134,11 +153,13 @@ class DependencyChecker {
     // 缺失的依赖
     if (this.missingDeps.size > 0) {
       console.log('\n' + chalk.red.bold('❌ 缺失的依赖:'));
-      this.missingDeps.forEach(dep => {
+      this.missingDeps.forEach((dep) => {
         console.log(chalk.red(`  - ${dep}`));
       });
       console.log(chalk.yellow('\n💡 修复建议:'));
-      console.log(chalk.yellow(`npm install ${[...this.missingDeps].join(' ')}`));
+      console.log(
+        chalk.yellow(`npm install ${[...this.missingDeps].join(' ')}`)
+      );
     } else {
       console.log('\n' + chalk.green('✅ 所有依赖都已正确声明'));
     }
@@ -146,22 +167,24 @@ class DependencyChecker {
     // 可能未使用的依赖
     if (this.unusedDeps.size > 0) {
       console.log('\n' + chalk.yellow.bold('⚠️  可能未使用的依赖:'));
-      this.unusedDeps.forEach(dep => {
+      this.unusedDeps.forEach((dep) => {
         console.log(chalk.yellow(`  - ${dep}`));
       });
-      console.log(chalk.gray('\n💡 注意: 这些依赖可能在配置文件或其他地方使用'));
+      console.log(
+        chalk.gray('\n💡 注意: 这些依赖可能在配置文件或其他地方使用')
+      );
     }
 
     // 错误信息
     if (this.errors.length > 0) {
       console.log('\n' + chalk.red.bold('🚨 扫描错误:'));
-      this.errors.forEach(error => {
+      this.errors.forEach((error) => {
         console.log(chalk.red(`  - ${error}`));
       });
     }
 
     console.log('\n' + '='.repeat(52));
-    
+
     return this.missingDeps.size === 0 && this.errors.length === 0;
   }
 
@@ -188,7 +211,7 @@ class DependencyChecker {
 // 如果直接运行此脚本
 if (import.meta.url === `file://${process.argv[1]}`) {
   const checker = new DependencyChecker();
-  checker.run().catch(error => {
+  checker.run().catch((error) => {
     console.error(chalk.red('检查过程中发生错误:'), error);
     process.exit(1);
   });
