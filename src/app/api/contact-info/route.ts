@@ -63,6 +63,8 @@ export async function GET() {
         '建议优先选择地铁出行，避开早晚高峰时段。如需驾车前往，请提前了解停车位情况。',
       hero_title: data.hero_title,
       hero_description: data.hero_description,
+      map_title: data.map_title || 'CCPM360办公室',
+      map_description: data.map_description || '欢迎您到访我们的办公室',
     };
 
     return NextResponse.json(contactInfo);

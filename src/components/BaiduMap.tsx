@@ -24,6 +24,8 @@ interface BaiduMapProps {
     content?: string;
   }>;
   address?: string; // 新增：支持地址输入进行地理编码
+  title?: string; // 新增：地图标记标题
+  description?: string; // 新增：地图标记描述
 }
 
 const BAIDU_AK = 'OhLeCrlHrwyPZLlOp8G9qK9ptCW0DzOX';
@@ -47,6 +49,8 @@ export default function BaiduMap({
     },
   ],
   address,
+  title = 'CCPM360办公室',
+  description = '北京市海淀区中关村科技园区<br/>创新大厦A座15层1501室',
 }: BaiduMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,11 +123,12 @@ export default function BaiduMap({
           // 添加信息窗口
           const infoWindow = new BMap.InfoWindow(
             `<div style="padding: 8px;">
-              <h4 style="margin: 0 0 8px 0; font-weight: bold;">CCPM360办公室</h4>
+              <h4 style="margin: 0 0 8px 0; font-weight: bold;">${title}</h4>
               <p style="margin: 0; line-height: 1.4;">${address}</p>
+              ${description ? `<p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">${description}</p>` : ''}
               ${!result ? '<p style="margin: 4px 0 0 0; font-size: 12px; color: #666;">（使用默认位置）</p>' : ''}
             </div>`,
-            { width: 250, height: result ? 80 : 100 }
+            { width: 250, height: (result ? 80 : 100) + (description ? 20 : 0) }
           );
 
           marker.addEventListener('click', () => {
@@ -153,11 +158,12 @@ export default function BaiduMap({
 
           const infoWindow = new BMap.InfoWindow(
             `<div style="padding: 8px;">
-              <h4 style="margin: 0 0 8px 0; font-weight: bold;">CCPM360办公室</h4>
+              <h4 style="margin: 0 0 8px 0; font-weight: bold;">${title}</h4>
               <p style="margin: 0; line-height: 1.4;">${address}</p>
+              ${description ? `<p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">${description}</p>` : ''}
               <p style="margin: 4px 0 0 0; font-size: 12px; color: #666;">（定位失败，使用默认位置）</p>
             </div>`,
-            { width: 250, height: 100 }
+            { width: 250, height: 100 + (description ? 20 : 0) }
           );
 
           marker.addEventListener('click', () => {
@@ -310,10 +316,11 @@ export default function BaiduMap({
                 `<div style="padding: 8px;">
                   ${marker.title ? `<h4 style="margin: 0 0 8px 0; font-weight: bold;">${marker.title}</h4>` : ''}
                   ${marker.content ? `<p style="margin: 0; line-height: 1.4;">${marker.content}</p>` : ''}
+                  ${description ? `<p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">${description}</p>` : ''}
                 </div>`,
                 {
                   width: 250,
-                  height: 80,
+                  height: description ? 100 : 80,
                 }
               );
 

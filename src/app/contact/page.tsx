@@ -68,6 +68,8 @@ export default function ContactPage() {
     driving_route: '导航至"中关村大街27号"，周边有多个停车场可供选择',
     traffic_tips:
       '建议优先选择地铁出行，避开早晚高峰时段。如需驾车前往，请提前了解停车位情况。',
+    map_title: 'CCPM360办公室',
+    map_description: '欢迎您到访我们的办公室',
   });
 
   // 初始化EmailJS和加载联系信息
@@ -100,6 +102,8 @@ export default function ContactPage() {
           bus_route: data.bus_route || prev.bus_route,
           driving_route: data.driving_route || prev.driving_route,
           traffic_tips: data.traffic_tips || prev.traffic_tips,
+          map_title: data.map_title || 'CCPM360办公室',
+          map_description: data.map_description || '欢迎您到访我们的办公室',
         }));
       } catch (error) {
         console.error('加载联系信息失败:', error);
@@ -635,6 +639,8 @@ export default function ContactPage() {
                   height="100%"
                   address={contactInfo.contact_address}
                   zoom={16}
+                  title={contactInfo.map_title}
+                  description={contactInfo.map_description}
                 />
               </div>
             </div>
