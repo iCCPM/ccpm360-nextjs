@@ -74,6 +74,7 @@
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/ui": "^3.2.4",
     "chalk": "^5.5.0",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
