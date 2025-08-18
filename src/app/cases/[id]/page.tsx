@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, Calendar, Building, Tag } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 
 interface CaseStudy {
   id: string;
@@ -17,18 +18,23 @@ interface CaseStudy {
 
 async function getCaseStudy(id: string): Promise<CaseStudy | null> {
   try {
-    const response = await fetch(
-      `${process.env['NEXT_PUBLIC_API_URL']}/api/case-studies/${id}`,
-      {
-        cache: 'no-store',
-      }
-    );
+    const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
+    const supabaseAnonKey = process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY']!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    if (!response.ok) {
+    const { data: caseStudy, error } = await supabase
+      .from('case_studies')
+      .select('*')
+      .eq('id', id)
+      .eq('published', true)
+      .single();
+
+    if (error) {
+      console.error('Error fetching case study:', error);
       return null;
     }
 
-    return await response.json();
+    return caseStudy;
   } catch (error) {
     console.error('Error fetching case study:', error);
     return null;
@@ -132,7 +138,7 @@ export default async function CaseDetailPage({
           <h2 className="text-2xl font-bold text-gray-900 mb-6">案例详情</h2>
           <div
             className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: caseStudy.content }}
+            dangerouslySetInnerHTML={{ __html: caseStudy.content || '' }}
           />
         </div>
 
@@ -154,13 +160,21 @@ export default async function CaseDetailPage({
 // 生成静态参数（可选，用于静态生成）
 export async function generateStaticParams() {
   try {
-    const response = await fetch(
-      `${process.env['NEXT_PUBLIC_API_URL']}/api/case-studies`
-    );
-    if (!response.ok) return [];
+    const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
+    const supabaseAnonKey = process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY']!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    const caseStudies = await response.json();
-    return caseStudies.map((caseStudy: CaseStudy) => ({
+    const { data: caseStudies, error } = await supabase
+      .from('case_studies')
+      .select('id')
+      .eq('published', true);
+
+    if (error) {
+      console.error('Error generating static params:', error);
+      return [];
+    }
+
+    return caseStudies.map((caseStudy: { id: string }) => ({
       id: caseStudy.id,
     }));
   } catch (error) {
