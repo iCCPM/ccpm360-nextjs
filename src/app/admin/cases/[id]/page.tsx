@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Save, ArrowLeft, Trash2, X, Plus, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthProvider';
+import ImageUpload from '@/components/ImageUpload';
 
 interface CaseStudy {
   id?: string;
@@ -469,20 +470,41 @@ const AdminCaseEdit = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  案例图片URL
+                  案例特色图片
                 </label>
-                <input
-                  type="url"
+                <ImageUpload
                   value={formData.featured_image_url}
-                  onChange={(e) =>
+                  onChange={(url) =>
                     setFormData((prev) => ({
                       ...prev,
-                      featured_image_url: e.target.value,
+                      featured_image_url: url,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://example.com/image.jpg"
+                  folder="cases/featured"
+                  placeholder="点击或拖拽上传案例特色图片"
+                  onError={(error) => setMessage(error)}
                 />
+
+                {/* 手动输入URL选项 */}
+                <details className="mt-3">
+                  <summary className="text-sm text-gray-600 cursor-pointer hover:text-gray-800">
+                    或手动输入图片URL
+                  </summary>
+                  <div className="mt-2">
+                    <input
+                      type="url"
+                      value={formData.featured_image_url}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          featured_image_url: e.target.value,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
+                </details>
               </div>
             </div>
           </div>

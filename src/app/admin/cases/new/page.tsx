@@ -10,10 +10,12 @@ import {
   Calendar,
   MapPin,
   Users,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import ImageUpload from '@/components/ImageUpload';
 
 interface CaseForm {
   title: string;
@@ -75,6 +77,20 @@ export default function NewCase() {
     setForm((prev) => ({
       ...prev,
       technologies: prev.technologies.filter((tech) => tech !== techToRemove),
+    }));
+  };
+
+  const addToGallery = (url: string) => {
+    setForm((prev) => ({
+      ...prev,
+      gallery: [...prev.gallery, url],
+    }));
+  };
+
+  const removeFromGallery = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      gallery: prev.gallery.filter((_, i) => i !== index),
     }));
   };
 
@@ -475,14 +491,13 @@ export default function NewCase() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   特色图片
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                  <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                  <div className="mt-2">
-                    <button className="text-blue-600 hover:text-blue-500 text-sm">
-                      点击上传
-                    </button>
-                  </div>
-                </div>
+                <ImageUpload
+                  value={form.featuredImage}
+                  onChange={(url) => handleInputChange('featuredImage', url)}
+                  folder="cases/featured"
+                  placeholder="点击或拖拽上传特色图片"
+                  onError={(error) => toast.error(error)}
+                />
               </div>
 
               {/* 项目图库 */}
@@ -490,14 +505,40 @@ export default function NewCase() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   项目图库
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                  <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                  <div className="mt-2">
-                    <button className="text-blue-600 hover:text-blue-500 text-sm">
-                      上传多张图片
-                    </button>
+
+                {/* 已上传的图片 */}
+                {form.gallery.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    {form.gallery.map((imageUrl, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={imageUrl}
+                          alt={`图库图片 ${index + 1}`}
+                          className="w-full h-20 object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFromGallery(index)}
+                          className="absolute -top-2 -right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="删除图片"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                )}
+
+                {/* 上传新图片 */}
+                <ImageUpload
+                  value=""
+                  onChange={addToGallery}
+                  folder="cases/gallery"
+                  placeholder="点击或拖拽添加图片到图库"
+                  showPreview={false}
+                  allowRemove={false}
+                  onError={(error) => toast.error(error)}
+                />
               </div>
             </div>
           </div>
