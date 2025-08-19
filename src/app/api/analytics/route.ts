@@ -317,36 +317,61 @@ export async function POST(request: NextRequest) {
 
 async function recordPageView(supabase: any, data: any) {
   const { error } = await supabase.from('page_views').insert({
-    visitor_id: data.visitorId,
     session_id: data.sessionId,
     page_url: data.pageUrl,
     page_title: data.pageTitle,
+    page_path: new URL(data.pageUrl, 'http://localhost').pathname,
     referrer: data.referrer,
-    user_agent: data.userAgent,
-    ip_address: data.ipAddress,
-    country: data.country,
-    city: data.city,
+    viewed_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
   });
 
-  if (error) throw error;
+  if (error) {
+    console.error('Page view insert error:', error);
+    throw error;
+  }
   return NextResponse.json({ success: true });
 }
 
 async function recordSession(supabase: any, data: any) {
-  const { error } = await supabase.from('visitor_sessions').upsert({
-    id: data.sessionId,
-    visitor_id: data.visitorId,
-    duration: data.duration,
-    page_count: data.pageCount,
-    country: data.country,
-    city: data.city,
-    device_type: data.deviceType,
-    browser: data.browser,
-    os: data.os,
-    updated_at: new Date().toISOString(),
-  });
+  // 首先检查是否已存在该session_id的记录
+  const { data: existingSession } = await supabase
+    .from('visitor_sessions')
+    .select('id')
+    .eq('session_id', data.sessionId)
+    .single();
 
-  if (error) throw error;
+  if (existingSession) {
+    // 更新现有记录
+    const { error } = await supabase
+      .from('visitor_sessions')
+      .update({
+        duration_seconds: data.duration,
+        page_views: data.pageCount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('session_id', data.sessionId);
+
+    if (error) throw error;
+  } else {
+    // 创建新记录
+    const { error } = await supabase.from('visitor_sessions').insert({
+      session_id: data.sessionId,
+      visitor_id: data.visitorId,
+      duration_seconds: data.duration,
+      page_views: data.pageCount,
+      country: data.country,
+      city: data.city,
+      device: data.deviceType,
+      browser: data.browser,
+      os: data.os,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    if (error) throw error;
+  }
+
   return NextResponse.json({ success: true });
 }
 
