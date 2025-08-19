@@ -56,7 +56,7 @@ const mockResources: Resource[] = [
       '通过真实案例分析，深入讲解CCPM在不同行业中的实施经验和注意事项。',
     type: 'video',
     category: '案例分析',
-    external_url: 'https://example.com/ccpm-case-study',
+    file_url: '/resources/ccpm-case-study.mp4',
     download_count: 567,
     created_at: '2024-01-05',
   },
@@ -95,6 +95,7 @@ export default function ResourcesPage() {
   const [filteredResources, setFilteredResources] =
     useState<Resource[]>(mockResources);
   const [loading, setLoading] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('全部分类');
@@ -173,21 +174,47 @@ export default function ResourcesPage() {
   };
 
   const handleDownload = async (resource: Resource) => {
-    if (resource.external_url) {
-      window.open(resource.external_url, '_blank');
-    } else if (resource.file_url) {
-      // 这里可以添加下载逻辑
-      console.log('Downloading:', resource.file_url);
-    }
+    if (downloadingId === resource.id) return; // 防止重复点击
 
-    // 更新下载计数
+    setDownloadingId(resource.id);
+
     try {
+      if (resource.external_url) {
+        // 打开外部链接
+        window.open(resource.external_url, '_blank');
+      } else if (resource.file_url) {
+        // 创建下载链接并触发下载
+        const link = document.createElement('a');
+        link.href = resource.file_url;
+        link.download = resource.title;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        alert('暂无可下载的文件');
+        return;
+      }
+
+      // 更新下载计数
       await supabase
         .from('resources')
         .update({ download_count: resource.download_count + 1 })
         .eq('id', resource.id);
+
+      // 更新本地状态
+      setResources((prev) =>
+        prev.map((r) =>
+          r.id === resource.id
+            ? { ...r, download_count: r.download_count + 1 }
+            : r
+        )
+      );
     } catch (error) {
-      console.error('Failed to update download count:', error);
+      console.error('下载失败:', error);
+      alert('下载失败，请稍后重试');
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -302,9 +329,19 @@ export default function ResourcesPage() {
 
                   <button
                     onClick={() => handleDownload(resource)}
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2 rounded-md hover:from-blue-700 hover:to-blue-600 transition-all duration-200"
+                    disabled={downloadingId === resource.id}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md transition-all duration-200 ${
+                      downloadingId === resource.id
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600'
+                    } text-white`}
                   >
-                    {resource.external_url ? (
+                    {downloadingId === resource.id ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        处理中...
+                      </>
+                    ) : resource.external_url ? (
                       <>
                         <ExternalLink className="h-4 w-4" />
                         查看资源

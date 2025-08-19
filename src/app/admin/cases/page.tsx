@@ -23,7 +23,7 @@ interface CaseStudy {
   industry: string;
   project_duration: string;
   team_size: number;
-  image_url: string;
+  featured_image_url: string;
   tags: string[];
   published: boolean;
   created_at: string;
@@ -265,9 +265,9 @@ const AdminCases = () => {
 
                     {/* 案例图片 */}
                     <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                      {case_study.image_url ? (
+                      {case_study.featured_image_url ? (
                         <img
-                          src={case_study.image_url}
+                          src={case_study.featured_image_url}
                           alt={case_study.title}
                           className="w-full h-full object-cover"
                         />

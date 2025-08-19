@@ -55,7 +55,7 @@ const AdminDashboardPage = () => {
         await Promise.all([
           supabase.from('case_studies').select('id', { count: 'exact' }),
           supabase.from('articles').select('id', { count: 'exact' }),
-          supabase.from('download_resources').select('download_count'),
+          supabase.from('resources').select('download_count'),
           supabase.from('contact_submissions').select('id', { count: 'exact' }),
         ]);
 

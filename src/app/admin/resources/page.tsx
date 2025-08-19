@@ -66,7 +66,7 @@ const AdminResourcesPage = () => {
   const loadResources = async () => {
     try {
       const { data, error } = await supabase
-        .from('download_resources')
+        .from('resources')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -117,10 +117,7 @@ const AdminResourcesPage = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('download_resources')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('resources').delete().eq('id', id);
 
       if (error) {
         alert('删除失败：' + error.message);
@@ -149,7 +146,7 @@ const AdminResourcesPage = () => {
 
     try {
       const { error } = await supabase
-        .from('download_resources')
+        .from('resources')
         .delete()
         .in('id', selectedResources);
 
@@ -168,7 +165,7 @@ const AdminResourcesPage = () => {
   const togglePublishStatus = async (id: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('download_resources')
+        .from('resources')
         .update({ is_published: !currentStatus })
         .eq('id', id);
 
@@ -187,7 +184,11 @@ const AdminResourcesPage = () => {
     }
   };
 
-  const getFileIcon = (fileType: string) => {
+  const getFileIcon = (fileType: string | null) => {
+    if (!fileType) {
+      return <File className="w-4 h-4" />;
+    }
+
     if (fileType.startsWith('image/')) return <Image className="w-4 h-4" />;
     if (fileType.startsWith('video/')) return <Video className="w-4 h-4" />;
     if (fileType.includes('pdf') || fileType.includes('document'))

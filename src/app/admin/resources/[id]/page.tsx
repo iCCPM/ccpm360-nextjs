@@ -46,6 +46,10 @@ const AdminResourceEditPage = () => {
     tags: [],
     is_featured: false,
     is_published: false,
+    file_url: '',
+    file_name: '',
+    file_size: 0,
+    file_type: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -75,7 +79,7 @@ const AdminResourceEditPage = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('download_resources')
+        .from('resources')
         .select('*')
         .eq('id', params?.['id'])
         .single();
@@ -88,16 +92,16 @@ const AdminResourceEditPage = () => {
 
       if (data) {
         setForm({
-          title: data.title,
-          description: data.description,
-          category: data.category,
+          title: data.title || '',
+          description: data.description || '',
+          category: data.category || 'document',
           tags: data.tags || [],
-          is_featured: data.is_featured,
-          is_published: data.is_published,
-          file_url: data.file_url,
-          file_name: data.file_name,
-          file_size: data.file_size,
-          file_type: data.file_type,
+          is_featured: data.is_featured || false,
+          is_published: data.is_published || false,
+          file_url: data.file_url || '',
+          file_name: data.file_name || '',
+          file_size: data.file_size || 0,
+          file_type: data.file_type || '',
         });
       }
     } catch (error) {
@@ -173,21 +177,26 @@ const AdminResourceEditPage = () => {
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `resources/${fileName}`;
+    const formData = new FormData();
+    formData.append('file', file);
 
-    const { error: uploadError } = await supabase.storage
-      .from('files')
-      .upload(filePath, file);
+    const response = await fetch('/api/upload/file', {
+      method: 'POST',
+      body: formData,
+    });
 
-    if (uploadError) {
-      throw uploadError;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '文件上传失败');
     }
 
-    const { data } = supabase.storage.from('files').getPublicUrl(filePath);
+    const result = await response.json();
 
-    return data.publicUrl;
+    if (!result.success || !result.url) {
+      throw new Error('文件上传失败，请重试');
+    }
+
+    return result.url;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -229,7 +238,7 @@ const AdminResourceEditPage = () => {
       };
 
       if (isNew) {
-        const { error } = await supabase.from('download_resources').insert({
+        const { error } = await supabase.from('resources').insert({
           ...resourceData,
           created_by: user?.id,
           download_count: 0,
@@ -241,7 +250,7 @@ const AdminResourceEditPage = () => {
         }
       } else {
         const { error } = await supabase
-          .from('download_resources')
+          .from('resources')
           .update(resourceData)
           .eq('id', params?.['id']);
 

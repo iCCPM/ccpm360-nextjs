@@ -1,10 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Save, ArrowLeft, Eye, Upload, Tag, Calendar } from 'lucide-react';
+import {
+  Save,
+  ArrowLeft,
+  Eye,
+  Tag,
+  Calendar,
+  Trash2,
+  File,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import FileUpload from '@/components/FileUpload';
 
 interface ResourceForm {
   title: string;
@@ -65,6 +74,8 @@ export default function NewResource() {
   const [form, setForm] = useState<ResourceForm>(initialForm);
   const [saving, setSaving] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const router = useRouter();
 
   const handleInputChange = (
@@ -145,6 +156,131 @@ export default function NewResource() {
   const previewResource = () => {
     // TODO: 实现预览功能
     toast.info('预览功能开发中');
+  };
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // 模拟上传进度
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 100);
+
+      const response = await fetch('/api/upload/file', {
+        method: 'POST',
+        body: formData,
+      });
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      if (!response.ok) {
+        throw new Error('上传失败');
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !result.url) {
+        throw new Error('上传失败，请重试');
+      }
+
+      // 自动填充文件信息
+      const fileName = file.name.split('.').slice(0, -1).join('.');
+
+      setForm((prev) => ({
+        ...prev,
+        fileUrl: result.url,
+        downloadUrl: result.url,
+        fileSize: formatFileSize(file.size),
+        // 如果标题为空，使用文件名作为标题
+        title: prev.title || fileName,
+        // 如果描述为空，添加基本描述
+        description:
+          prev.description ||
+          `${getResourceTypeLabel(form.resourceType)}文件：${file.name}`,
+      }));
+
+      toast.success('文件上传成功');
+    } catch (error) {
+      console.error('文件上传失败:', error);
+      toast.error(error instanceof Error ? error.message : '文件上传失败');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const getAcceptedFileTypes = () => {
+    switch (form.resourceType) {
+      case 'document':
+        return '.pdf,.doc,.docx,.txt,.md,.rtf,.odt,.xls,.xlsx,.ppt,.pptx';
+      case 'video':
+        return '.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv,.m4v';
+      case 'image':
+        return '.jpg,.jpeg,.png,.gif,.svg,.bmp,.webp,.tiff';
+      default:
+        return '.pdf,.doc,.docx,.txt,.md,.rtf,.odt,.xls,.xlsx,.ppt,.pptx,.mp4,.avi,.mov,.wmv,.jpg,.jpeg,.png,.gif,.svg';
+    }
+  };
+
+  const getMaxFileSize = () => {
+    switch (form.resourceType) {
+      case 'video':
+        return 100 * 1024 * 1024; // 100MB for videos
+      case 'image':
+        return 10 * 1024 * 1024; // 10MB for images
+      case 'document':
+        return 50 * 1024 * 1024; // 50MB for documents
+      default:
+        return 50 * 1024 * 1024; // 50MB default
+    }
+  };
+
+  const getFileIcon = (type: string) => {
+    switch (type) {
+      case 'document':
+        return <File className="w-5 h-5 text-blue-500" />;
+      case 'video':
+        return <File className="w-5 h-5 text-red-500" />;
+      case 'image':
+        return <File className="w-5 h-5 text-green-500" />;
+      default:
+        return <File className="w-5 h-5 text-gray-500" />;
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getResourceTypeLabel = (type: string) => {
+    switch (type) {
+      case 'document':
+        return '文档';
+      case 'video':
+        return '视频';
+      case 'image':
+        return '图片';
+      case 'link':
+        return '链接';
+      default:
+        return '资源';
+    }
   };
 
   return (
@@ -279,17 +415,42 @@ export default function NewResource() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     上传文件
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                    <div className="mt-4">
-                      <button className="text-blue-600 hover:text-blue-500">
-                        点击上传文件
-                      </button>
-                      <p className="text-sm text-gray-500 mt-1">
-                        或拖拽文件到此处
-                      </p>
+                  <FileUpload
+                    onFileSelect={handleFileUpload}
+                    uploading={uploading}
+                    uploadProgress={uploadProgress}
+                    acceptedTypes={getAcceptedFileTypes()}
+                    maxSize={getMaxFileSize()}
+                  />
+                  {form.fileUrl && (
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          {getFileIcon(form.resourceType)}
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <p className="text-sm font-medium text-green-800">
+                            文件上传成功
+                          </p>
+                          <p className="text-sm text-green-600">
+                            {form.fileUrl.split('/').pop()}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setForm((prev) => ({
+                              ...prev,
+                              fileUrl: '',
+                              fileSize: '',
+                            }));
+                          }}
+                          className="text-green-600 hover:text-green-800"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
 

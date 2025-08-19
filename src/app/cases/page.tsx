@@ -106,12 +106,29 @@ export default function CasesPage() {
     const loadCases = async () => {
       try {
         setLoading(true);
+        console.log('开始加载案例数据...');
         const casesData = await caseStudiesAPI.getPublishedCaseStudies();
+        console.log('获取到的案例数据:', casesData);
+        console.log('案例数量:', casesData.length);
+
+        // 打印每个案例的详细信息
+        casesData.forEach((caseItem, index) => {
+          console.log(`案例 ${index + 1}:`, {
+            id: caseItem.id,
+            title: caseItem.title,
+            client_name: caseItem.client_name,
+            industry: caseItem.industry,
+            published: caseItem.published,
+            created_at: caseItem.created_at,
+          });
+        });
+
         setCases(casesData);
         if (casesData.length > 0) {
           setSelectedCase(casesData[0] || null);
         }
       } catch (err) {
+        console.error('加载案例数据失败:', err);
         setError(err instanceof Error ? err.message : '加载案例数据失败');
       } finally {
         setLoading(false);

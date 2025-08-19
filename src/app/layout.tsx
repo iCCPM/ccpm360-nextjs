@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import ConditionalLayout from '../components/ConditionalLayout';
 import UmamiTracker from '../components/UmamiTracker';
+import DebugPanel from '../components/DebugPanel';
 import { ErrorProvider } from '../contexts/ErrorContext';
 import { AuthProvider } from '../contexts/AuthProvider';
 import { ErrorBoundary } from '../components/error/ErrorBoundary';
@@ -45,6 +46,8 @@ export default function RootLayout({
                   },
                 }}
               />
+              {/* 调试面板 - 仅在开发环境显示 */}
+              <DebugPanel />
             </ErrorBoundary>
           </AuthProvider>
         </ErrorProvider>

@@ -240,6 +240,9 @@ export const articlesAPI = {
 export const caseStudiesAPI = {
   // 获取所有已发布的案例
   async getPublishedCaseStudies(industry?: string) {
+    console.log('caseStudiesAPI.getPublishedCaseStudies 开始执行...');
+    console.log('传入的行业参数:', industry);
+
     let query = supabase
       .from('case_studies')
       .select('*')
@@ -250,11 +253,16 @@ export const caseStudiesAPI = {
       query = query.eq('industry', industry);
     }
 
+    console.log('准备执行Supabase查询...');
     const { data, error } = await query;
 
     if (error) {
+      console.error('Supabase查询出错:', error);
       throw new Error(error.message);
     }
+
+    console.log('Supabase查询成功，返回数据:', data);
+    console.log('返回的案例数量:', data?.length || 0);
 
     return data as CaseStudy[];
   },
@@ -280,7 +288,7 @@ export const downloadResourcesAPI = {
   // 获取所有下载资源
   async getDownloadResources(category?: string, featured?: boolean) {
     let query = supabase
-      .from('download_resources')
+      .from('resources')
       .select('*')
       .order('created_at', { ascending: false });
 

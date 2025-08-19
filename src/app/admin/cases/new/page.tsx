@@ -104,13 +104,27 @@ export default function NewCase() {
   const saveDraft = async () => {
     setSaving(true);
     try {
-      // TODO: 保存草稿到API
       const draftData = { ...form, status: 'draft' as const };
-      console.log('保存草稿:', draftData);
-      toast.success('草稿保存成功');
+
+      const response = await fetch('/api/case-studies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(draftData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '保存草稿失败');
+      }
+
+      toast.success(result.message || '草稿保存成功');
+      console.log('草稿保存成功:', result.data);
     } catch (error) {
       console.error('保存草稿失败:', error);
-      toast.error('保存草稿失败');
+      toast.error(error instanceof Error ? error.message : '保存草稿失败');
     } finally {
       setSaving(false);
     }
@@ -132,14 +146,28 @@ export default function NewCase() {
 
     setSaving(true);
     try {
-      // TODO: 发布案例到API
       const publishData = { ...form, status: 'published' as const };
-      console.log('发布案例:', publishData);
-      toast.success('案例发布成功');
+
+      const response = await fetch('/api/case-studies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(publishData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '发布案例失败');
+      }
+
+      toast.success(result.message || '案例发布成功');
+      console.log('案例发布成功:', result.data);
       router.push('/admin/cases');
     } catch (error) {
       console.error('发布案例失败:', error);
-      toast.error('发布案例失败');
+      toast.error(error instanceof Error ? error.message : '发布案例失败');
     } finally {
       setSaving(false);
     }

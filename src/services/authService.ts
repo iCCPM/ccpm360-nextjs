@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { handleSupabaseError } from '@/utils/errorHandler';
+import { debugAuth, debugError } from '@/utils/debugLogger';
 
 export interface AdminUser {
   id: string;
@@ -89,7 +90,7 @@ export class AuthService {
 
       return await this.getAdminUser(user.id);
     } catch (error) {
-      console.error('获取当前用户失败:', error);
+      debugError('获取当前用户失败:', error);
       return null;
     }
   }
@@ -104,11 +105,11 @@ export class AuthService {
       const cached = this.userCache.get(userId);
       if (cached && Date.now() - cached.timestamp < 30000) {
         // 30秒缓存
-        console.log('使用缓存的管理员用户信息:', cached.user.email);
+        debugAuth('使用缓存的管理员用户信息:', cached.user.email);
         return cached.user;
       }
 
-      console.log('通过API端点获取管理员用户信息:', userId);
+      debugAuth('通过API端点获取管理员用户信息:', userId);
 
       // 使用API端点获取管理员用户信息
       const response = await fetch(
@@ -124,7 +125,7 @@ export class AuthService {
       );
 
       if (!response.ok) {
-        console.error(
+        debugError(
           '获取管理员用户API请求失败:',
           response.status,
           response.statusText
@@ -135,7 +136,7 @@ export class AuthService {
       const result = await response.json();
 
       if (!result.success || !result.user) {
-        console.error('获取管理员用户失败:', result.error || '未知错误');
+        debugError('获取管理员用户失败:', result.error || '未知错误');
         return null;
       }
 
@@ -147,10 +148,10 @@ export class AuthService {
         timestamp: Date.now(),
       });
 
-      console.log('成功获取管理员用户信息:', user.email);
+      debugAuth('成功获取管理员用户信息:', user.email);
       return user;
     } catch (error) {
-      console.error('获取管理员用户信息失败:', error);
+      debugError('获取管理员用户信息失败:', error);
       return null;
     }
   }
