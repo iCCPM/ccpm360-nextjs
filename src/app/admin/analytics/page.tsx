@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 // 使用原生HTML元素和Tailwind CSS替代UI组件
 import {
   BarChart,
@@ -16,7 +16,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { Calendar, Users, Eye, Clock, Globe } from 'lucide-react';
+import { Calendar, Users, Eye, Clock, Globe, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface AnalyticsData {
@@ -39,56 +39,125 @@ export default function AnalyticsPage() {
     null
   );
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState('7d');
   const [activeTab, setActiveTab] = useState('trends');
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 使用useCallback优化fetchAnalyticsData函数
+  const fetchAnalyticsData = useCallback(
+    async (isManualRefresh = false) => {
+      if (isManualRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      try {
+        const dateRange = getDateRange(timeRange);
+        console.log('Date range for query:', dateRange);
+
+        // 完整数据获取
+        const [sessionsResult, pageViewsResult, dailyStatsResult] =
+          await Promise.all([
+            supabase
+              .from('visitor_sessions')
+              .select('*')
+              .gte('created_at', dateRange),
+            supabase
+              .from('page_views')
+              .select('*')
+              .gte('created_at', dateRange),
+            supabase
+              .from('daily_analytics')
+              .select('*')
+              .gte('date', getDateOnly(timeRange))
+              .order('date', { ascending: true }),
+          ]);
+
+        if (sessionsResult.error) throw sessionsResult.error;
+        if (pageViewsResult.error) throw pageViewsResult.error;
+        if (dailyStatsResult.error) throw dailyStatsResult.error;
+
+        // 获取今日数据（实时更新）
+        const today = new Date().toISOString().split('T')[0];
+        const todayStart = `${today}T00:00:00.000Z`;
+
+        const { data: todaySessions, error: todaySessionsError } =
+          await supabase
+            .from('visitor_sessions')
+            .select('*')
+            .gte('created_at', todayStart);
+
+        if (todaySessionsError) throw todaySessionsError;
+
+        // 处理数据
+        const processedData = processAnalyticsData(
+          sessionsResult.data || [],
+          pageViewsResult.data || [],
+          dailyStatsResult.data || []
+        );
+
+        // 更新今日访客数
+        const todayVisitors = new Set(
+          todaySessions?.map((s) => s.visitor_id) || []
+        ).size;
+        processedData.dailyVisitors = todayVisitors;
+
+        setAnalyticsData(processedData);
+        setLastRefresh(new Date());
+      } catch (error) {
+        console.error('获取分析数据失败:', error);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [timeRange]
+  );
+
+  // 手动刷新函数
+  const handleManualRefresh = () => {
+    fetchAnalyticsData(true);
+  };
+
+  // 初始数据加载
   useEffect(() => {
     fetchAnalyticsData();
-  }, [timeRange]);
+  }, [timeRange, fetchAnalyticsData]);
 
-  const fetchAnalyticsData = async () => {
-    setLoading(true);
-    try {
-      const dateRange = getDateRange(timeRange);
-      console.log('Date range for query:', dateRange);
-
-      // 获取访客会话数据
-      const { data: sessions, error: sessionsError } = await supabase
-        .from('visitor_sessions')
-        .select('*')
-        .gte('created_at', dateRange);
-
-      if (sessionsError) throw sessionsError;
-
-      // 获取页面访问数据
-      const { data: pageViews, error: pageViewsError } = await supabase
-        .from('page_views')
-        .select('*')
-        .gte('created_at', dateRange);
-
-      if (pageViewsError) throw pageViewsError;
-
-      // 获取每日统计数据
-      const { data: dailyStats, error: dailyStatsError } = await supabase
-        .from('daily_analytics')
-        .select('*')
-        .gte('date', getDateOnly(timeRange))
-        .order('date', { ascending: true });
-
-      if (dailyStatsError) throw dailyStatsError;
-
-      // 处理数据
-      const processedData = processAnalyticsData(
-        sessions || [],
-        pageViews || [],
-        dailyStats || []
-      );
-      setAnalyticsData(processedData);
-    } catch (error) {
-      console.error('获取分析数据失败:', error);
-    } finally {
-      setLoading(false);
+  // 自动刷新控制
+  useEffect(() => {
+    // 清除之前的定时器
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
     }
-  };
+
+    // 只有在启用自动刷新时才设置定时器
+    if (autoRefreshEnabled) {
+      intervalRef.current = setInterval(() => {
+        fetchAnalyticsData(true);
+      }, 60000); // 改为60秒，减少刷新频率
+    }
+
+    // 清理函数
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [autoRefreshEnabled, fetchAnalyticsData]);
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
 
   const getDateRange = (range: string) => {
     const now = new Date();
@@ -259,9 +328,52 @@ export default function AnalyticsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">访客分析</h1>
-          <p className="text-gray-600 mt-1">网站访问数据统计与分析</p>
+          <div className="flex items-center space-x-4 mt-1">
+            <p className="text-gray-600">网站访问数据统计与分析</p>
+            <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <span>最后更新:</span>
+              <span>{lastRefresh.toLocaleTimeString('zh-CN')}</span>
+              <span
+                className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                  autoRefreshEnabled
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full mr-1 ${
+                    autoRefreshEnabled
+                      ? 'bg-green-400 animate-pulse'
+                      : 'bg-gray-400'
+                  }`}
+                ></span>
+                {autoRefreshEnabled ? '自动刷新' : '手动模式'}
+              </span>
+            </div>
+          </div>
         </div>
         <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+            className={`flex items-center space-x-1 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
+              autoRefreshEnabled
+                ? 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <span>{autoRefreshEnabled ? '关闭自动刷新' : '开启自动刷新'}</span>
+          </button>
+          <button
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`}
+            />
+            <span>{refreshing ? '刷新中...' : '刷新'}</span>
+          </button>
+          <div className="h-4 border-l border-gray-300"></div>
           <button
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               timeRange === '7d'

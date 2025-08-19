@@ -316,63 +316,94 @@ export async function POST(request: NextRequest) {
 }
 
 async function recordPageView(supabase: any, data: any) {
-  const { error } = await supabase.from('page_views').insert({
-    session_id: data.sessionId,
-    page_url: data.pageUrl,
-    page_title: data.pageTitle,
-    page_path: new URL(data.pageUrl, 'http://localhost').pathname,
-    referrer: data.referrer,
-    viewed_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-  });
+  try {
+    // 使用upsert确保session存在，避免竞态条件
+    const deviceInfo = {
+      browser: 'unknown',
+      os: 'unknown',
+      device: 'desktop',
+    };
 
-  if (error) {
-    console.error('Page view insert error:', error);
+    const { error: sessionUpsertError } = await supabase
+      .from('visitor_sessions')
+      .upsert(
+        {
+          session_id: data.sessionId,
+          visitor_id: data.visitorId,
+          duration_seconds: 0,
+          page_views: 0,
+          browser: deviceInfo.browser,
+          os: deviceInfo.os,
+          device: deviceInfo.device,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'session_id',
+          ignoreDuplicates: true,
+        }
+      );
+
+    if (sessionUpsertError) {
+      console.error('Session upsert error:', sessionUpsertError);
+      throw sessionUpsertError;
+    }
+
+    // 现在插入page_view
+    const { error } = await supabase.from('page_views').insert({
+      session_id: data.sessionId,
+      page_url: data.pageUrl,
+      page_title: data.pageTitle,
+      page_path: new URL(data.pageUrl, 'http://localhost').pathname,
+      referrer: data.referrer,
+      viewed_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      console.error('Page view insert error:', error);
+      throw error;
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Record page view error:', error);
     throw error;
   }
-  return NextResponse.json({ success: true });
 }
 
 async function recordSession(supabase: any, data: any) {
-  // 首先检查是否已存在该session_id的记录
-  const { data: existingSession } = await supabase
-    .from('visitor_sessions')
-    .select('id')
-    .eq('session_id', data.sessionId)
-    .single();
-
-  if (existingSession) {
-    // 更新现有记录
-    const { error } = await supabase
-      .from('visitor_sessions')
-      .update({
-        duration_seconds: data.duration,
-        page_views: data.pageCount,
+  try {
+    // 使用upsert操作，避免重复键错误
+    const { error } = await supabase.from('visitor_sessions').upsert(
+      {
+        session_id: data.sessionId,
+        visitor_id: data.visitorId,
+        duration_seconds: data.duration || 0,
+        page_views: data.pageCount || 0,
+        country: data.country || null,
+        city: data.city || null,
+        device: data.deviceType || 'desktop',
+        browser: data.browser || 'unknown',
+        os: data.os || 'unknown',
         updated_at: new Date().toISOString(),
-      })
-      .eq('session_id', data.sessionId);
+      },
+      {
+        onConflict: 'session_id',
+        ignoreDuplicates: false,
+      }
+    );
 
-    if (error) throw error;
-  } else {
-    // 创建新记录
-    const { error } = await supabase.from('visitor_sessions').insert({
-      session_id: data.sessionId,
-      visitor_id: data.visitorId,
-      duration_seconds: data.duration,
-      page_views: data.pageCount,
-      country: data.country,
-      city: data.city,
-      device: data.deviceType,
-      browser: data.browser,
-      os: data.os,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
+    if (error) {
+      console.error('Session upsert error:', error);
+      throw error;
+    }
 
-    if (error) throw error;
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Record session error:', error);
+    throw error;
   }
-
-  return NextResponse.json({ success: true });
 }
 
 async function recordEvent(supabase: any, data: any) {
