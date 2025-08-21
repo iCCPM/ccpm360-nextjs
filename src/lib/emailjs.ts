@@ -1,5 +1,6 @@
 import emailjs from '@emailjs/browser';
-import nodemailer from 'nodemailer';
+// nodemailer只能在服务器端使用，不能在客户端导入
+// import nodemailer from 'nodemailer';
 
 // EmailJS配置
 const EMAILJS_CONFIG = {
@@ -8,16 +9,8 @@ const EMAILJS_CONFIG = {
   publicKey: 'YOUR_EMAILJS_PUBLIC_KEY', // EmailJS公钥
 };
 
-// 腾讯企业邮箱配置（备选方案）
-const TENCENT_EMAIL_CONFIG = {
-  host: 'smtp.exmail.qq.com',
-  port: 465,
-  secure: true,
-  user: process.env['EMAIL_USER'] || '',
-  pass: process.env['EMAIL_PASS'] || '',
-  from: process.env['EMAIL_FROM'] || '',
-  fromName: process.env['EMAIL_FROM_NAME'] || 'CCPM360 项目管理思维诊断',
-};
+// 腾讯企业邮箱配置（仅用于服务器端）
+// 客户端不能直接使用SMTP，需要通过API路由
 
 // 检查EmailJS配置是否完整
 export const isEmailJSConfigured = () => {
@@ -31,22 +24,15 @@ export const isEmailJSConfigured = () => {
   );
 };
 
-// 检查腾讯企业邮箱配置是否完整
-export const isTencentEmailConfigured = () => {
-  return (
-    TENCENT_EMAIL_CONFIG.user &&
-    TENCENT_EMAIL_CONFIG.pass &&
-    TENCENT_EMAIL_CONFIG.from
-  );
-};
+// 腾讯企业邮箱相关函数已移除，因为客户端不能使用SMTP
 
-// 获取可用的邮件服务
+// 获取可用的邮件服务（客户端只能使用EmailJS）
 export const getAvailableEmailService = () => {
+  // 客户端只能使用EmailJS
   if (isEmailJSConfigured()) {
     return 'emailjs';
-  } else if (isTencentEmailConfigured()) {
-    return 'tencent';
   }
+
   return null;
 };
 
@@ -60,57 +46,8 @@ export const initEmailJS = () => {
   return true;
 };
 
-// 使用腾讯企业邮箱发送邮件
-export const sendEmailViaTencent = async ({
-  to,
-  subject,
-  html,
-  text,
-}: {
-  to: string;
-  subject: string;
-  html?: string;
-  text?: string;
-}) => {
-  try {
-    // 创建邮件传输器
-    const transporter = nodemailer.createTransport({
-      host: TENCENT_EMAIL_CONFIG.host,
-      port: TENCENT_EMAIL_CONFIG.port,
-      secure: TENCENT_EMAIL_CONFIG.secure,
-      auth: {
-        user: TENCENT_EMAIL_CONFIG.user,
-        pass: TENCENT_EMAIL_CONFIG.pass,
-      },
-    });
-
-    // 发送邮件
-    const result = await transporter.sendMail({
-      from: `"${TENCENT_EMAIL_CONFIG.fromName}" <${TENCENT_EMAIL_CONFIG.from}>`,
-      to,
-      subject,
-      html: html || text,
-      text: text || html?.replace(/<[^>]*>/g, ''), // 从HTML中提取纯文本
-    });
-
-    console.log('腾讯企业邮箱发送成功:', result.messageId);
-    return {
-      success: true,
-      messageId: result.messageId || 'unknown',
-      response: result,
-    };
-  } catch (error) {
-    console.error('腾讯企业邮箱发送失败:', error);
-    return {
-      success: false,
-      error: {
-        message: '腾讯企业邮箱发送失败',
-        originalError: error,
-        suggestion: '请检查SMTP配置和网络连接',
-      },
-    };
-  }
-};
+// 腾讯企业邮箱发送函数已移除，因为客户端不能使用SMTP
+// 如需使用SMTP，请在服务器端API路由中实现
 
 // 发送联系表单邮件
 export const sendContactEmail = async (formData: {
@@ -132,17 +69,13 @@ export const sendContactEmail = async (formData: {
   if (!availableService) {
     const configError = {
       message: '邮件服务未配置',
-      details: '请配置EmailJS或腾讯企业邮箱服务',
+      details: '请配置EmailJS服务',
       configSteps: [
-        '方案1: 配置EmailJS',
+        '配置EmailJS:',
         '1. 注册EmailJS账户并创建服务',
         '2. 创建邮件模板',
         '3. 获取Public Key',
         '4. 更新src/lib/emailjs.ts中的配置信息',
-        '',
-        '方案2: 配置腾讯企业邮箱',
-        '1. 在.env文件中配置EMAIL_USER、EMAIL_PASS、EMAIL_FROM',
-        '2. 确保邮箱开启SMTP服务',
       ],
     };
     console.error('邮件服务配置错误:', configError);
@@ -151,15 +84,6 @@ export const sendContactEmail = async (formData: {
       error: configError,
       needsConfiguration: true,
     };
-  }
-
-  // 如果使用腾讯企业邮箱
-  if (availableService === 'tencent') {
-    return await sendEmailViaTencent({
-      to: formData.to_email || 'business@ccpm360.com',
-      subject: formData.subject || '来自CCPM360官网的消息',
-      html: formData.message || '',
-    });
   }
 
   try {

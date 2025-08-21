@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import {
-  sendContactEmail,
-  sendEmailViaTencent,
-  getAvailableEmailService,
-} from '@/lib/emailjs';
+import { sendContactEmail, getAvailableEmailService } from '@/lib/emailjs';
 
 const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
 const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
@@ -228,7 +224,7 @@ async function sendEmail(to: string, subject: string, html: string) {
     if (!availableService) {
       const error = {
         message: '邮件服务未配置',
-        details: '请配置EmailJS或腾讯企业邮箱服务',
+        details: '请配置EmailJS服务',
       };
       console.error('邮件服务配置错误:', error);
       return {
@@ -238,25 +234,14 @@ async function sendEmail(to: string, subject: string, html: string) {
       };
     }
 
-    let result;
-
-    // 根据可用服务选择发送方式
-    if (availableService === 'tencent') {
-      result = await sendEmailViaTencent({
-        to,
-        subject,
-        html,
-      });
-    } else {
-      // 使用EmailJS
-      result = await sendContactEmail({
-        to_email: to,
-        subject: subject,
-        message: html,
-        from_email: 'noreply@ccpm360.com',
-        name: 'CCPM360系统',
-      });
-    }
+    // 使用EmailJS发送邮件
+    const result = await sendContactEmail({
+      to_email: to,
+      subject: subject,
+      message: html,
+      from_email: 'noreply@ccpm360.com',
+      name: 'CCPM360系统',
+    });
 
     if (result.success) {
       return {
