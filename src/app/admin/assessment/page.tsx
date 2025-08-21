@@ -30,14 +30,16 @@ import {
 
 interface AssessmentRecord {
   id: string;
-  user_email: string;
-  user_name: string;
-  user_company: string;
+  user_email: string | null;
+  user_name: string | null;
+  user_company: string | null;
   total_score: number;
   dimension_scores: Record<string, number>;
   assessment_level: string;
   completed_at: string;
-  created_at: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  computer_name: string | null;
 }
 
 interface EmailRecord {
@@ -90,6 +92,8 @@ export default function AssessmentAdminPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange] = useState('7d');
   const [searchTerm, setSearchTerm] = useState('');
+  const [levelFilter, setLevelFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
 
   const navigateToQuestions = () => {
     window.location.href = '/admin/questions';
@@ -242,12 +246,99 @@ export default function AssessmentAdminPage() {
     });
   };
 
-  const filteredAssessments = assessments.filter(
-    (assessment) =>
+  const filteredAssessments = assessments.filter((assessment) => {
+    // 文本搜索筛选
+    const matchesSearch =
       assessment.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       assessment.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assessment.user_company?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      assessment.user_company?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // 评估水平筛选
+    const matchesLevel =
+      levelFilter === 'all' || assessment.assessment_level === levelFilter;
+
+    // 日期筛选
+    let matchesDate = true;
+    if (dateFilter !== 'all' && assessment.completed_at) {
+      const assessmentDate = new Date(assessment.completed_at);
+      const now = new Date();
+
+      switch (dateFilter) {
+        case '7d':
+          matchesDate =
+            now.getTime() - assessmentDate.getTime() <= 7 * 24 * 60 * 60 * 1000;
+          break;
+        case '30d':
+          matchesDate =
+            now.getTime() - assessmentDate.getTime() <=
+            30 * 24 * 60 * 60 * 1000;
+          break;
+        case '90d':
+          matchesDate =
+            now.getTime() - assessmentDate.getTime() <=
+            90 * 24 * 60 * 60 * 1000;
+          break;
+      }
+    }
+
+    return matchesSearch && matchesLevel && matchesDate;
+  });
+
+  const exportToCSV = () => {
+    const headers = [
+      '姓名',
+      '邮箱',
+      '公司',
+      '总分',
+      '水平',
+      'IP地址',
+      '计算机名',
+      '客户端',
+      '完成时间',
+    ];
+
+    const csvData = filteredAssessments.map((assessment) => [
+      assessment.user_name || '',
+      assessment.user_email || '',
+      assessment.user_company || '',
+      assessment.total_score || 0,
+      levelNames[assessment.assessment_level as keyof typeof levelNames] ||
+        assessment.assessment_level,
+      assessment.ip_address || '',
+      assessment.computer_name || '',
+      assessment.user_agent
+        ? assessment.user_agent.includes('Chrome')
+          ? 'Chrome'
+          : assessment.user_agent.includes('Firefox')
+            ? 'Firefox'
+            : assessment.user_agent.includes('Safari')
+              ? 'Safari'
+              : assessment.user_agent.includes('Edge')
+                ? 'Edge'
+                : '其他浏览器'
+        : '',
+      assessment.completed_at
+        ? new Date(assessment.completed_at).toLocaleString('zh-CN')
+        : '',
+    ]);
+
+    const csvContent = [headers, ...csvData]
+      .map((row) => row.map((field) => `"${field}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute(
+      'download',
+      `评估记录_${new Date().toISOString().split('T')[0]}.csv`
+    );
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (loading) {
     return (
@@ -521,8 +612,31 @@ export default function AssessmentAdminPage() {
                         className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-80"
                       />
                     </div>
+                    <select
+                      value={levelFilter}
+                      onChange={(e) => setLevelFilter(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">所有水平</option>
+                      <option value="beginner">初级</option>
+                      <option value="intermediate">中级</option>
+                      <option value="advanced">高级</option>
+                    </select>
+                    <select
+                      value={dateFilter}
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">所有时间</option>
+                      <option value="7d">最近7天</option>
+                      <option value="30d">最近30天</option>
+                      <option value="90d">最近90天</option>
+                    </select>
                   </div>
-                  <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  <button
+                    onClick={exportToCSV}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
                     <Download className="w-4 h-4 mr-2" />
                     导出数据
                   </button>
@@ -541,6 +655,15 @@ export default function AssessmentAdminPage() {
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           水平
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          IP地址
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          计算机名
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          客户端
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           完成时间
@@ -598,6 +721,30 @@ export default function AssessmentAdminPage() {
                                 ]
                               }
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {assessment.ip_address || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {assessment.computer_name || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div
+                              className="max-w-xs truncate"
+                              title={assessment.user_agent || 'N/A'}
+                            >
+                              {assessment.user_agent
+                                ? assessment.user_agent.includes('Chrome')
+                                  ? 'Chrome'
+                                  : assessment.user_agent.includes('Firefox')
+                                    ? 'Firefox'
+                                    : assessment.user_agent.includes('Safari')
+                                      ? 'Safari'
+                                      : assessment.user_agent.includes('Edge')
+                                        ? 'Edge'
+                                        : '其他浏览器'
+                                : 'N/A'}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {assessment.completed_at

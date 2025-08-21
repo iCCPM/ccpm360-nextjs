@@ -150,11 +150,14 @@ export default function ContactPage() {
         console.warn('邮件发送失败，但继续保存到数据库:', emailResult.error);
 
         // 如果是配置问题，给用户更友好的提示
-        if (emailResult.needsConfiguration) {
-          if ('details' in emailResult.error) {
+        if (
+          'needsConfiguration' in emailResult &&
+          emailResult.needsConfiguration
+        ) {
+          if (emailResult.error && 'details' in emailResult.error) {
             console.info('EmailJS配置提示:', emailResult.error.details);
           }
-          if ('configSteps' in emailResult.error) {
+          if (emailResult.error && 'configSteps' in emailResult.error) {
             console.info('配置步骤:', emailResult.error.configSteps);
           }
         }

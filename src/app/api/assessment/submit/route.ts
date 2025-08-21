@@ -19,17 +19,28 @@ function calculateScores(answers: Record<string, number>, questions: any[]) {
   let totalQuestions = 0;
 
   // 计算各维度得分
-  questions.forEach((question) => {
-    const answerIndex = answers[question.id.toString()];
+  questions.forEach((question, index) => {
+    // 支持两种格式：对象格式 {"1": 0, "2": 1} 或数组格式 [0, 1, 2]
+    let answerIndex;
+    if (Array.isArray(answers)) {
+      answerIndex = answers[index];
+    } else {
+      answerIndex = answers[question.id.toString()];
+    }
+
     if (answerIndex !== undefined && question.options[answerIndex]) {
       const score = question.options[answerIndex].score;
-      const dimensionData = dimensionScores[question.dimension];
-      if (dimensionData) {
-        dimensionData.total += score;
-        dimensionData.count += 1;
+
+      // 确保score是有效数字
+      if (typeof score === 'number' && !isNaN(score)) {
+        const dimensionData = dimensionScores[question.dimension];
+        if (dimensionData) {
+          dimensionData.total += score;
+          dimensionData.count += 1;
+        }
+        totalScore += score;
+        totalQuestions += 1;
       }
-      totalScore += score;
-      totalQuestions += 1;
     }
   });
 
@@ -45,8 +56,7 @@ function calculateScores(answers: Record<string, number>, questions: any[]) {
     }
   });
 
-  const averageScore =
-    totalQuestions > 0 ? Math.round(totalScore / totalQuestions) : 0;
+  const averageScore = totalQuestions > 0 ? totalScore / totalQuestions : 0;
 
   return { dimensionScores: finalScores, totalScore: averageScore };
 }
@@ -180,10 +190,38 @@ function generateNextSteps(level: string, scores: Record<string, number>) {
   return steps;
 }
 
+// 获取客户端信息的辅助函数
+function getClientInfo(request: NextRequest) {
+  // 获取真实IP地址
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIp = request.headers.get('x-real-ip');
+  const cfConnectingIp = request.headers.get('cf-connecting-ip');
+
+  let ipAddress = null;
+  if (cfConnectingIp) {
+    ipAddress = cfConnectingIp;
+  } else if (realIp) {
+    ipAddress = realIp;
+  } else if (forwarded) {
+    ipAddress = forwarded.split(',')[0]?.trim() || '127.0.0.1';
+  } else {
+    // NextRequest doesn't have ip property, use fallback
+    ipAddress = '127.0.0.1';
+  }
+
+  // 获取User-Agent
+  const userAgent = request.headers.get('user-agent') || null;
+
+  return {
+    ipAddress,
+    userAgent,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { answers, userInfo } = body;
+    const { answers, userInfo, clientInfo } = body;
 
     if (!answers || typeof answers !== 'object') {
       return NextResponse.json(
@@ -191,6 +229,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // 获取客户端信息
+    const serverClientInfo = getClientInfo(request);
 
     // 获取所有题目和答案选项
     const { data: questions, error: questionsError } = await supabase
@@ -219,10 +260,11 @@ export async function POST(request: NextRequest) {
       user_company: userInfo?.company || null,
       answers,
       scores: dimensionScores,
-      total_score: totalScore,
+      total_score: Math.round(totalScore), // 确保是整数
       assessment_level: advice.level,
-      ip_address: null,
-      user_agent: request.headers.get('user-agent') || null,
+      ip_address: serverClientInfo.ipAddress,
+      user_agent: serverClientInfo.userAgent,
+      computer_name: clientInfo?.computerName || null,
     };
 
     const { data: record, error: insertError } = await supabase
@@ -242,6 +284,15 @@ export async function POST(request: NextRequest) {
       dimensionScores,
       advice,
       completedAt: new Date().toISOString(),
+      userAnswers: answers,
+      questions: questions.map((q) => ({
+        id: q.id,
+        question_text: q.question_text,
+        dimension: q.dimension,
+        explanation: q.explanation,
+        options: q.options,
+        correct_answer: q.correct_answer,
+      })),
     };
 
     // 如果用户提供了邮箱，发送个性化报告邮件

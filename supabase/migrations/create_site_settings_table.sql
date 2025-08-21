@@ -46,7 +46,7 @@ INSERT INTO public.site_settings (
 ) VALUES (
     'CCPM360 - 关键链项目管理专家',
     'CCPM360是专业的关键链项目管理解决方案提供商，致力于帮助企业提升项目管理效率和成功率。',
-    'info@ccpm360.com',
+    'contact@ccpm360.com',
     '+86-400-123-4567',
     'CCPM360科技有限公司',
     '{

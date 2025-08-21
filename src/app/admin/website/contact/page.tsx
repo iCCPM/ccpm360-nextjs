@@ -33,7 +33,7 @@ const defaultSettings: ContactSettings = {
   heroDescription: '我们期待与您的合作，为您提供专业的项目管理解决方案',
   contactInfo: {
     phone: '+86 400-123-4567',
-    email: 'info@ccpm360.com',
+    email: 'contact@ccpm360.com',
     address: '北京市朝阳区建国路88号现代城A座1001室',
     workingHours: '周一至周五 9:00-18:00',
     weekendHours: '周六日及节假日 08:00~22:00',

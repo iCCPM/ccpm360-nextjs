@@ -99,9 +99,53 @@ export default function AssessmentQuiz({
     }
   };
 
+  // 收集客户端信息的函数
+  const getClientInfo = () => {
+    let computerName = null;
+
+    try {
+      // 尝试从不同来源获取计算机名
+      if (typeof window !== 'undefined') {
+        // 从浏览器环境变量或其他可用信息推断
+        computerName =
+          // @ts-expect-error - userAgentData is experimental API
+          window.navigator?.userAgentData?.platform ||
+          window.navigator?.platform ||
+          'Unknown';
+
+        // 如果可能，尝试从其他来源获取更具体的计算机名
+        // 注意：出于安全考虑，现代浏览器限制了对计算机名的直接访问
+        if (computerName === 'Unknown' || computerName === 'Win32') {
+          // 可以尝试从User-Agent中提取一些信息
+          const userAgent = navigator.userAgent;
+          if (userAgent.includes('Windows NT')) {
+            computerName = 'Windows PC';
+          } else if (userAgent.includes('Mac OS')) {
+            computerName = 'Mac';
+          } else if (userAgent.includes('Linux')) {
+            computerName = 'Linux PC';
+          }
+        }
+      }
+    } catch (error) {
+      console.log('无法获取计算机信息:', error);
+      computerName = 'Unknown';
+    }
+
+    return {
+      computerName,
+      timestamp: new Date().toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      language: navigator.language,
+      screenResolution: `${screen.width}x${screen.height}`,
+    };
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
+      const clientInfo = getClientInfo();
+
       const response = await fetch('/api/assessment/submit', {
         method: 'POST',
         headers: {
@@ -110,6 +154,7 @@ export default function AssessmentQuiz({
         body: JSON.stringify({
           answers,
           userInfo,
+          clientInfo,
         }),
       });
 
@@ -158,19 +203,49 @@ export default function AssessmentQuiz({
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              测试完成！
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              恭喜！您已完成所有题目
             </h2>
+            <div className="bg-blue-50 rounded-lg p-6 mb-6">
+              <h3 className="text-xl font-semibold text-blue-900 mb-3">
+                📧 获取完整测试报告
+              </h3>
+              <p className="text-blue-800 text-lg leading-relaxed">
+                留下您的联系信息，我们将为您发送：
+              </p>
+              <ul className="text-blue-700 mt-3 space-y-2 text-left max-w-md mx-auto">
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                  详细的个人能力分析报告
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                  完整的题目答案解析
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                  个性化的CCMP学习建议
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                  后续的项目管理学习资料
+                </li>
+              </ul>
+            </div>
             <p className="text-gray-600">
-              您已完成所有{questions.length}道题目，用时{' '}
-              {formatTime(timeElapsed)}
+              当然，您也可以选择跳过直接查看基础结果
             </p>
           </div>
 
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                姓名（可选）
+                <span className="flex items-center">
+                  👤 姓名
+                  <span className="text-green-600 text-xs ml-2 bg-green-100 px-2 py-1 rounded">
+                    推荐填写
+                  </span>
+                </span>
               </label>
               <input
                 type="text"
@@ -179,13 +254,18 @@ export default function AssessmentQuiz({
                   setUserInfo((prev) => ({ ...prev, name: e.target.value }))
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="请输入您的姓名"
+                placeholder="请输入您的姓名，用于个性化报告"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                邮箱（可选）
+                <span className="flex items-center">
+                  📧 邮箱地址
+                  <span className="text-green-600 text-xs ml-2 bg-green-100 px-2 py-1 rounded">
+                    强烈推荐
+                  </span>
+                </span>
               </label>
               <input
                 type="email"
@@ -196,9 +276,15 @@ export default function AssessmentQuiz({
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="请输入您的邮箱地址"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                填写邮箱可获得详细的PDF报告和后续的CCPM学习资料
-              </p>
+              <div className="mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-sm text-green-800 font-medium mb-1">
+                  ✅ 填写邮箱即可获得：
+                </p>
+                <p className="text-xs text-green-700">
+                  • 完整PDF测试报告 • 详细答案解析 • 个性化学习路径 •
+                  定期CCPM学习资料
+                </p>
+              </div>
             </div>
 
             <div>
@@ -216,26 +302,33 @@ export default function AssessmentQuiz({
               />
             </div>
 
-            <div className="flex gap-4 pt-4">
-              <button
-                onClick={() => setShowUserForm(false)}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                返回修改答案
-              </button>
+            <div className="flex flex-col gap-3 pt-6">
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
               >
                 {submitting ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2 inline-block"></div>
-                    生成报告中...
+                    生成个性化报告中...
                   </>
                 ) : (
-                  '查看测试结果'
+                  <span className="flex items-center justify-center">
+                    📊 生成我的测试报告
+                    {(userInfo.email || userInfo.name) && (
+                      <span className="ml-2 text-sm bg-white bg-opacity-20 px-2 py-1 rounded">
+                        含邮件报告
+                      </span>
+                    )}
+                  </span>
                 )}
+              </button>
+              <button
+                onClick={() => setShowUserForm(false)}
+                className="w-full px-6 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              >
+                ← 返回修改答案
               </button>
             </div>
           </div>

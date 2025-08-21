@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import {
+  sendContactEmail,
+  sendEmailViaTencent,
+  getAvailableEmailService,
+} from '@/lib/emailjs';
 
 const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
 const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
@@ -18,47 +23,51 @@ const emailTemplates = {
         </div>
         
         <div style="background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
-          <h2 style="margin: 0 0 10px 0; font-size: 24px;">您的项目管理水平：${data.advice.level === 'beginner' ? '初学者' : data.advice.level === 'intermediate' ? '进阶者' : '专家级'}</h2>
-          <div style="font-size: 36px; font-weight: bold; margin: 15px 0;">${data.totalScore}分</div>
-          <p style="margin: 0; opacity: 0.9;">${data.advice.levelDescription}</p>
+          <h2 style="margin: 0 0 10px 0; font-size: 24px;">您的项目管理水平：${data.advice?.level === 'beginner' ? '初学者' : data.advice?.level === 'intermediate' ? '进阶者' : '专家级'}</h2>
+          <div style="font-size: 36px; font-weight: bold; margin: 15px 0;">${data.totalScore || 0}分</div>
+          <p style="margin: 0; opacity: 0.9;">${data.advice?.levelDescription || '基于您的测试结果，我们为您提供了个性化的项目管理建议。'}</p>
         </div>
         
         <div style="background: #f8fafc; padding: 25px; border-radius: 12px; margin-bottom: 25px;">
           <h3 style="color: #1f2937; margin-bottom: 15px;">整体评价</h3>
-          <p style="color: #4b5563; line-height: 1.6; margin: 0;">${data.advice.overallAdvice}</p>
+          <p style="color: #4b5563; line-height: 1.6; margin: 0;">${data.advice?.overallAdvice || '您在项目管理方面展现出了良好的基础能力，通过持续学习和实践，您将能够进一步提升项目管理水平。'}</p>
         </div>
         
         <div style="margin-bottom: 25px;">
           <h3 style="color: #1f2937; margin-bottom: 15px;">各维度得分</h3>
-          ${Object.entries(data.dimensionScores)
-            .map(([dimension, score]: [string, any]) => {
-              const dimensionNames: Record<string, string> = {
-                time_management: '时间管理',
-                resource_coordination: '资源协调',
-                risk_control: '风险控制',
-                team_collaboration: '团队协作',
-              };
-              const barColor =
-                score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444';
-              return `
+          ${
+            (Array.isArray(data.dimensionScores) ? data.dimensionScores : [])
+              .map((item: any) => {
+                const dimension = item?.dimension || '未知维度';
+                const score = item?.score || 0;
+                const safeScore = Number(score) || 0;
+                const barColor =
+                  safeScore >= 80
+                    ? '#10b981'
+                    : safeScore >= 60
+                      ? '#f59e0b'
+                      : '#ef4444';
+                return `
               <div style="margin-bottom: 15px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                  <span style="color: #374151; font-weight: 500;">${dimensionNames[dimension]}</span>
-                  <span style="color: ${barColor}; font-weight: bold;">${score}分</span>
+                  <span style="color: #374151; font-weight: 500;">${dimension}</span>
+                  <span style="color: ${barColor}; font-weight: bold;">${safeScore}分</span>
                 </div>
                 <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
-                  <div style="background: ${barColor}; height: 100%; width: ${score}%; transition: width 0.3s ease;"></div>
+                  <div style="background: ${barColor}; height: 100%; width: ${safeScore}%; transition: width 0.3s ease;"></div>
                 </div>
               </div>
             `;
-            })
-            .join('')}
+              })
+              .join('') ||
+            '<p style="color: #6b7280; text-align: center;">暂无维度得分数据</p>'
+          }
         </div>
         
         <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
           <h3 style="color: #92400e; margin-bottom: 15px;">提升建议</h3>
           <ul style="color: #92400e; margin: 0; padding-left: 20px;">
-            ${data.advice.nextSteps.map((step: string) => `<li style="margin-bottom: 8px;">${step}</li>`).join('')}
+            ${(data.advice?.nextSteps || ['建议您关注项目管理的基础理论学习', '实践中积累项目管理经验', '考虑参加专业的项目管理培训']).map((step: string) => `<li style="margin-bottom: 8px;">${step || '持续提升项目管理技能'}</li>`).join('')}
           </ul>
         </div>
         
@@ -68,9 +77,31 @@ const emailTemplates = {
           <a href="https://ccpm360.com/contact" style="display: inline-block; background: white; color: #6366f1; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">免费咨询CCPM解决方案</a>
         </div>
         
-        <div style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
-          <p>CCPM360 - 专业的关键链项目管理解决方案提供商</p>
-          <p>如有疑问，请联系我们：info@ccpm360.com | 400-123-4567</p>
+        <div style="text-align: center; padding: 30px 20px; border-top: 1px solid #e5e7eb; background: #f8fafc; margin-top: 30px;">
+          <div style="margin-bottom: 20px;">
+            <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">CCPM360</h3>
+            <p style="color: #6b7280; margin: 0; font-size: 14px;">专业的关键链项目管理解决方案提供商</p>
+          </div>
+          
+          <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">📞</span>
+              <span>+86-400-868-2015</span>
+            </div>
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">💬</span>
+              <span>微信公众号：ccpm360</span>
+            </div>
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">✉️</span>
+              <span>contact@ccpm360.com</span>
+            </div>
+          </div>
+          
+          <div style="border-top: 1px solid #d1d5db; padding-top: 15px;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">本邮件由CCPM360系统自动发送，请勿直接回复</p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 5px 0 0 0;">如需帮助，请通过上述联系方式与我们联系</p>
+          </div>
         </div>
       </div>
     `,
@@ -99,6 +130,33 @@ const emailTemplates = {
         </div>
         
         <p>最佳祝愿，<br>CCPM360团队</p>
+        
+        <div style="text-align: center; padding: 30px 20px; border-top: 1px solid #e5e7eb; background: #f8fafc; margin-top: 30px;">
+          <div style="margin-bottom: 20px;">
+            <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">CCPM360</h3>
+            <p style="color: #6b7280; margin: 0; font-size: 14px;">专业的关键链项目管理解决方案提供商</p>
+          </div>
+          
+          <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">📞</span>
+              <span>+86-400-868-2015</span>
+            </div>
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">💬</span>
+              <span>微信公众号：ccpm360</span>
+            </div>
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">✉️</span>
+              <span>contact@ccpm360.com</span>
+            </div>
+          </div>
+          
+          <div style="border-top: 1px solid #d1d5db; padding-top: 15px;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">本邮件由CCPM360系统自动发送，请勿直接回复</p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 5px 0 0 0;">如需帮助，请通过上述联系方式与我们联系</p>
+          </div>
+        </div>
       </div>
     `,
   },
@@ -125,23 +183,103 @@ const emailTemplates = {
         <p>想了解CCPM如何帮助您的企业？我们提供免费的项目诊断服务。</p>
         
         <p>最佳祝愿，<br>CCPM360团队</p>
+        
+        <div style="text-align: center; padding: 30px 20px; border-top: 1px solid #e5e7eb; background: #f8fafc; margin-top: 30px;">
+          <div style="margin-bottom: 20px;">
+            <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">CCPM360</h3>
+            <p style="color: #6b7280; margin: 0; font-size: 14px;">专业的关键链项目管理解决方案提供商</p>
+          </div>
+          
+          <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">📞</span>
+              <span>+86-400-868-2015</span>
+            </div>
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">💬</span>
+              <span>微信公众号：ccpm360</span>
+            </div>
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">✉️</span>
+              <span>contact@ccpm360.com</span>
+            </div>
+          </div>
+          
+          <div style="border-top: 1px solid #d1d5db; padding-top: 15px;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">本邮件由CCPM360系统自动发送，请勿直接回复</p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 5px 0 0 0;">如需帮助，请通过上述联系方式与我们联系</p>
+          </div>
+        </div>
       </div>
     `,
   },
 };
 
-// 发送邮件函数（这里使用模拟，实际项目中需要集成真实的邮件服务）
+// 邮件发送函数
 async function sendEmail(to: string, subject: string, html: string) {
-  // 这里可以集成 SendGrid, AWS SES, 或其他邮件服务
-  // 目前返回模拟成功结果
-  console.log('Sending email to:', to);
-  console.log('Subject:', subject);
-  console.log('HTML content length:', html.length);
+  try {
+    console.log('Sending email to:', to);
+    console.log('Subject:', subject);
+    console.log('HTML content length:', html.length);
 
-  // 模拟邮件发送延迟
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+    // 获取可用的邮件服务
+    const availableService = getAvailableEmailService();
 
-  return { success: true, messageId: `msg_${Date.now()}` };
+    if (!availableService) {
+      const error = {
+        message: '邮件服务未配置',
+        details: '请配置EmailJS或腾讯企业邮箱服务',
+      };
+      console.error('邮件服务配置错误:', error);
+      return {
+        success: false,
+        error: error,
+        message: 'Email service not configured',
+      };
+    }
+
+    let result;
+
+    // 根据可用服务选择发送方式
+    if (availableService === 'tencent') {
+      result = await sendEmailViaTencent({
+        to,
+        subject,
+        html,
+      });
+    } else {
+      // 使用EmailJS
+      result = await sendContactEmail({
+        to_email: to,
+        subject: subject,
+        message: html,
+        from_email: 'noreply@ccpm360.com',
+        name: 'CCPM360系统',
+      });
+    }
+
+    if (result.success) {
+      return {
+        success: true,
+        messageId: `msg_${Date.now()}`,
+        message: 'Email sent successfully',
+      };
+    } else {
+      console.error('邮件发送失败:', result.error);
+      return {
+        success: false,
+        error: result.error,
+        message: 'Email sending failed',
+      };
+    }
+  } catch (error) {
+    console.error('邮件发送异常:', error);
+    return {
+      success: false,
+      error: error,
+      message: 'Email sending exception',
+    };
+  }
 }
 
 // 发送测试结果邮件
@@ -178,14 +316,37 @@ export async function POST(request: NextRequest) {
     }
 
     // 记录邮件发送历史
-    const { error: insertError } = await supabase.from('email_history').insert({
+    const emailHistoryData: any = {
       recipient_email: recipientEmail,
       email_type: type,
       subject: template.subject,
       sent_at: new Date().toISOString(),
-      assessment_id: data.id,
       status: 'sent',
-    });
+    };
+
+    // 只有当assessment_id是有效的UUID且在数据库中存在时才添加
+    if (
+      data.id &&
+      typeof data.id === 'string' &&
+      data.id.match(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      )
+    ) {
+      // 检查assessment_id是否存在于assessment_records表中
+      const { data: assessmentExists } = await supabase
+        .from('assessment_records')
+        .select('id')
+        .eq('id', data.id)
+        .single();
+
+      if (assessmentExists) {
+        emailHistoryData.assessment_id = data.id;
+      }
+    }
+
+    const { error: insertError } = await supabase
+      .from('email_history')
+      .insert(emailHistoryData);
 
     if (insertError) {
       console.error('Failed to record email history:', insertError);

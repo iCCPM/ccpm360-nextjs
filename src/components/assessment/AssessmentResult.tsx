@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -15,6 +15,9 @@ import {
   CheckCircle,
   AlertCircle,
   Info,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface AssessmentData {
@@ -29,6 +32,26 @@ interface AssessmentData {
     nextSteps: string[];
   };
   completedAt: string;
+  userAnswers?: Record<string, number>;
+  questions?: {
+    id: number;
+    question_text: string;
+    dimension: string;
+    explanation?: string;
+    options: any[];
+    correct_answer?: number;
+  }[];
+}
+
+interface Question {
+  id: number;
+  question_text: string;
+  dimension: string;
+  explanation?: string;
+  options: {
+    index: number;
+    text: string;
+  }[];
 }
 
 interface AssessmentResultProps {
@@ -89,12 +112,33 @@ export default function AssessmentResult({
   onRetake,
 }: AssessmentResultProps) {
   const [showContactForm, setShowContactForm] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [showExplanations, setShowExplanations] = useState(false);
+  const [expandedDimensions, setExpandedDimensions] = useState<
+    Record<string, boolean>
+  >({});
   const [contactInfo, setContactInfo] = useState({
     name: '',
     email: '',
     phone: '',
     message: '',
   });
+
+  // 获取题目数据
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await fetch('/api/assessment/questions');
+        if (response.ok) {
+          const data = await response.json();
+          setQuestions(data.questions);
+        }
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+      }
+    };
+    fetchQuestions();
+  }, []);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
@@ -106,6 +150,26 @@ export default function AssessmentResult({
     if (score >= 80) return 'bg-green-500';
     if (score >= 60) return 'bg-yellow-500';
     return 'bg-red-500';
+  };
+
+  // 按维度分组题目
+  const groupQuestionsByDimension = () => {
+    const grouped: Record<string, Question[]> = {};
+    questions.forEach((question) => {
+      if (!grouped[question.dimension]) {
+        grouped[question.dimension] = [];
+      }
+      grouped[question.dimension]?.push(question);
+    });
+    return grouped;
+  };
+
+  // 切换维度展开状态
+  const toggleDimension = (dimension: string) => {
+    setExpandedDimensions((prev) => ({
+      ...prev,
+      [dimension]: !prev[dimension],
+    }));
   };
 
   const handleContactSubmit = async (e: React.FormEvent) => {
@@ -147,7 +211,7 @@ export default function AssessmentResult({
               <div
                 className={`text-4xl font-bold ${getScoreColor(data.totalScore)}`}
               >
-                {data.totalScore}分
+                {data.totalScore || 0}分
               </div>
               <div className="text-sm text-gray-500">总体得分</div>
             </div>
@@ -261,6 +325,204 @@ export default function AssessmentResult({
           ))}
         </div>
       </motion.div>
+
+      {/* 题目解析 */}
+      {questions.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white rounded-2xl shadow-xl p-8"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <BookOpen className="w-8 h-8 text-indigo-600 mr-3" />
+              <h3 className="text-2xl font-bold text-gray-900">题目解析</h3>
+            </div>
+            <button
+              onClick={() => setShowExplanations(!showExplanations)}
+              className="flex items-center px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors"
+            >
+              {showExplanations ? (
+                <>
+                  <ChevronUp className="w-5 h-5 mr-2" />
+                  收起解析
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-5 h-5 mr-2" />
+                  查看解析
+                </>
+              )}
+            </button>
+          </div>
+
+          {showExplanations && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-6"
+            >
+              {Object.entries(groupQuestionsByDimension()).map(
+                ([dimension, dimensionQuestions]) => {
+                  const config =
+                    dimensionConfig[dimension as keyof typeof dimensionConfig];
+                  if (!config) return null;
+
+                  const Icon = config.icon;
+                  const isExpanded = expandedDimensions[dimension];
+
+                  return (
+                    <div
+                      key={dimension}
+                      className="border border-gray-200 rounded-xl overflow-hidden"
+                    >
+                      <button
+                        onClick={() => toggleDimension(dimension)}
+                        className="w-full flex items-center justify-between p-6 bg-gray-50 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <Icon
+                            className={`w-6 h-6 text-${config.color}-500 mr-3`}
+                          />
+                          <div className="text-left">
+                            <h4 className="text-lg font-semibold text-gray-900">
+                              {config.name}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {dimensionQuestions.length} 道题目
+                            </p>
+                          </div>
+                        </div>
+                        {isExpanded ? (
+                          <ChevronUp className="w-5 h-5 text-gray-500" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-gray-500" />
+                        )}
+                      </button>
+
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="p-6 space-y-6 bg-white"
+                        >
+                          {dimensionQuestions.map((question, index) => {
+                            // 使用data.questions中的题目信息，如果没有则使用原有的questions
+                            const questionData =
+                              data.questions?.find(
+                                (q) => q.id === question.id
+                              ) || question;
+
+                            return (
+                              <div
+                                key={question.id}
+                                className="border-l-4 border-indigo-200 pl-6"
+                              >
+                                <div className="mb-3">
+                                  <span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-medium rounded-full mb-2">
+                                    题目 {index + 1}
+                                  </span>
+                                  <h5 className="text-lg font-medium text-gray-900 mb-2">
+                                    {questionData.question_text}
+                                  </h5>
+                                </div>
+
+                                {/* 显示选项和用户答案 */}
+                                {questionData.options && data.userAnswers && (
+                                  <div className="mb-4">
+                                    <div className="space-y-2">
+                                      {questionData.options.map(
+                                        (option: any, optionIndex: number) => {
+                                          const userAnswer =
+                                            data.userAnswers?.[
+                                              questionData.id.toString()
+                                            ];
+                                          const isUserChoice =
+                                            userAnswer === optionIndex;
+                                          const isCorrect =
+                                            (questionData as any)
+                                              .correct_answer === optionIndex;
+
+                                          let optionClass =
+                                            'p-3 rounded-lg border ';
+                                          if (isUserChoice && isCorrect) {
+                                            optionClass +=
+                                              'bg-green-100 border-green-300 text-green-800';
+                                          } else if (
+                                            isUserChoice &&
+                                            !isCorrect
+                                          ) {
+                                            optionClass +=
+                                              'bg-red-100 border-red-300 text-red-800';
+                                          } else if (isCorrect) {
+                                            optionClass +=
+                                              'bg-green-50 border-green-200 text-green-700';
+                                          } else {
+                                            optionClass +=
+                                              'bg-gray-50 border-gray-200 text-gray-700';
+                                          }
+
+                                          return (
+                                            <div
+                                              key={optionIndex}
+                                              className={optionClass}
+                                            >
+                                              <div className="flex items-center justify-between">
+                                                <span className="text-sm">
+                                                  {String.fromCharCode(
+                                                    65 + optionIndex
+                                                  )}
+                                                  . {option.text || option}
+                                                </span>
+                                                <div className="flex items-center space-x-2">
+                                                  {isUserChoice && (
+                                                    <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                                                      您的选择
+                                                    </span>
+                                                  )}
+                                                  {isCorrect && (
+                                                    <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                                                      正确答案
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          );
+                                        }
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {questionData.explanation && (
+                                  <div className="bg-blue-50 rounded-lg p-4">
+                                    <h6 className="text-sm font-semibold text-blue-900 mb-2">
+                                      解析说明：
+                                    </h6>
+                                    <div
+                                      className="text-sm text-blue-800 leading-relaxed"
+                                      dangerouslySetInnerHTML={{
+                                        __html: questionData.explanation,
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </div>
+                  );
+                }
+              )}
+            </motion.div>
+          )}
+        </motion.div>
+      )}
 
       {/* CCPM介绍和转化 */}
       <motion.div

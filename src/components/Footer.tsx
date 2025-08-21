@@ -22,7 +22,7 @@ const services = [
 
 export default function Footer() {
   const [contactInfo, setContactInfo] = useState({
-    contact_email: 'info@ccpm360.com',
+    contact_email: 'contact@ccpm360.com',
     contact_phone: '400-123-4567',
     contact_address: '北京市朝阳区商务中心区',
     business_hours_weekday: '周一至周五 9:00-18:00',

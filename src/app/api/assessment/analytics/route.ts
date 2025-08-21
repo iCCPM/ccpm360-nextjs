@@ -149,6 +149,22 @@ export async function GET(request: NextRequest) {
         ? Math.round((totalAssessments / emailsSent) * 100)
         : 0;
 
+    // 获取详细的评估记录列表
+    let assessmentsQuery = supabase
+      .from('assessment_records')
+      .select(
+        'id, user_email, user_name, user_company, total_score, assessment_level, completed_at, ip_address, user_agent, computer_name, dimension_scores'
+      )
+      .order('completed_at', { ascending: false });
+
+    if (startDate && endDate) {
+      assessmentsQuery = assessmentsQuery
+        .gte('completed_at', startDate)
+        .lte('completed_at', endDate);
+    }
+
+    const { data: assessments } = await assessmentsQuery;
+
     return NextResponse.json({
       summary: {
         totalAssessments: totalAssessments || 0,
@@ -168,6 +184,7 @@ export async function GET(request: NextRequest) {
         openRate,
         clickRate,
       },
+      assessments: assessments || [],
     });
   } catch (error) {
     console.error('获取评测分析数据失败:', error);

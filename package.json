@@ -1,6 +1,6 @@
 {
   "name": "ccpm360-nextjs",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -85,7 +85,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/mdx": "^2.0.13",
     "@types/node": "^20",
-    "@types/nodemailer": "^6.4.18",
+    "@types/nodemailer": "^6.4.19",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",

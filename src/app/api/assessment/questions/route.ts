@@ -11,8 +11,9 @@ export async function GET() {
     // 获取所有测试题目，按维度分组
     const { data: questions, error } = await supabase
       .from('assessment_questions')
-      .select('*')
-      .order('id');
+      .select('*, explanation')
+      .order('dimension', { ascending: true })
+      .order('id', { ascending: true });
 
     if (error) {
       console.error('Error fetching questions:', error);
