@@ -35,7 +35,7 @@ export function AuthGuard({
 
     // 检查认证状态
     checkAuth();
-  }, [pathname, redirectTo, checkAuth]);
+  }, [pathname, redirectTo]);
 
   // 处理未认证用户的重定向
   useEffect(() => {

@@ -59,17 +59,40 @@ const getDeviceInfo = () => {
 };
 
 // 发送数据到API
-const sendAnalyticsData = async (type: string, data: any) => {
+const sendAnalyticsData = async (
+  type: string,
+  data: any,
+  useBeacon = false
+) => {
   try {
+    // 在页面卸载时使用sendBeacon，避免ERR_ABORTED错误
+    if (useBeacon && navigator.sendBeacon) {
+      const blob = new Blob([JSON.stringify({ type, data })], {
+        type: 'application/json',
+      });
+      navigator.sendBeacon('/api/analytics', blob);
+      return;
+    }
+
+    // 创建AbortController来处理请求中断
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+
     await fetch('/api/analytics', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ type, data }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
   } catch (error) {
-    console.error('Failed to send analytics data:', error);
+    // 忽略AbortError，这是正常的页面卸载行为
+    if (error instanceof Error && error.name !== 'AbortError') {
+      console.error('Failed to send analytics data:', error);
+    }
   }
 };
 
@@ -87,6 +110,10 @@ export default function UmamiTracker({
     // 初始化访客和会话ID
     visitorId.current = generateVisitorId();
     sessionId.current = generateSessionId();
+
+    // 存储到localStorage和sessionStorage供其他函数使用
+    localStorage.setItem('visitor_id', visitorId.current);
+    sessionStorage.setItem('session_id', sessionId.current);
 
     // 动态加载 Umami 脚本
     const script = document.createElement('script');
@@ -106,7 +133,11 @@ export default function UmamiTracker({
       visitorId: visitorId.current,
       duration: 0,
       pageCount: 0,
-      ...deviceInfo,
+      deviceType: deviceInfo.deviceType,
+      browser: deviceInfo.browser,
+      os: deviceInfo.os,
+      country: null,
+      city: null,
     });
 
     // 页面卸载时更新会话信息
@@ -114,13 +145,22 @@ export default function UmamiTracker({
       const duration = Math.floor(
         (Date.now() - sessionStartTime.current) / 1000
       );
-      sendAnalyticsData('session', {
-        sessionId: sessionId.current,
-        visitorId: visitorId.current,
-        duration,
-        pageCount: pageCount.current,
-        ...deviceInfo,
-      });
+      // 使用sendBeacon避免ERR_ABORTED错误
+      sendAnalyticsData(
+        'session',
+        {
+          sessionId: sessionId.current,
+          visitorId: visitorId.current,
+          duration,
+          pageCount: pageCount.current,
+          deviceType: deviceInfo.deviceType,
+          browser: deviceInfo.browser,
+          os: deviceInfo.os,
+          country: null,
+          city: null,
+        },
+        true
+      ); // 使用beacon
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -140,17 +180,33 @@ export default function UmamiTracker({
     if (typeof window !== 'undefined') {
       pageCount.current += 1;
 
+      // 确保ID已经初始化
+      const currentVisitorId =
+        visitorId.current ||
+        localStorage.getItem('visitor_id') ||
+        generateVisitorId();
+      const currentSessionId =
+        sessionId.current ||
+        sessionStorage.getItem('session_id') ||
+        generateSessionId();
+
+      // 如果ref中的值为空，更新它们
+      if (!visitorId.current) {
+        visitorId.current = currentVisitorId;
+        localStorage.setItem('visitor_id', currentVisitorId);
+      }
+      if (!sessionId.current) {
+        sessionId.current = currentSessionId;
+        sessionStorage.setItem('session_id', currentSessionId);
+      }
+
       // 发送页面访问数据到Supabase
       sendAnalyticsData('page_view', {
-        visitorId: visitorId.current,
-        sessionId: sessionId.current,
-        pageUrl: pathname,
+        visitorId: currentVisitorId,
+        sessionId: currentSessionId,
+        pageUrl: window.location.href,
         pageTitle: document.title,
         referrer: document.referrer,
-        userAgent: navigator.userAgent,
-        ipAddress: null, // 将在服务端获取
-        country: null, // 将在服务端获取
-        city: null, // 将在服务端获取
       });
 
       // Umami 追踪
@@ -172,13 +228,21 @@ export const trackEvent = (
     const visitorId = localStorage.getItem('visitor_id');
     const sessionId = sessionStorage.getItem('session_id');
 
+    // 确保有有效的ID
+    if (!visitorId || !sessionId) {
+      console.warn(
+        'Visitor ID or Session ID not found, skipping analytics event'
+      );
+      return;
+    }
+
     // 发送到Supabase
     sendAnalyticsData('event', {
       visitorId,
       sessionId,
-      eventType: eventName,
+      eventType: 'custom',
+      eventName: eventName,
       eventData,
-      pageUrl: window.location.pathname,
     });
 
     // Umami 追踪

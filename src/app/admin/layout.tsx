@@ -26,6 +26,8 @@ import {
   Globe,
   Shield,
   Database,
+  ClipboardList,
+  BarChart3,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthProvider';
 import { AuthGuard } from '@/components/auth/AuthGuard';
@@ -142,6 +144,26 @@ const menuItems: MenuItem[] = [
         label: '角色权限',
         icon: Shield,
         href: '/admin/users/roles',
+      },
+    ],
+  },
+  {
+    id: 'assessment',
+    label: '测评管理',
+    icon: ClipboardList,
+    href: '/admin/assessment',
+    children: [
+      {
+        id: 'assessment-questions',
+        label: '题库管理',
+        icon: ClipboardList,
+        href: '/admin/questions',
+      },
+      {
+        id: 'assessment-analytics',
+        label: '数据分析',
+        icon: BarChart3,
+        href: '/admin/assessment',
       },
     ],
   },

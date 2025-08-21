@@ -111,6 +111,10 @@ export class AuthService {
 
       debugAuth('通过API端点获取管理员用户信息:', userId);
 
+      // 创建AbortController来处理请求中断
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+
       // 使用API端点获取管理员用户信息
       const response = await fetch(
         `/api/admin/get-user?userId=${encodeURIComponent(userId)}`,
@@ -121,8 +125,11 @@ export class AuthService {
           },
           // 添加缓存控制
           cache: 'no-cache',
+          signal: controller.signal,
         }
       );
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         debugError(
@@ -151,7 +158,10 @@ export class AuthService {
       debugAuth('成功获取管理员用户信息:', user.email);
       return user;
     } catch (error) {
-      debugError('获取管理员用户信息失败:', error);
+      // 忽略AbortError，这是正常的页面卸载行为
+      if (error instanceof Error && error.name !== 'AbortError') {
+        debugError('获取管理员用户信息失败:', error);
+      }
       return null;
     }
   }

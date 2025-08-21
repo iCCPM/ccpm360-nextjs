@@ -188,7 +188,15 @@ async function getPageData(supabase: any, startDate: string) {
   try {
     const { data: pageViews, error } = await supabase
       .from('page_views')
-      .select('page_url, page_title, referrer, created_at')
+      .select(
+        `
+        page_url, 
+        page_title, 
+        referrer, 
+        created_at,
+        visitor_sessions!inner(visitor_id)
+      `
+      )
       .gte('created_at', startDate)
       .order('created_at', { ascending: false });
 
@@ -207,7 +215,10 @@ async function getPageData(supabase: any, startDate: string) {
           };
         }
         acc[key].views++;
-        acc[key].uniqueVisitors.add(pv.visitor_id);
+        // 从关联的visitor_sessions中获取visitor_id
+        if (pv.visitor_sessions?.visitor_id) {
+          acc[key].uniqueVisitors.add(pv.visitor_sessions.visitor_id);
+        }
         return acc;
       },
       {}
@@ -244,11 +255,11 @@ async function getSessionData(supabase: any, startDate: string) {
       visitorId: session.visitor_id,
       startTime: session.created_at,
       endTime: session.updated_at,
-      duration: session.duration || 0,
-      pageCount: session.page_count || 0,
+      duration: session.duration_seconds || 0,
+      pageCount: session.page_views || 0,
       country: session.country,
       city: session.city,
-      device: session.device_type,
+      device: session.device,
       browser: session.browser,
       os: session.os,
     }));
@@ -407,14 +418,29 @@ async function recordSession(supabase: any, data: any) {
 }
 
 async function recordEvent(supabase: any, data: any) {
-  const { error } = await supabase.from('user_events').insert({
-    visitor_id: data.visitorId,
-    session_id: data.sessionId,
-    event_type: data.eventType,
-    event_data: data.eventData,
-    page_url: data.pageUrl,
-  });
+  try {
+    const { error } = await supabase.from('user_events').insert({
+      session_id: data.sessionId,
+      event_type: data.eventType,
+      event_name: data.eventName,
+      element_selector: data.elementSelector,
+      element_text: data.elementText,
+      element_attributes: data.elementAttributes,
+      position_x: data.positionX,
+      position_y: data.positionY,
+      event_data: data.eventData,
+      occurred_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    });
 
-  if (error) throw error;
-  return NextResponse.json({ success: true });
+    if (error) {
+      console.error('Event insert error:', error);
+      throw error;
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Record event error:', error);
+    throw error;
+  }
 }

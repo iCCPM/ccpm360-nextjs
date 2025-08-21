@@ -13,6 +13,9 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
+  Brain,
+  Clock,
+  BarChart3,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -280,6 +283,116 @@ export default function Home() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* 项目管理思维诊断器 */}
+      <section className="py-24 sm:py-32 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23f97316%22 fill-opacity=%220.05%22%3E%3Ccircle cx=%2230%22 cy=%2230%22 r=%221.5%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-purple-400/10 to-pink-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-gradient-to-br from-orange-400/10 to-red-500/10 rounded-full blur-3xl"></div>
+
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 rounded-full text-sm font-medium mb-6">
+              <Brain className="w-4 h-4 mr-2" />
+              免费诊断
+            </div>
+            <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl mb-6">
+              <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
+                项目管理思维诊断器
+              </span>
+            </h2>
+            <p className="text-xl leading-8 text-gray-600 mb-12 max-w-3xl mx-auto">
+              通过10道精心设计的情景化问题，深度分析您的项目管理思维模式，
+              获得个性化的能力评估报告和专业提升建议
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              <div className="group">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-purple-100">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                    <Clock className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    3分钟快速测评
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    精简高效的测评流程，快速了解您的项目管理能力现状
+                  </p>
+                </div>
+              </div>
+
+              <div className="group">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-pink-100">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-pink-500 to-orange-500 text-white rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                    <BarChart3 className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    专业能力分析
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    基于CCPM理论的多维度能力评估，精准定位优势与短板
+                  </p>
+                </div>
+              </div>
+
+              <div className="group">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-orange-100">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                    <Target className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    个性化建议
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    获得针对性的能力提升建议和专业培训推荐
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-purple-200 mb-8">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="text-left">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    立即开始您的项目管理能力诊断
+                  </h3>
+                  <p className="text-gray-600">
+                    加入已有{' '}
+                    <span className="font-semibold text-purple-600">2000+</span>{' '}
+                    位项目经理的能力提升之旅
+                  </p>
+                </div>
+                <Link
+                  href="/assessment"
+                  className="btn-gradient-primary group flex items-center gap-3 text-lg px-8 py-4 whitespace-nowrap"
+                >
+                  开始免费测评
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>完全免费</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>无需注册</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>即时获得结果</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>专业权威</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>

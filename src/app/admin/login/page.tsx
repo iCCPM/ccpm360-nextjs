@@ -39,7 +39,7 @@ const AdminLogin = () => {
       checkAuth();
       checkForExistingAdmin();
     }
-  }, [checkAuth]);
+  }, []);
 
   useEffect(() => {
     // 如果已经登录，重定向到仪表板

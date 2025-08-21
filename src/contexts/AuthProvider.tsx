@@ -80,6 +80,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const checkAuth = useCallback(async () => {
+    // 避免在已经加载中时重复调用
+    if (isLoading) return;
+
     setIsLoading(true);
     try {
       const currentUser = await AuthService.getCurrentUser();
@@ -100,7 +103,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [handleError]);
+  }, [handleError, isLoading]);
 
   const hasRole = (role: string): boolean => {
     return AuthService.hasRole(user, role);
@@ -112,7 +115,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // 监听认证状态变化
   useEffect(() => {
+    let mounted = true;
+
     const { data } = AuthService.onAuthStateChange((authUser) => {
+      if (!mounted) return;
+
       // 检查缓存，避免重复设置相同用户
       const cache = userCache.current;
       const cacheValid =
@@ -143,12 +150,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
 
     // 初始化时检查认证状态
-    checkAuth();
+    const initAuth = async () => {
+      if (!mounted) return;
+      setIsLoading(true);
+      try {
+        const currentUser = await AuthService.getCurrentUser();
+        if (mounted) {
+          if (currentUser) {
+            userCache.current = {
+              userId: currentUser.id,
+              user: currentUser,
+              timestamp: Date.now(),
+            };
+          }
+          setUser(currentUser);
+        }
+      } catch (error) {
+        if (mounted) {
+          handleError(
+            error instanceof Error ? error : new Error(String(error))
+          );
+          setUser(null);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initAuth();
 
     return () => {
+      mounted = false;
       data?.subscription?.unsubscribe();
     };
-  }, [checkAuth]);
+  }, [handleError]);
 
   const value: AuthContextType = {
     user,
