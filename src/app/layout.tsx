@@ -7,6 +7,7 @@ import { ErrorProvider } from '../contexts/ErrorContext';
 import { AuthProvider } from '../contexts/AuthProvider';
 import { ErrorBoundary } from '../components/error/ErrorBoundary';
 import { Toaster } from 'sonner';
+import FloatingAssessmentButton from '../components/FloatingAssessmentButton';
 
 export const metadata: Metadata = {
   title: 'CCPM360 - 关键链项目管理研究院',
@@ -48,6 +49,8 @@ export default function RootLayout({
               />
               {/* 调试面板 - 仅在开发环境显示 */}
               <DebugPanel />
+              {/* 浮动的项目管理思维诊断器入口 */}
+              <FloatingAssessmentButton />
             </ErrorBoundary>
           </AuthProvider>
         </ErrorProvider>
