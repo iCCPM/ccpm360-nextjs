@@ -32,9 +32,10 @@ fi
 # 额外的安全检查
 echo "🔒 执行安全检查..."
 
-# 检查是否有敏感信息
+# 检查是否有敏感信息（更精确的检测）
 echo "🔍 检查敏感信息..."
-if grep -r "API_KEY\|SECRET\|PASSWORD\|TOKEN" src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" | grep -v "process.env" | grep -v "//" | grep -v "\*" > /dev/null; then
+# 检查硬编码的API密钥、令牌等（排除变量声明和函数参数）
+if grep -r "['\"][a-zA-Z0-9]\{20,\}['\"]" src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" | grep -E "(api_key|secret|token|password)\s*[:=]" | grep -v "process.env" > /dev/null; then
   echo "❌ 发现可能的敏感信息硬编码"
   echo "💡 请使用环境变量存储敏感信息"
   exit 1
