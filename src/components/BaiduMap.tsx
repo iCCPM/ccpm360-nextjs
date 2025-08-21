@@ -28,7 +28,7 @@ interface BaiduMapProps {
   description?: string; // 新增：地图标记描述
 }
 
-const BAIDU_AK = 'OhLeCrlHrwyPZLlOp8G9qK9ptCW0DzOX';
+const BAIDU_AK = process.env['NEXT_PUBLIC_BAIDU_MAP_AK'] || '';
 
 // 默认公司位置（北京中关村）
 const DEFAULT_CENTER = { lng: 116.3074, lat: 39.9776 };
