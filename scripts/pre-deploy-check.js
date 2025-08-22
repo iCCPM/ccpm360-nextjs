@@ -371,9 +371,23 @@ function checkDependencyIntegrity() {
         // 跳过相对路径和内置模块
         if (importPath.startsWith('.') || importPath.startsWith('/')) continue;
         if (
-          ['fs', 'path', 'crypto', 'util', 'os', 'child_process'].includes(
-            importPath
-          )
+          [
+            'fs',
+            'fs/promises',
+            'path',
+            'crypto',
+            'util',
+            'os',
+            'child_process',
+            'http',
+            'https',
+            'url',
+            'events',
+            'stream',
+            'buffer',
+            'querystring',
+            'zlib',
+          ].includes(importPath)
         )
           continue;
 
@@ -397,9 +411,23 @@ function checkDependencyIntegrity() {
         if (requirePath.startsWith('.') || requirePath.startsWith('/'))
           continue;
         if (
-          ['fs', 'path', 'crypto', 'util', 'os', 'child_process'].includes(
-            requirePath
-          )
+          [
+            'fs',
+            'fs/promises',
+            'path',
+            'crypto',
+            'util',
+            'os',
+            'child_process',
+            'http',
+            'https',
+            'url',
+            'events',
+            'stream',
+            'buffer',
+            'querystring',
+            'zlib',
+          ].includes(requirePath)
         )
           continue;
 
