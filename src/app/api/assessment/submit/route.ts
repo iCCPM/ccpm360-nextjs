@@ -320,31 +320,63 @@ export async function POST(request: NextRequest) {
     // 如果用户提供了邮箱，发送个性化报告邮件
     if (userInfo?.email) {
       try {
-        const emailResponse = await fetch(
-          `${process.env['NEXT_PUBLIC_SITE_URL'] || 'http://localhost:3000'}/api/assessment/email`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              type: 'assessment_result',
-              recipientEmail: userInfo.email,
-              data: {
-                ...responseData,
-                name: userInfo.name,
-                company: userInfo.company,
-              },
-              scheduleFollowUp: true,
-            }),
+        // 构建正确的API URL，支持Vercel部署环境
+        const getApiUrl = () => {
+          // 在Vercel环境中使用VERCEL_URL
+          if (process.env['VERCEL_URL']) {
+            return `https://${process.env['VERCEL_URL']}`;
           }
-        );
+          // 在其他生产环境中使用NEXT_PUBLIC_SITE_URL
+          if (
+            process.env['NEXT_PUBLIC_SITE_URL'] &&
+            !process.env['NEXT_PUBLIC_SITE_URL'].includes('localhost')
+          ) {
+            return process.env['NEXT_PUBLIC_SITE_URL'];
+          }
+          // 开发环境回退到localhost
+          return 'http://localhost:3000';
+        };
+
+        const apiUrl = getApiUrl();
+        console.log('📧 Sending email using API URL:', apiUrl);
+
+        const emailResponse = await fetch(`${apiUrl}/api/assessment/email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'assessment_result',
+            recipientEmail: userInfo.email,
+            data: {
+              ...responseData,
+              name: userInfo.name,
+              company: userInfo.company,
+            },
+            scheduleFollowUp: true,
+          }),
+        });
 
         if (!emailResponse.ok) {
-          console.error('Failed to send assessment result email');
+          const errorText = await emailResponse.text();
+          console.error('❌ Failed to send assessment result email:', {
+            status: emailResponse.status,
+            statusText: emailResponse.statusText,
+            error: errorText,
+          });
+        } else {
+          console.log('✅ Assessment result email sent successfully');
         }
       } catch (emailError) {
-        console.error('Error sending assessment result email:', emailError);
+        console.error('❌ Error sending assessment result email:', {
+          error:
+            emailError instanceof Error ? emailError.message : 'Unknown error',
+          stack: emailError instanceof Error ? emailError.stack : undefined,
+          cause:
+            emailError instanceof Error && 'cause' in emailError
+              ? emailError.cause
+              : undefined,
+        });
         // 不影响主流程，继续返回结果
       }
     }

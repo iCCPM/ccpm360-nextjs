@@ -5,9 +5,25 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { generateAssessmentPDF } from '@/lib/puppeteerPDFGenerator';
 
+// 获取API基础URL的辅助函数
+function getApiUrl(): string {
+  // 在Vercel部署环境中，使用VERCEL_URL
+  if (process.env['VERCEL_URL']) {
+    return `https://${process.env['VERCEL_URL']}`;
+  }
+
+  // 使用NEXT_PUBLIC_SITE_URL（如果设置）
+  if (process.env['NEXT_PUBLIC_SITE_URL']) {
+    return process.env['NEXT_PUBLIC_SITE_URL'];
+  }
+
+  // 开发环境回退到localhost
+  return 'http://localhost:3000';
+}
+
 // 生成跟踪URL的辅助函数
 function generateTrackingUrls(trackingId: string) {
-  const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'http://localhost:3000';
+  const baseUrl = getApiUrl();
 
   return {
     openTrackingUrl: `${baseUrl}/api/email/track/open?trackingId=${encodeURIComponent(trackingId)}`,
