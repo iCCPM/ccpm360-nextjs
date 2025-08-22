@@ -321,51 +321,161 @@ export async function POST(request: NextRequest) {
     if (userInfo?.email) {
       try {
         // 构建正确的API URL，支持Vercel部署环境
-        const getApiUrl = () => {
-          // 在Vercel环境中使用VERCEL_URL
+        const getApiUrl = (request: NextRequest) => {
+          // 记录所有可用的环境变量和请求信息
+          console.log('🔍 Environment variables:', {
+            VERCEL_URL: process.env['VERCEL_URL'],
+            VERCEL_ENV: process.env['VERCEL_ENV'],
+            NODE_ENV: process.env['NODE_ENV'],
+            NEXT_PUBLIC_SITE_URL: process.env['NEXT_PUBLIC_SITE_URL'],
+            NEXT_PUBLIC_VERCEL_URL: process.env['NEXT_PUBLIC_VERCEL_URL'],
+          });
+
+          // 记录请求头信息
+          const host = request.headers.get('host');
+          const origin = request.headers.get('origin');
+          const referer = request.headers.get('referer');
+          console.log('🌐 Request headers:', { host, origin, referer });
+
+          let apiUrl = '';
+
+          // 方法1: 使用Vercel的VERCEL_URL环境变量
           if (process.env['VERCEL_URL']) {
-            return `https://${process.env['VERCEL_URL']}`;
+            apiUrl = `https://${process.env['VERCEL_URL']}`;
+            console.log('✅ Using VERCEL_URL:', apiUrl);
+            return apiUrl;
           }
-          // 在其他生产环境中使用NEXT_PUBLIC_SITE_URL
+
+          // 方法2: 使用NEXT_PUBLIC_VERCEL_URL
+          if (process.env['NEXT_PUBLIC_VERCEL_URL']) {
+            apiUrl = process.env['NEXT_PUBLIC_VERCEL_URL'].startsWith('http')
+              ? process.env['NEXT_PUBLIC_VERCEL_URL']
+              : `https://${process.env['NEXT_PUBLIC_VERCEL_URL']}`;
+            console.log('✅ Using NEXT_PUBLIC_VERCEL_URL:', apiUrl);
+            return apiUrl;
+          }
+
+          // 方法3: 从请求头获取host信息
+          if (host && !host.includes('localhost')) {
+            // 在生产环境中，通常使用HTTPS
+            const protocol =
+              process.env['NODE_ENV'] === 'production' ? 'https' : 'http';
+            apiUrl = `${protocol}://${host}`;
+            console.log('✅ Using request host:', apiUrl);
+            return apiUrl;
+          }
+
+          // 方法4: 使用NEXT_PUBLIC_SITE_URL（如果不是localhost）
           if (
             process.env['NEXT_PUBLIC_SITE_URL'] &&
             !process.env['NEXT_PUBLIC_SITE_URL'].includes('localhost')
           ) {
-            return process.env['NEXT_PUBLIC_SITE_URL'];
+            apiUrl = process.env['NEXT_PUBLIC_SITE_URL'];
+            console.log('✅ Using NEXT_PUBLIC_SITE_URL:', apiUrl);
+            return apiUrl;
           }
-          // 开发环境回退到localhost
-          return 'http://localhost:3000';
+
+          // 方法5: 从origin或referer获取
+          if (origin && !origin.includes('localhost')) {
+            apiUrl = origin;
+            console.log('✅ Using origin:', apiUrl);
+            return apiUrl;
+          }
+
+          if (referer && !referer.includes('localhost')) {
+            try {
+              const url = new URL(referer);
+              apiUrl = `${url.protocol}//${url.host}`;
+              console.log('✅ Using referer:', apiUrl);
+              return apiUrl;
+            } catch (e) {
+              console.warn('⚠️ Failed to parse referer:', referer);
+            }
+          }
+
+          // 最后回退到localhost（仅用于开发环境）
+          apiUrl = 'http://localhost:3000';
+          console.log('⚠️ Falling back to localhost:', apiUrl);
+          return apiUrl;
         };
 
-        const apiUrl = getApiUrl();
-        console.log('📧 Sending email using API URL:', apiUrl);
+        const apiUrl = getApiUrl(request);
+        console.log('📧 Final API URL for email sending:', apiUrl);
 
-        const emailResponse = await fetch(`${apiUrl}/api/assessment/email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        // 准备邮件数据
+        const emailData = {
+          type: 'assessment_result',
+          recipientEmail: userInfo.email,
+          data: {
+            ...responseData,
+            name: userInfo.name,
+            company: userInfo.company,
           },
-          body: JSON.stringify({
-            type: 'assessment_result',
-            recipientEmail: userInfo.email,
-            data: {
-              ...responseData,
-              name: userInfo.name,
-              company: userInfo.company,
-            },
-            scheduleFollowUp: true,
-          }),
-        });
+          scheduleFollowUp: true,
+        };
 
-        if (!emailResponse.ok) {
-          const errorText = await emailResponse.text();
-          console.error('❌ Failed to send assessment result email:', {
-            status: emailResponse.status,
-            statusText: emailResponse.statusText,
-            error: errorText,
-          });
-        } else {
-          console.log('✅ Assessment result email sent successfully');
+        // 尝试发送邮件，如果失败则尝试备用URL
+        let emailSent = false;
+        const urlsToTry = [apiUrl];
+
+        // 如果主URL是localhost，添加备用URL
+        if (apiUrl.includes('localhost')) {
+          const host = request.headers.get('host');
+          if (host && !host.includes('localhost')) {
+            urlsToTry.push(`https://${host}`);
+            urlsToTry.push(`http://${host}`);
+          }
+        }
+
+        console.log('🔄 URLs to try for email sending:', urlsToTry);
+
+        for (let i = 0; i < urlsToTry.length && !emailSent; i++) {
+          const currentUrl = urlsToTry[i];
+          console.log(`📧 Attempt ${i + 1}: Trying URL ${currentUrl}`);
+
+          try {
+            const emailResponse = await fetch(
+              `${currentUrl}/api/assessment/email`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(emailData),
+                // 添加超时设置
+                signal: AbortSignal.timeout(30000), // 30秒超时
+              }
+            );
+
+            if (emailResponse.ok) {
+              console.log(
+                `✅ Assessment result email sent successfully using ${currentUrl}`
+              );
+              emailSent = true;
+            } else {
+              const errorText = await emailResponse.text();
+              console.error(`❌ Failed to send email using ${currentUrl}:`, {
+                status: emailResponse.status,
+                statusText: emailResponse.statusText,
+                error: errorText,
+              });
+            }
+          } catch (fetchError) {
+            console.error(`❌ Fetch error for ${currentUrl}:`, {
+              error:
+                fetchError instanceof Error
+                  ? fetchError.message
+                  : 'Unknown error',
+              cause:
+                fetchError instanceof Error && 'cause' in fetchError
+                  ? fetchError.cause
+                  : undefined,
+            });
+          }
+        }
+
+        if (!emailSent) {
+          console.error('❌ Failed to send email using all available URLs');
         }
       } catch (emailError) {
         console.error('❌ Error sending assessment result email:', {
