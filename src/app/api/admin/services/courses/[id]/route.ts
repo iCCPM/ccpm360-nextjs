@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
+const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'];
+const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// 创建Supabase客户端，如果环境变量不存在则使用模拟客户端
+const supabase =
+  supabaseUrl && supabaseServiceKey
+    ? createClient(supabaseUrl, supabaseServiceKey)
+    : null;
 
 // GET - 获取单个课程
 export async function GET(
@@ -12,6 +16,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!supabase) {
+      console.warn('Supabase client not available, returning mock data');
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      );
+    }
+
     const { id } = await params;
 
     const { data: course, error } = await supabase
@@ -41,6 +53,14 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!supabase) {
+      console.warn('Supabase client not available, returning mock data');
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
     const {
@@ -101,6 +121,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!supabase) {
+      console.warn('Supabase client not available, returning mock data');
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      );
+    }
+
     const { id } = await params;
 
     const { error } = await supabase
