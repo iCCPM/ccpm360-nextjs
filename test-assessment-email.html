@@ -16,7 +16,7 @@
         background: white;
         padding: 20px;
         border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       }
       .test-section {
         margin-bottom: 30px;
@@ -67,7 +67,8 @@
         overflow-x: auto;
         font-size: 12px;
       }
-      input, select {
+      input,
+      select {
         padding: 8px;
         margin: 5px;
         border: 1px solid #ddd;
@@ -79,38 +80,53 @@
   <body>
     <div class="container">
       <h1>CCPM360 评估结果邮件测试</h1>
-      
+
       <div class="test-section">
         <h3>📧 发送测试邮件</h3>
         <p>测试发送包含维度得分的评估结果邮件</p>
-        
+
         <div>
           <label>收件人邮箱:</label>
-          <input type="email" id="testEmail" value="test@example.com" placeholder="输入测试邮箱">
+          <input
+            type="email"
+            id="testEmail"
+            value="test@example.com"
+            placeholder="输入测试邮箱"
+          />
         </div>
-        
+
         <div>
           <label>用户姓名:</label>
-          <input type="text" id="testName" value="张三" placeholder="输入测试姓名">
+          <input
+            type="text"
+            id="testName"
+            value="张三"
+            placeholder="输入测试姓名"
+          />
         </div>
-        
+
         <div>
           <label>公司名称:</label>
-          <input type="text" id="testCompany" value="测试公司" placeholder="输入公司名称">
+          <input
+            type="text"
+            id="testCompany"
+            value="测试公司"
+            placeholder="输入公司名称"
+          />
         </div>
-        
+
         <button onclick="sendTestEmail()">发送测试邮件</button>
         <button onclick="sendTestEmailWithPDF()">发送邮件+PDF</button>
-        
+
         <div id="emailResult"></div>
       </div>
-      
+
       <div class="test-section">
         <h3>📊 查看邮件记录</h3>
         <p>查看系统中的邮件发送记录</p>
-        
+
         <button onclick="getEmailRecords()">获取邮件记录</button>
-        
+
         <div id="recordsResult"></div>
       </div>
     </div>
@@ -125,28 +141,29 @@
             time_management: 85,
             resource_coordination: 72,
             risk_control: 68,
-            team_collaboration: 88
+            team_collaboration: 88,
           },
           advice: {
             level: 'intermediate',
             levelDescription: '您具备中等水平的CCPM项目管理思维',
-            overallAdvice: '您在项目管理方面有一定基础，建议继续深入学习CCPM理论和实践。',
+            overallAdvice:
+              '您在项目管理方面有一定基础，建议继续深入学习CCPM理论和实践。',
             dimensionAdvice: {
               time_management: '时间管理能力较强，继续保持。',
               resource_coordination: '资源协调能力有待提升。',
               risk_control: '风险控制意识需要加强。',
-              team_collaboration: '团队协作能力优秀！'
+              team_collaboration: '团队协作能力优秀！',
             },
             nextSteps: [
               '🔧 在实际项目中尝试应用CCPM方法',
               '📊 学习使用CCPM项目管理工具',
               '👥 考虑参加CCPM认证培训',
-              '🎯 重点提升风险控制能力'
-            ]
+              '🎯 重点提升风险控制能力',
+            ],
           },
           completedAt: new Date().toISOString(),
           userAnswers: {},
-          questions: []
+          questions: [],
         };
       }
 
@@ -156,17 +173,18 @@
         const email = document.getElementById('testEmail').value;
         const name = document.getElementById('testName').value;
         const company = document.getElementById('testCompany').value;
-        
+
         if (!email || !name) {
-          resultDiv.innerHTML = '<div class="result error">请填写邮箱和姓名</div>';
+          resultDiv.innerHTML =
+            '<div class="result error">请填写邮箱和姓名</div>';
           return;
         }
-        
+
         resultDiv.innerHTML = '<div class="result info">正在发送邮件...</div>';
-        
+
         try {
           const testData = generateTestData();
-          
+
           const response = await fetch('/api/assessment/email', {
             method: 'POST',
             headers: {
@@ -178,14 +196,14 @@
               data: {
                 ...testData,
                 name: name,
-                company: company
+                company: company,
               },
-              scheduleFollowUp: false
-            })
+              scheduleFollowUp: false,
+            }),
           });
-          
+
           const result = await response.json();
-          
+
           if (response.ok) {
             resultDiv.innerHTML = `
               <div class="result success">
@@ -218,24 +236,26 @@
           `;
         }
       }
-      
+
       // 发送带PDF的测试邮件
       async function sendTestEmailWithPDF() {
         const resultDiv = document.getElementById('emailResult');
         const email = document.getElementById('testEmail').value;
         const name = document.getElementById('testName').value;
         const company = document.getElementById('testCompany').value;
-        
+
         if (!email || !name) {
-          resultDiv.innerHTML = '<div class="result error">请填写邮箱和姓名</div>';
+          resultDiv.innerHTML =
+            '<div class="result error">请填写邮箱和姓名</div>';
           return;
         }
-        
-        resultDiv.innerHTML = '<div class="result info">正在发送邮件和PDF...</div>';
-        
+
+        resultDiv.innerHTML =
+          '<div class="result info">正在发送邮件和PDF...</div>';
+
         try {
           const testData = generateTestData();
-          
+
           const response = await fetch('/api/assessment/email', {
             method: 'POST',
             headers: {
@@ -247,15 +267,15 @@
               data: {
                 ...testData,
                 name: name,
-                company: company
+                company: company,
               },
               scheduleFollowUp: false,
-              includePDF: true
-            })
+              includePDF: true,
+            }),
           });
-          
+
           const result = await response.json();
-          
+
           if (response.ok) {
             resultDiv.innerHTML = `
               <div class="result success">
@@ -289,24 +309,30 @@
           `;
         }
       }
-      
+
       // 获取邮件记录
       async function getEmailRecords() {
         const resultDiv = document.getElementById('recordsResult');
-        resultDiv.innerHTML = '<div class="result info">正在获取邮件记录...</div>';
-        
+        resultDiv.innerHTML =
+          '<div class="result info">正在获取邮件记录...</div>';
+
         try {
           const response = await fetch('/api/assessment/email');
           const data = await response.json();
-          
+
           if (response.ok) {
             const emails = data.emails || [];
             resultDiv.innerHTML = `
               <div class="result success">
                 <h4>📧 邮件记录 (共 ${emails.length} 条)</h4>
-                ${emails.length > 0 ? `
+                ${
+                  emails.length > 0
+                    ? `
                   <div style="max-height: 400px; overflow-y: auto;">
-                    ${emails.slice(0, 10).map((email, index) => `
+                    ${emails
+                      .slice(0, 10)
+                      .map(
+                        (email, index) => `
                       <div style="border: 1px solid #ddd; margin: 10px 0; padding: 10px; border-radius: 3px;">
                         <strong>邮件 ${index + 1}:</strong><br>
                         <strong>收件人:</strong> ${email.recipient_email}<br>
@@ -315,10 +341,14 @@
                         <strong>发送时间:</strong> ${new Date(email.sent_at).toLocaleString()}<br>
                         ${email.error_message ? `<strong style="color: red;">错误:</strong> ${email.error_message}<br>` : ''}
                       </div>
-                    `).join('')}
+                    `
+                      )
+                      .join('')}
                     ${emails.length > 10 ? `<p><em>显示前10条记录，共${emails.length}条</em></p>` : ''}
                   </div>
-                ` : '<p>暂无邮件记录</p>'}
+                `
+                    : '<p>暂无邮件记录</p>'
+                }
                 <details>
                   <summary>原始数据</summary>
                   <pre>${JSON.stringify(data, null, 2)}</pre>

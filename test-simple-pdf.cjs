@@ -218,7 +218,7 @@ const testData = {
   userInfo: {
     name: '张三',
     email: 'zhangsan@example.com',
-    company: '北京科技有限公司'
+    company: '北京科技有限公司',
   },
   totalScore: 85,
   completedAt: '2024年1月15日',
@@ -227,16 +227,17 @@ const testData = {
     { dimension: '风险管理能力', score: 82 },
     { dimension: '团队协作能力', score: 90 },
     { dimension: '沟通表达能力', score: 78 },
-    { dimension: '问题解决能力', score: 85 }
+    { dimension: '问题解决能力', score: 85 },
   ],
   personalizedAdvice: {
-    overallLevel: '您在项目管理思维方面表现优秀，具备了扎实的理论基础和实践经验。在大多数维度上都达到了较高水平，特别是在团队协作和项目规划方面表现突出。建议继续加强风险管理和沟通技巧的提升。'
-  }
+    overallLevel:
+      '您在项目管理思维方面表现优秀，具备了扎实的理论基础和实践经验。在大多数维度上都达到了较高水平，特别是在团队协作和项目规划方面表现突出。建议继续加强风险管理和沟通技巧的提升。',
+  },
 };
 
 async function testPuppeteerPDF() {
   let browser;
-  
+
   try {
     console.log('1. 启动Puppeteer浏览器...');
     browser = await puppeteer.launch({
@@ -245,26 +246,26 @@ async function testPuppeteerPDF() {
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-gpu'
-      ]
+        '--disable-gpu',
+      ],
     });
-    
+
     console.log('   ✅ 浏览器启动成功');
-    
+
     console.log('2. 编译HTML模板...');
     const template = Handlebars.compile(htmlTemplate);
     const html = template(testData);
-    
+
     console.log('   ✅ HTML模板编译成功');
-    
+
     console.log('3. 创建新页面并生成PDF...');
     const page = await browser.newPage();
-    
+
     // 设置页面内容
     await page.setContent(html, {
-      waitUntil: 'networkidle0'
+      waitUntil: 'networkidle0',
     });
-    
+
     // 生成PDF
     const pdfBuffer = await page.pdf({
       format: 'A4',
@@ -273,23 +274,22 @@ async function testPuppeteerPDF() {
         top: '20mm',
         right: '15mm',
         bottom: '20mm',
-        left: '15mm'
-      }
+        left: '15mm',
+      },
     });
-    
+
     console.log(`   ✅ PDF生成成功，大小: ${pdfBuffer.length} 字节`);
-    
+
     // 保存PDF文件
     const outputPath = path.join(__dirname, 'test-simple-output.pdf');
     await fs.writeFile(outputPath, pdfBuffer);
-    
+
     console.log(`   ✅ PDF已保存到: ${outputPath}`);
-    
+
     console.log('\n🎉 测试成功！');
     console.log('✅ Puppeteer PDF生成器工作正常');
     console.log('✅ 中文字体显示正常');
     console.log('✅ HTML模板和CSS样式正确渲染');
-    
   } catch (error) {
     console.error('\n❌ 测试失败:', error);
     console.error('\n错误详情:');
@@ -303,10 +303,12 @@ async function testPuppeteerPDF() {
 }
 
 // 运行测试
-testPuppeteerPDF().then(() => {
-  console.log('\n=== 测试完成 ===');
-  process.exit(0);
-}).catch((error) => {
-  console.error('\n❌ 测试执行失败:', error);
-  process.exit(1);
-});
+testPuppeteerPDF()
+  .then(() => {
+    console.log('\n=== 测试完成 ===');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('\n❌ 测试执行失败:', error);
+    process.exit(1);
+  });

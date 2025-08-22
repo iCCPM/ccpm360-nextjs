@@ -2,7 +2,11 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { sendServerEmail, isServerEmailConfigured, generateAssessmentEmailHTML } from './src/lib/server-email.ts';
+import {
+  sendServerEmail,
+  isServerEmailConfigured,
+  generateAssessmentEmailHTML,
+} from './src/lib/server-email.ts';
 import { generateAssessmentPDF } from './src/lib/pdfGenerator.ts';
 import path from 'path';
 import fs from 'fs';
@@ -10,24 +14,31 @@ import fs from 'fs';
 // 测试邮件发送功能
 async function testEmailSending() {
   console.log('=== CCPM360 邮件发送测试 ===\n');
-  
+
   // 调试：打印环境变量
   console.log('调试信息:');
   console.log('EMAIL_USER:', process.env.EMAIL_USER);
-  console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '***已设置***' : '未设置');
+  console.log(
+    'EMAIL_PASS:',
+    process.env.EMAIL_PASS ? '***已设置***' : '未设置'
+  );
   console.log('EMAIL_HOST:', process.env.EMAIL_HOST);
   console.log('');
-  
+
   // 1. 检查服务器邮件配置
   console.log('1. 检查服务器邮件配置...');
   const isConfigured = isServerEmailConfigured();
-  
+
   if (isConfigured) {
     console.log('   配置状态: ✅ 已配置');
-    console.log(`   邮件服务器: ${process.env.EMAIL_HOST || 'smtp.exmail.qq.com'}`);
+    console.log(
+      `   邮件服务器: ${process.env.EMAIL_HOST || 'smtp.exmail.qq.com'}`
+    );
     console.log(`   端口: ${process.env.EMAIL_PORT || '465'}`);
     console.log(`   用户: ${process.env.EMAIL_USER}`);
-    console.log(`   发件人: ${process.env.EMAIL_FROM || process.env.EMAIL_USER}`);
+    console.log(
+      `   发件人: ${process.env.EMAIL_FROM || process.env.EMAIL_USER}`
+    );
   } else {
     console.log('   配置状态: ❌ 未配置');
     console.log('\n❌ 服务器邮件配置不完整，请检查以下环境变量:');
@@ -35,7 +46,7 @@ async function testEmailSending() {
     console.log('   - EMAIL_PASS');
     return;
   }
-  
+
   // 2. 测试基本邮件发送
   console.log('\n2. 测试基本邮件发送...');
   const testEmailData = {
@@ -46,16 +57,16 @@ async function testEmailSending() {
       <p>这是一封测试邮件，用于验证邮件发送功能是否正常。</p>
       <p>发送时间: ${new Date().toLocaleString('zh-CN')}</p>
       <p>如果您收到这封邮件，说明邮件发送功能正常工作。</p>
-    `
+    `,
   };
-  
+
   try {
     const result = await sendServerEmail(testEmailData);
     console.log(`   基本邮件发送: ${result ? '✅ 成功' : '❌ 失败'}`);
   } catch (error) {
     console.log(`   基本邮件发送: ❌ 失败 - ${error.message}`);
   }
-  
+
   // 3. 测试带PDF附件的邮件发送
   console.log('\n3. 测试带PDF附件的邮件发送...');
   try {
@@ -69,20 +80,20 @@ async function testEmailSending() {
       dimensionScores: [
         { name: '项目管理基础', score: 80, maxScore: 100 },
         { name: '关键链应用', score: 90, maxScore: 100 },
-        { name: '团队协作', score: 85, maxScore: 100 }
+        { name: '团队协作', score: 85, maxScore: 100 },
       ],
       recommendations: [
         '建议加强项目管理基础知识的学习',
         '继续深化关键链项目管理的实践应用',
-        '提升团队沟通协作效率'
+        '提升团队沟通协作效率',
       ],
-      completedAt: new Date().toISOString()
+      completedAt: new Date().toISOString(),
     };
-    
+
     console.log('   生成PDF报告...');
     const pdfBuffer = await generateAssessmentPDF(testAssessmentData);
     console.log(`   PDF生成: ${pdfBuffer ? '✅ 成功' : '❌ 失败'}`);
-    
+
     if (pdfBuffer) {
       const emailWithPDF = {
         to: 'test@example.com', // 请替换为您的测试邮箱
@@ -94,20 +105,22 @@ async function testEmailSending() {
           <p><strong>综合得分：85分</strong></p>
           <p>感谢您使用CCPM360评估系统！</p>
         `,
-        attachments: [{
-          filename: 'CCPM360评估报告.pdf',
-          content: pdfBuffer,
-          contentType: 'application/pdf'
-        }]
+        attachments: [
+          {
+            filename: 'CCPM360评估报告.pdf',
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          },
+        ],
       };
-      
+
       const pdfResult = await sendServerEmail(emailWithPDF);
       console.log(`   PDF邮件发送: ${pdfResult ? '✅ 成功' : '❌ 失败'}`);
     }
   } catch (error) {
     console.log(`   PDF邮件发送: ❌ 失败 - ${error.message}`);
   }
-  
+
   // 4. 显示配置信息
   console.log('\n4. 当前邮件配置信息:');
   console.log(`   EMAIL_HOST: ${process.env.EMAIL_HOST || '未设置'}`);
@@ -115,7 +128,7 @@ async function testEmailSending() {
   console.log(`   EMAIL_USER: ${process.env.EMAIL_USER || '未设置'}`);
   console.log(`   EMAIL_FROM: ${process.env.EMAIL_FROM || '未设置'}`);
   console.log(`   EMAIL_SECURE: ${process.env.EMAIL_SECURE || '未设置'}`);
-  
+
   console.log('\n=== 测试完成 ===');
   console.log('\n注意事项:');
   console.log('1. 请将测试邮箱地址替换为您的真实邮箱');
@@ -125,7 +138,7 @@ async function testEmailSending() {
 
 // 运行测试
 // 在ES模块中直接执行
-testEmailSending().catch(error => {
+testEmailSending().catch((error) => {
   console.error('测试过程中发生错误:', error);
   process.exit(1);
 });

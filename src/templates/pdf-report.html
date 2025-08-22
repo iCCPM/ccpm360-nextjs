@@ -1,457 +1,469 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CCPM360 项目管理思维诊断报告</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          'Noto Sans SC', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+        line-height: 1.6;
+        color: #1f2937;
+        background: #ffffff;
+        font-size: 12px;
+      }
+
+      .page {
+        width: 210mm;
+        min-height: 297mm;
+        padding: 80px 20mm 20mm 20mm; /* 增加顶部padding为固定页眉留出空间 */
+        margin: 0 auto;
+        background: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        page-break-after: always;
+      }
+
+      .page:last-child {
+        page-break-after: avoid;
+      }
+
+      /* 页眉样式 */
+      .header {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: white;
+        padding: 15px 20px;
+        margin: -20mm -20mm 20px -20mm;
+        text-align: center;
+        position: relative;
+      }
+
+      /* 每页页眉样式 */
+      @page {
+        margin-top: 60px;
+        @top-center {
+          content: 'CCPM360 项目管理思维诊断报告';
+          background: linear-gradient(135deg, #2563eb, #3b82f6);
+          color: white;
+          padding: 15px 20px;
+          font-size: 18px;
+          font-weight: 700;
+          text-align: center;
+          width: 100%;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 1000;
         }
-        
-        body {
-            font-family: 'Noto Sans SC', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-            line-height: 1.6;
-            color: #1f2937;
-            background: #ffffff;
-            font-size: 12px;
-        }
-        
+      }
+
+      /* 固定页眉样式（适用于所有页面） */
+      .fixed-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: white;
+        padding: 15px 20px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: 700;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .header::before,
+      .header::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 12px;
+        height: 12px;
+        background: #3b82f6;
+        border-radius: 50%;
+      }
+
+      .header::before {
+        left: 20px;
+      }
+
+      .header::after {
+        right: 20px;
+      }
+
+      /* 页脚样式 */
+      .footer {
+        position: fixed;
+        bottom: 15mm;
+        left: 20mm;
+        right: 20mm;
+        text-align: center;
+        font-size: 10px;
+        color: #6b7280;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 10px;
+      }
+
+      /* 标题样式 */
+      .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #2563eb;
+        margin: 25px 0 15px 0;
+        padding: 10px 15px;
+        background: linear-gradient(90deg, #eff6ff, #ffffff);
+        border-left: 4px solid #2563eb;
+        border-radius: 0 8px 8px 0;
+      }
+
+      /* 用户信息卡片 */
+      .user-info-card {
+        background: white;
+        border: 2px solid #2563eb;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        position: relative;
+      }
+
+      .user-info-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        background: #2563eb;
+        border-radius: 6px 0 0 6px;
+      }
+
+      .user-avatar {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        float: left;
+        margin-right: 20px;
+      }
+
+      .user-details {
+        overflow: hidden;
+      }
+
+      .user-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 8px;
+      }
+
+      .user-meta {
+        font-size: 11px;
+        color: #6b7280;
+        margin-bottom: 4px;
+      }
+
+      .assessment-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        color: white;
+        font-weight: 600;
+        font-size: 11px;
+      }
+
+      /* 得分卡片 */
+      .score-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 15px 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .score-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--score-color, #2563eb);
+      }
+
+      .score-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .score-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f2937;
+      }
+
+      .score-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--score-color, #2563eb);
+      }
+
+      .score-max {
+        font-size: 14px;
+        color: #6b7280;
+        margin-left: 4px;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #f3f4f6;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: var(--score-color, #2563eb);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        position: relative;
+      }
+
+      .progress-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50%;
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+      }
+
+      /* 建议列表 */
+      .advice-list {
+        margin: 20px 0;
+      }
+
+      .advice-item {
+        background: #fcfcfd;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+        border-left: 4px solid #2563eb;
+        position: relative;
+        padding-left: 50px;
+      }
+
+      .advice-number {
+        position: absolute;
+        left: 15px;
+        top: 15px;
+        width: 24px;
+        height: 24px;
+        background: #2563eb;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .advice-content {
+        font-size: 11px;
+        line-height: 1.6;
+        color: #374151;
+      }
+
+      /* 总体描述 */
+      .overall-description {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        border: 1px solid #e2e8f0;
+        font-size: 12px;
+        line-height: 1.7;
+        color: #475569;
+      }
+
+      /* 颜色变量 */
+      .score-excellent {
+        --score-color: #10b981;
+      }
+      .score-good {
+        --score-color: #3b82f6;
+      }
+      .score-average {
+        --score-color: #f59e0b;
+      }
+      .score-poor {
+        --score-color: #ef4444;
+      }
+
+      /* 打印样式 */
+      @media print {
         .page {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 80px 20mm 20mm 20mm; /* 增加顶部padding为固定页眉留出空间 */
-            margin: 0 auto;
-            background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            page-break-after: always;
+          box-shadow: none;
+          margin: 0;
+          padding-top: 80px; /* 确保打印时也有页眉空间 */
         }
-        
-        .page:last-child {
-            page-break-after: avoid;
-        }
-        
-        /* 页眉样式 */
-        .header {
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
-            color: white;
-            padding: 15px 20px;
-            margin: -20mm -20mm 20px -20mm;
-            text-align: center;
-            position: relative;
-        }
-        
-        /* 每页页眉样式 */
-        @page {
-            margin-top: 60px;
-            @top-center {
-                content: "CCPM360 项目管理思维诊断报告";
-                background: linear-gradient(135deg, #2563eb, #3b82f6);
-                color: white;
-                padding: 15px 20px;
-                font-size: 18px;
-                font-weight: 700;
-                text-align: center;
-                width: 100%;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                z-index: 1000;
-            }
-        }
-        
-        /* 固定页眉样式（适用于所有页面） */
-        .fixed-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
-            color: white;
-            padding: 15px 20px;
-            text-align: center;
-            font-size: 18px;
-            font-weight: 700;
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .header h1 {
-            font-size: 18px;
-            font-weight: 700;
-            margin: 0;
-        }
-        
-        .header::before,
-        .header::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 12px;
-            height: 12px;
-            background: #3b82f6;
-            border-radius: 50%;
-        }
-        
-        .header::before {
-            left: 20px;
-        }
-        
-        .header::after {
-            right: 20px;
-        }
-        
-        /* 页脚样式 */
+
         .footer {
-            position: fixed;
-            bottom: 15mm;
-            left: 20mm;
-            right: 20mm;
-            text-align: center;
-            font-size: 10px;
-            color: #6b7280;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 10px;
+          position: fixed;
+          bottom: 0;
         }
-        
-        /* 标题样式 */
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #2563eb;
-            margin: 25px 0 15px 0;
-            padding: 10px 15px;
-            background: linear-gradient(90deg, #eff6ff, #ffffff);
-            border-left: 4px solid #2563eb;
-            border-radius: 0 8px 8px 0;
+
+        .fixed-header {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
-        
-        /* 用户信息卡片 */
-        .user-info-card {
-            background: white;
-            border: 2px solid #2563eb;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-        
-        .user-info-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 6px;
-            background: #2563eb;
-            border-radius: 6px 0 0 6px;
-        }
-        
-        .user-avatar {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            float: left;
-            margin-right: 20px;
-        }
-        
-        .user-details {
-            overflow: hidden;
-        }
-        
-        .user-name {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 8px;
-        }
-        
-        .user-meta {
-            font-size: 11px;
-            color: #6b7280;
-            margin-bottom: 4px;
-        }
-        
-        .assessment-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            color: white;
-            font-weight: 600;
-            font-size: 11px;
-        }
-        
-        /* 得分卡片 */
-        .score-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 15px 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e5e7eb;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .score-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: var(--score-color, #2563eb);
-        }
-        
-        .score-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .score-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .score-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--score-color, #2563eb);
-        }
-        
-        .score-max {
-            font-size: 14px;
-            color: #6b7280;
-            margin-left: 4px;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #f3f4f6;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: var(--score-color, #2563eb);
-            border-radius: 4px;
-            transition: width 0.3s ease;
-            position: relative;
-        }
-        
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 50%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
-        }
-        
-        /* 建议列表 */
-        .advice-list {
-            margin: 20px 0;
-        }
-        
-        .advice-item {
-            background: #fcfcfd;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            border-left: 4px solid #2563eb;
-            position: relative;
-            padding-left: 50px;
-        }
-        
-        .advice-number {
-            position: absolute;
-            left: 15px;
-            top: 15px;
-            width: 24px;
-            height: 24px;
-            background: #2563eb;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .advice-content {
-            font-size: 11px;
-            line-height: 1.6;
-            color: #374151;
-        }
-        
-        /* 总体描述 */
-        .overall-description {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            border: 1px solid #e2e8f0;
-            font-size: 12px;
-            line-height: 1.7;
-            color: #475569;
-        }
-        
-        /* 颜色变量 */
-        .score-excellent { --score-color: #10b981; }
-        .score-good { --score-color: #3b82f6; }
-        .score-average { --score-color: #f59e0b; }
-        .score-poor { --score-color: #ef4444; }
-        
-        /* 打印样式 */
-        @media print {
-            .page {
-                box-shadow: none;
-                margin: 0;
-                padding-top: 80px; /* 确保打印时也有页眉空间 */
-            }
-            
-            .footer {
-                position: fixed;
-                bottom: 0;
-            }
-            
-            .fixed-header {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-        }
-        
-        /* 响应式调整 */
-        @page {
-            size: A4;
-            margin: 60px 0 0 0; /* 为页眉留出空间 */
-        }
+      }
+
+      /* 响应式调整 */
+      @page {
+        size: A4;
+        margin: 60px 0 0 0; /* 为页眉留出空间 */
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- 固定页眉（每页都显示） -->
     <div class="fixed-header">
-        <h1>CCPM360 项目管理思维诊断报告</h1>
+      <h1>CCPM360 项目管理思维诊断报告</h1>
     </div>
-    
+
     <div class="page">
-        <!-- 页眉 -->
-        <div class="header">
-            <h1>CCPM360 项目管理思维诊断报告</h1>
+      <!-- 页眉 -->
+      <div class="header">
+        <h1>CCPM360 项目管理思维诊断报告</h1>
+      </div>
+
+      <!-- 用户信息 -->
+      <div class="section-title">测评者信息</div>
+      <div class="user-info-card">
+        <div class="user-avatar">{{userInitial}}</div>
+        <div class="user-details">
+          <div class="user-name">{{userName}}</div>
+          <div class="user-meta">邮箱: {{userEmail}}</div>
+          <div class="user-meta">公司: {{company}}</div>
+          <div class="user-meta">完成时间: {{completedAt}}</div>
         </div>
-        
-        <!-- 用户信息 -->
-        <div class="section-title">测评者信息</div>
-        <div class="user-info-card">
-            <div class="user-avatar">{{userInitial}}</div>
-            <div class="user-details">
-                <div class="user-name">{{userName}}</div>
-                <div class="user-meta">邮箱: {{userEmail}}</div>
-                <div class="user-meta">公司: {{company}}</div>
-                <div class="user-meta">完成时间: {{completedAt}}</div>
-            </div>
-            <div class="assessment-badge {{badgeClass}}">{{assessmentLevel}}</div>
+        <div class="assessment-badge {{badgeClass}}">{{assessmentLevel}}</div>
+      </div>
+
+      <!-- 总体得分 -->
+      <div class="section-title">总体评估结果</div>
+      <div class="score-card {{totalScoreClass}}">
+        <div class="score-header">
+          <div class="score-title">综合得分</div>
+          <div>
+            <span class="score-value">{{totalScore}}</span>
+            <span class="score-max">/100</span>
+          </div>
         </div>
-        
-        <!-- 总体得分 -->
-        <div class="section-title">总体评估结果</div>
-        <div class="score-card {{totalScoreClass}}">
-            <div class="score-header">
-                <div class="score-title">综合得分</div>
-                <div>
-                    <span class="score-value">{{totalScore}}</span>
-                    <span class="score-max">/100</span>
-                </div>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: {{totalScorePercent}}%"></div>
-            </div>
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            style="width: {{totalScorePercent}}%"
+          ></div>
         </div>
-        
-        <!-- 各维度得分 -->
-        <div class="section-title">各维度得分详情</div>
-        {{#each dimensionScores}}
-        <div class="score-card {{this.scoreClass}}">
-            <div class="score-header">
-                <div class="score-title">{{this.dimension}}</div>
-                <div>
-                    <span class="score-value">{{this.score}}</span>
-                    <span class="score-max">/100</span>
-                </div>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: {{this.scorePercent}}%"></div>
-            </div>
+      </div>
+
+      <!-- 各维度得分 -->
+      <div class="section-title">各维度得分详情</div>
+      {{#each dimensionScores}}
+      <div class="score-card {{this.scoreClass}}">
+        <div class="score-header">
+          <div class="score-title">{{this.dimension}}</div>
+          <div>
+            <span class="score-value">{{this.score}}</span>
+            <span class="score-max">/100</span>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            style="width: {{this.scorePercent}}%"
+          ></div>
+        </div>
+      </div>
+      {{/each}}
+
+      <!-- 个性化分析 -->
+      {{#if personalizedAdvice}}
+      <div class="section-title">个性化分析与建议</div>
+
+      {{#if personalizedAdvice.overallLevel}}
+      <div class="overall-description">{{personalizedAdvice.overallLevel}}</div>
+      {{/if}} {{#if personalizedAdvice.dimensionAdvice}}
+      <div class="section-title">🎯 维度改进建议</div>
+      <div class="advice-list">
+        {{#each personalizedAdvice.dimensionAdvice}}
+        <div class="advice-item">
+          <div class="advice-number">{{inc @index}}</div>
+          <div class="advice-content">{{this}}</div>
         </div>
         {{/each}}
-        
-        <!-- 个性化分析 -->
-        {{#if personalizedAdvice}}
-        <div class="section-title">个性化分析与建议</div>
-        
-        {{#if personalizedAdvice.overallLevel}}
-        <div class="overall-description">
-            {{personalizedAdvice.overallLevel}}
+      </div>
+      {{/if}} {{#if personalizedAdvice.nextSteps}}
+      <div class="section-title">🚀 下一步行动建议</div>
+      <div class="advice-list">
+        {{#each personalizedAdvice.nextSteps}}
+        <div class="advice-item">
+          <div class="advice-number">{{inc @index}}</div>
+          <div class="advice-content">{{this}}</div>
         </div>
-        {{/if}}
-        
-        {{#if personalizedAdvice.dimensionAdvice}}
-        <div class="section-title">🎯 维度改进建议</div>
-        <div class="advice-list">
-            {{#each personalizedAdvice.dimensionAdvice}}
-            <div class="advice-item">
-                <div class="advice-number">{{inc @index}}</div>
-                <div class="advice-content">{{this}}</div>
-            </div>
-            {{/each}}
-        </div>
-        {{/if}}
-        
-        {{#if personalizedAdvice.nextSteps}}
-        <div class="section-title">🚀 下一步行动建议</div>
-        <div class="advice-list">
-            {{#each personalizedAdvice.nextSteps}}
-            <div class="advice-item">
-                <div class="advice-number">{{inc @index}}</div>
-                <div class="advice-content">{{this}}</div>
-            </div>
-            {{/each}}
-        </div>
-        {{/if}}
-        {{/if}}
-        
-        <!-- 页脚 -->
-        <div class="footer">
-            <div>© 2024 CCPM360. All rights reserved. | www.ccpm360.com</div>
-            <div>报告生成时间: {{reportGeneratedAt}}</div>
-        </div>
+        {{/each}}
+      </div>
+      {{/if}} {{/if}}
+
+      <!-- 页脚 -->
+      <div class="footer">
+        <div>© 2024 CCPM360. All rights reserved. | www.ccpm360.com</div>
+        <div>报告生成时间: {{reportGeneratedAt}}</div>
+      </div>
     </div>
-</body>
+  </body>
 </html>
