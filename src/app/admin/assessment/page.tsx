@@ -840,16 +840,7 @@ export default function AssessmentAdminPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   邮件发送记录 ({emails.length} 条记录)
                 </h3>
-                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
-                  <p className="text-sm text-yellow-800">
-                    调试信息: activeTab = {activeTab}, emails数组长度 ={' '}
-                    {emails.length}
-                  </p>
-                  <p className="text-sm text-yellow-800">
-                    emails数组内容:{' '}
-                    {JSON.stringify(emails.slice(0, 1), null, 2)}
-                  </p>
-                </div>
+
                 {emails.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     暂无邮件发送记录

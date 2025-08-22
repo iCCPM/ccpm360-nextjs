@@ -65,6 +65,7 @@ class DependencyChecker {
     // 跳过Node.js内置模块
     const builtinModules = [
       'fs',
+      'fs/promises',
       'path',
       'http',
       'https',
@@ -78,6 +79,23 @@ class DependencyChecker {
       'querystring',
       'zlib',
       'child_process',
+      'assert',
+      'cluster',
+      'dgram',
+      'dns',
+      'domain',
+      'module',
+      'net',
+      'punycode',
+      'readline',
+      'repl',
+      'string_decoder',
+      'timers',
+      'tls',
+      'tty',
+      'v8',
+      'vm',
+      'worker_threads',
     ];
     if (builtinModules.includes(importPath)) {
       return;

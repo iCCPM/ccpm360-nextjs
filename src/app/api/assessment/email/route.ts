@@ -3,6 +3,7 @@ import { sendServerEmail, isServerEmailConfigured } from '@/lib/server-email';
 import { supabase } from '@/lib/supabase';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { generateAssessmentPDF } from '@/lib/puppeteerPDFGenerator';
 
 // 生成跟踪URL的辅助函数
 function generateTrackingUrls(trackingId: string) {
@@ -53,8 +54,36 @@ const emailTemplates = {
         
         <div style="margin-bottom: 25px;">
           <h3 style="color: #1f2937; margin-bottom: 15px;">各维度得分</h3>
-          ${
-            (Array.isArray(data.dimensionScores) ? data.dimensionScores : [])
+          ${(() => {
+            // 处理dimensionScores数据格式转换
+            let dimensionData = [];
+            if (Array.isArray(data.dimensionScores)) {
+              dimensionData = data.dimensionScores;
+            } else if (
+              data.dimensionScores &&
+              typeof data.dimensionScores === 'object'
+            ) {
+              // 将Record<string, number>格式转换为数组格式
+              const dimensionNames = {
+                time_management: '时间管理',
+                resource_coordination: '资源协调',
+                risk_control: '风险控制',
+                team_collaboration: '团队协作',
+              };
+              dimensionData = Object.entries(data.dimensionScores).map(
+                ([key, score]) => ({
+                  dimension:
+                    dimensionNames[key as keyof typeof dimensionNames] || key,
+                  score: score,
+                })
+              );
+            }
+
+            if (dimensionData.length === 0) {
+              return '<p style="color: #6b7280; text-align: center;">暂无维度得分数据</p>';
+            }
+
+            return dimensionData
               .map((item: any) => {
                 const dimension = item?.dimension || '未知维度';
                 const score = item?.score || 0;
@@ -77,9 +106,8 @@ const emailTemplates = {
               </div>
             `;
               })
-              .join('') ||
-            '<p style="color: #6b7280; text-align: center;">暂无维度得分数据</p>'
-          }
+              .join('');
+          })()}
         </div>
         
         <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
@@ -242,7 +270,16 @@ const emailTemplates = {
 };
 
 // 邮件发送函数 - 实现一用一备策略
-async function sendEmail(to: string, subject: string, html: string) {
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  attachments?: Array<{
+    filename: string;
+    content: Uint8Array;
+    contentType?: string;
+  }>
+) {
   try {
     console.log('Sending email to:', to);
     console.log('Subject:', subject);
@@ -293,11 +330,15 @@ async function sendEmail(to: string, subject: string, html: string) {
     if (serverEmailAvailable) {
       console.log('Attempting to send email via Server Email (backup)');
       try {
-        const serverResult = await sendServerEmail({
+        const mailOptions: any = {
           to: to,
           subject: subject,
           html: html,
-        });
+        };
+        if (attachments) {
+          mailOptions.attachments = attachments;
+        }
+        const serverResult = await sendServerEmail(mailOptions);
 
         if (serverResult) {
           console.log('Email sent successfully via Server Email (backup)');
@@ -364,9 +405,326 @@ export async function POST(request: NextRequest) {
     // 生成唯一的跟踪ID
     const trackingId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+    // 生成PDF报告（仅对测评结果邮件）
+    let attachments:
+      | Array<{ filename: string; content: Uint8Array; contentType?: string }>
+      | undefined;
+    if (type === 'assessment_result') {
+      try {
+        console.log('Generating PDF report for assessment result');
+        console.log('Original data structure:', JSON.stringify(data, null, 2));
+        console.log('Advice field detailed structure:');
+        console.log('- advice:', data.advice);
+        console.log('- advice type:', typeof data.advice);
+        console.log('- dimensionAdvice:', data.advice?.dimensionAdvice);
+        console.log(
+          '- dimensionAdvice type:',
+          typeof data.advice?.dimensionAdvice
+        );
+        console.log(
+          '- dimensionAdvice is Array:',
+          Array.isArray(data.advice?.dimensionAdvice)
+        );
+        console.log('- nextSteps:', data.advice?.nextSteps);
+        console.log('- nextSteps type:', typeof data.advice?.nextSteps);
+        console.log(
+          '- nextSteps is Array:',
+          Array.isArray(data.advice?.nextSteps)
+        );
+
+        // 转换数据格式以匹配PuppeteerPDFGenerator的AssessmentData接口
+        const assessmentData = {
+          userInfo: {
+            name: data.name || '用户',
+            email: data.email || recipientEmail,
+            company: data.company || undefined,
+          },
+          totalScore: Number(data.totalScore) || 0,
+          maxTotalScore: 100, // 假设总分为100
+          dimensionScores: (() => {
+            // 处理dimensionScores数据格式转换
+            let dimensionData = [];
+            if (Array.isArray(data.dimensionScores)) {
+              dimensionData = data.dimensionScores.map((item: any) => ({
+                dimension: item?.dimension || '未知维度',
+                score: Number(item?.score) || 0,
+                maxScore: 25, // 假设每个维度满分25分
+              }));
+            } else if (
+              data.dimensionScores &&
+              typeof data.dimensionScores === 'object'
+            ) {
+              // 将Record<string, number>格式转换为数组格式
+              const dimensionNames = {
+                time_management: '时间管理',
+                resource_coordination: '资源协调',
+                risk_control: '风险控制',
+                team_collaboration: '团队协作',
+              };
+              dimensionData = Object.entries(data.dimensionScores).map(
+                ([key, score]) => ({
+                  dimension:
+                    dimensionNames[key as keyof typeof dimensionNames] || key,
+                  score: Number(score) || 0,
+                  maxScore: 25,
+                })
+              );
+            }
+
+            // 如果没有维度数据，创建默认数据
+            if (dimensionData.length === 0) {
+              dimensionData = [
+                { dimension: '时间管理', score: 0, maxScore: 25 },
+                { dimension: '资源协调', score: 0, maxScore: 25 },
+                { dimension: '风险控制', score: 0, maxScore: 25 },
+                { dimension: '团队协作', score: 0, maxScore: 25 },
+              ];
+            }
+
+            return dimensionData;
+          })(),
+          personalizedAdvice: {
+            overallLevel:
+              data.advice?.levelDescription ||
+              data.advice?.overallAdvice ||
+              '您目前主要采用传统项目管理思维。CCPM能够显著提升项目成功率和效率，建议您系统学习关键链项目管理方法。',
+            dimensionAdvice: (() => {
+              // 处理dimensionAdvice数据格式转换
+              console.log('Processing dimensionAdvice...');
+              const rawAdvice = data.advice?.dimensionAdvice;
+              console.log('Raw dimensionAdvice:', rawAdvice);
+              console.log('Raw dimensionAdvice type:', typeof rawAdvice);
+
+              if (!rawAdvice) {
+                console.log('No dimensionAdvice found, using default');
+                return [
+                  '建议您关注项目管理的基础理论学习',
+                  '实践中积累项目管理经验',
+                ];
+              }
+
+              // 如果已经是字符串数组，直接返回
+              if (Array.isArray(rawAdvice)) {
+                console.log('dimensionAdvice is already an array:', rawAdvice);
+                return rawAdvice.filter(
+                  (item) => typeof item === 'string' && item.trim() !== ''
+                );
+              }
+
+              // 如果是对象格式，转换为数组
+              if (typeof rawAdvice === 'object' && rawAdvice !== null) {
+                console.log('Converting dimensionAdvice object to array');
+                const dimensionNames = {
+                  time_management: '时间管理',
+                  resource_coordination: '资源协调',
+                  risk_control: '风险控制',
+                  team_collaboration: '团队协作',
+                };
+
+                const converted = Object.entries(rawAdvice)
+                  .filter(
+                    ([_key, value]) =>
+                      value && typeof value === 'string' && value.trim() !== ''
+                  )
+                  .map(([key, advice]) => {
+                    const dimensionName =
+                      dimensionNames[key as keyof typeof dimensionNames] || key;
+                    return `${dimensionName}: ${advice}`;
+                  });
+
+                console.log('Converted dimensionAdvice:', converted);
+                return converted.length > 0
+                  ? converted
+                  : [
+                      '建议您关注项目管理的基础理论学习',
+                      '实践中积累项目管理经验',
+                    ];
+              }
+
+              // 如果是字符串，尝试解析
+              if (typeof rawAdvice === 'string') {
+                console.log(
+                  'dimensionAdvice is string, trying to parse:',
+                  rawAdvice
+                );
+                try {
+                  const parsed = JSON.parse(rawAdvice);
+                  if (Array.isArray(parsed)) {
+                    return parsed.filter(
+                      (item) => typeof item === 'string' && item.trim() !== ''
+                    );
+                  }
+                  if (typeof parsed === 'object' && parsed !== null) {
+                    return Object.values(parsed).filter(
+                      (item) => typeof item === 'string' && item.trim() !== ''
+                    );
+                  }
+                } catch (e) {
+                  console.log('Failed to parse dimensionAdvice string:', e);
+                  return [rawAdvice]; // 直接作为单个建议返回
+                }
+              }
+
+              console.log('Using default dimensionAdvice');
+              return [
+                '建议您关注项目管理的基础理论学习',
+                '实践中积累项目管理经验',
+              ];
+            })(),
+            nextSteps: (() => {
+              // 处理nextSteps数据格式转换
+              console.log('Processing nextSteps...');
+              const rawSteps = data.advice?.nextSteps;
+              console.log('Raw nextSteps:', rawSteps);
+              console.log('Raw nextSteps type:', typeof rawSteps);
+
+              if (!rawSteps) {
+                console.log('No nextSteps found, using default');
+                return [
+                  '📚 阅读《关键链》一书，了解CCPM基础理论',
+                  '🎯 参加CCPM基础培训课程',
+                  '💼 联系我们获取免费的项目诊断服务',
+                ];
+              }
+
+              // 如果已经是字符串数组，直接返回
+              if (Array.isArray(rawSteps)) {
+                console.log('nextSteps is already an array:', rawSteps);
+                const filtered = rawSteps.filter(
+                  (item) => typeof item === 'string' && item.trim() !== ''
+                );
+                return filtered.length > 0
+                  ? filtered
+                  : [
+                      '📚 阅读《关键链》一书，了解CCPM基础理论',
+                      '🎯 参加CCPM基础培训课程',
+                      '💼 联系我们获取免费的项目诊断服务',
+                    ];
+              }
+
+              // 如果是对象格式，提取值
+              if (typeof rawSteps === 'object' && rawSteps !== null) {
+                console.log('Converting nextSteps object to array');
+                const values = Object.values(rawSteps).filter(
+                  (item) => typeof item === 'string' && item.trim() !== ''
+                );
+                console.log('Converted nextSteps:', values);
+                return values.length > 0
+                  ? values
+                  : [
+                      '📚 阅读《关键链》一书，了解CCPM基础理论',
+                      '🎯 参加CCPM基础培训课程',
+                      '💼 联系我们获取免费的项目诊断服务',
+                    ];
+              }
+
+              // 如果是字符串，尝试解析
+              if (typeof rawSteps === 'string') {
+                console.log('nextSteps is string, trying to parse:', rawSteps);
+                try {
+                  const parsed = JSON.parse(rawSteps);
+                  if (Array.isArray(parsed)) {
+                    const filtered = parsed.filter(
+                      (item) => typeof item === 'string' && item.trim() !== ''
+                    );
+                    return filtered.length > 0
+                      ? filtered
+                      : [
+                          '📚 阅读《关键链》一书，了解CCPM基础理论',
+                          '🎯 参加CCPM基础培训课程',
+                          '💼 联系我们获取免费的项目诊断服务',
+                        ];
+                  }
+                  if (typeof parsed === 'object' && parsed !== null) {
+                    const values = Object.values(parsed).filter(
+                      (item) => typeof item === 'string' && item.trim() !== ''
+                    );
+                    return values.length > 0
+                      ? values
+                      : [
+                          '📚 阅读《关键链》一书，了解CCPM基础理论',
+                          '🎯 参加CCPM基础培训课程',
+                          '💼 联系我们获取免费的项目诊断服务',
+                        ];
+                  }
+                } catch (e) {
+                  console.log('Failed to parse nextSteps string:', e);
+                  return [rawSteps]; // 直接作为单个步骤返回
+                }
+              }
+
+              console.log('Using default nextSteps');
+              return [
+                '📚 阅读《关键链》一书，了解CCPM基础理论',
+                '🎯 参加CCPM基础培训课程',
+                '💼 联系我们获取免费的项目诊断服务',
+              ];
+            })(),
+          },
+          completedAt: data.completedAt
+            ? new Date(data.completedAt)
+            : new Date(),
+        };
+
+        console.log(
+          'Converted assessment data:',
+          JSON.stringify(assessmentData, null, 2)
+        );
+        console.log('Final personalizedAdvice structure:');
+        console.log(
+          '- dimensionAdvice:',
+          assessmentData.personalizedAdvice.dimensionAdvice
+        );
+        console.log(
+          '- dimensionAdvice type:',
+          typeof assessmentData.personalizedAdvice.dimensionAdvice
+        );
+        console.log(
+          '- dimensionAdvice is Array:',
+          Array.isArray(assessmentData.personalizedAdvice.dimensionAdvice)
+        );
+        console.log(
+          '- nextSteps:',
+          assessmentData.personalizedAdvice.nextSteps
+        );
+        console.log(
+          '- nextSteps type:',
+          typeof assessmentData.personalizedAdvice.nextSteps
+        );
+        console.log(
+          '- nextSteps is Array:',
+          Array.isArray(assessmentData.personalizedAdvice.nextSteps)
+        );
+
+        const pdfBuffer = await generateAssessmentPDF(assessmentData);
+        const fileName = `CCPM360-assessment-report-${new Date().toISOString().split('T')[0]}.pdf`;
+        attachments = [
+          {
+            filename: fileName,
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          },
+        ];
+        console.log('PDF report generated successfully:', fileName);
+      } catch (pdfError) {
+        console.error('Failed to generate PDF report:', pdfError);
+        console.error('PDF Error details:', {
+          message:
+            pdfError instanceof Error ? pdfError.message : 'Unknown error',
+          stack: pdfError instanceof Error ? pdfError.stack : undefined,
+        });
+        // 继续发送邮件，即使PDF生成失败
+      }
+    }
+
     // 发送主邮件
     const emailHtml = template.template(data, trackingId);
-    const result = await sendEmail(recipientEmail, template.subject, emailHtml);
+    const result = await sendEmail(
+      recipientEmail,
+      template.subject,
+      emailHtml,
+      attachments
+    );
 
     if (!result.success) {
       throw new Error('Failed to send email');

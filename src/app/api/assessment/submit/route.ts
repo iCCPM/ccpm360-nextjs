@@ -220,10 +220,13 @@ function getClientInfo(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔍 Assessment submit API called');
     const body = await request.json();
+    console.log('📝 Request body:', JSON.stringify(body, null, 2));
     const { answers, userInfo, clientInfo } = body;
 
     if (!answers || typeof answers !== 'object') {
+      console.error('❌ Invalid answers format:', answers);
       return NextResponse.json(
         { error: 'Invalid answers format' },
         { status: 400 }
@@ -234,24 +237,35 @@ export async function POST(request: NextRequest) {
     const serverClientInfo = getClientInfo(request);
 
     // 获取所有题目和答案选项
+    console.log('📊 Fetching assessment questions...');
     const { data: questions, error: questionsError } = await supabase
       .from('assessment_questions')
       .select('*')
       .order('id');
 
     if (questionsError) {
-      console.error('Error fetching questions:', questionsError);
+      console.error('❌ Error fetching questions:', questionsError);
       return NextResponse.json(
         { error: 'Failed to fetch questions' },
         { status: 500 }
       );
     }
 
+    console.log(
+      '✅ Questions fetched successfully:',
+      questions?.length || 0,
+      'questions'
+    );
+
     // 计算得分
+    console.log('🧮 Calculating scores...');
     const { dimensionScores, totalScore } = calculateScores(answers, questions);
+    console.log('📈 Scores calculated:', { dimensionScores, totalScore });
 
     // 生成个性化建议
+    console.log('💡 Generating personalized advice...');
     const advice = generatePersonalizedAdvice(dimensionScores, totalScore);
+    console.log('✅ Advice generated successfully');
 
     // 保存测试记录
     const assessmentRecord = {
@@ -267,6 +281,7 @@ export async function POST(request: NextRequest) {
       computer_name: clientInfo?.computerName || null,
     };
 
+    console.log('💾 Saving assessment record...');
     const { data: record, error: insertError } = await supabase
       .from('assessment_records')
       .insert(assessmentRecord)
@@ -274,8 +289,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('Error saving assessment record:', insertError);
+      console.error('❌ Error saving assessment record:', insertError);
+      console.error(
+        '📋 Assessment record data:',
+        JSON.stringify(assessmentRecord, null, 2)
+      );
       // 即使保存失败，也返回评估结果
+    } else {
+      console.log('✅ Assessment record saved successfully:', record?.id);
     }
 
     const responseData = {
@@ -330,9 +351,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error('Unexpected error:', error);
+    console.error('❌ Unexpected error in assessment submit:', error);
+    console.error(
+      '📋 Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace'
+    );
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }

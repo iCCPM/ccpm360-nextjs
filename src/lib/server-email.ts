@@ -1,19 +1,21 @@
 import nodemailer from 'nodemailer';
 
-// 服务器端邮件配置
-const EMAIL_CONFIG = {
-  host: process.env['EMAIL_HOST'] || 'smtp.exmail.qq.com',
-  port: parseInt(process.env['EMAIL_PORT'] || '465'),
-  secure: process.env['EMAIL_SECURE'] === 'true' || true,
-  auth: {
-    user: process.env['EMAIL_USER'],
-    pass: process.env['EMAIL_PASS'],
-  },
-};
+// 动态获取服务器端邮件配置
+function getEmailConfig() {
+  return {
+    host: process.env['EMAIL_HOST'] || 'smtp.exmail.qq.com',
+    port: parseInt(process.env['EMAIL_PORT'] || '465'),
+    secure: process.env['EMAIL_SECURE'] === 'true' || true,
+    auth: {
+      user: process.env['EMAIL_USER'],
+      pass: process.env['EMAIL_PASS'],
+    },
+  };
+}
 
 // 检查服务器端邮件配置是否完整
 export function isServerEmailConfigured(): boolean {
-  return !!(EMAIL_CONFIG.auth.user && EMAIL_CONFIG.auth.pass);
+  return !!(process.env['EMAIL_USER'] && process.env['EMAIL_PASS']);
 }
 
 // 创建邮件传输器
@@ -22,7 +24,7 @@ export function createTransporter() {
     throw new Error('服务器邮件配置不完整');
   }
 
-  return nodemailer.createTransport(EMAIL_CONFIG);
+  return nodemailer.createTransport(getEmailConfig());
 }
 
 // 服务器端邮件发送接口
@@ -31,6 +33,11 @@ export interface ServerEmailOptions {
   subject: string;
   html: string;
   from?: string;
+  attachments?: Array<{
+    filename: string;
+    content: Buffer | Uint8Array;
+    contentType?: string;
+  }>;
 }
 
 // 发送邮件函数
@@ -45,12 +52,22 @@ export async function sendServerEmail(
 
     const transporter = createTransporter();
 
-    const mailOptions = {
-      from: options.from || process.env['EMAIL_FROM'] || EMAIL_CONFIG.auth.user,
+    const emailConfig = getEmailConfig();
+    const mailOptions: any = {
+      from: options.from || process.env['EMAIL_FROM'] || emailConfig.auth.user,
       to: options.to,
       subject: options.subject,
       html: options.html,
     };
+
+    // 添加附件支持
+    if (options.attachments && options.attachments.length > 0) {
+      mailOptions.attachments = options.attachments.map((attachment) => ({
+        filename: attachment.filename,
+        content: Buffer.from(attachment.content),
+        contentType: attachment.contentType || 'application/pdf',
+      }));
+    }
 
     console.log('Sending email via server (Tencent Enterprise Email):', {
       to: options.to,
