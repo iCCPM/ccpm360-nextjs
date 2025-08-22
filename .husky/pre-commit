@@ -13,36 +13,6 @@ npx tsc --noEmit --strict
 
 # 检查依赖完整性
 echo "📦 Checking dependency integrity..."
-node -e "
-const fs = require('fs');
-const path = require('path');
-const glob = require('glob');
-
-const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
-
-const files = glob.sync('src/**/*.{ts,tsx,js,jsx}');
-const missingDeps = [];
-
-files.forEach(file => {
-  const content = fs.readFileSync(file, 'utf8');
-  const importMatches = content.match(/import.*from\s+['\"]([^'\"]+)['\"]/g) || [];
-  
-  importMatches.forEach(match => {
-    const dep = match.match(/from\s+['\"]([^'\"]+)['\"]/)[1];
-    // 跳过相对路径、绝对路径和TypeScript路径别名
-    if (!dep.startsWith('.') && !dep.startsWith('/') && !dep.startsWith('@/') && !allDeps[dep] && !allDeps[dep.split('/')[0]]) {
-      missingDeps.push(dep);
-    }
-  });
-});
-
-if (missingDeps.length > 0) {
-  console.error('❌ Missing dependencies:', [...new Set(missingDeps)]);
-  process.exit(1);
-} else {
-  console.log('✅ All dependencies are properly declared');
-}
-"
+node scripts/check-dependencies.js
 
 echo "✅ Pre-commit checks completed successfully!"
