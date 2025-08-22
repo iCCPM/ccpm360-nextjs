@@ -321,81 +321,137 @@ export async function POST(request: NextRequest) {
     if (userInfo?.email) {
       try {
         // 构建正确的API URL，支持Vercel部署环境
-        const getApiUrl = (request: NextRequest) => {
+        const getApiUrl = (request: NextRequest): string => {
           // 记录所有可用的环境变量和请求信息
-          console.log('🔍 Environment variables:', {
+          const envVars = {
             VERCEL_URL: process.env['VERCEL_URL'],
             VERCEL_ENV: process.env['VERCEL_ENV'],
             NODE_ENV: process.env['NODE_ENV'],
             NEXT_PUBLIC_SITE_URL: process.env['NEXT_PUBLIC_SITE_URL'],
             NEXT_PUBLIC_VERCEL_URL: process.env['NEXT_PUBLIC_VERCEL_URL'],
-          });
+          };
+          console.log('🔍 Environment variables:', envVars);
 
           // 记录请求头信息
-          const host = request.headers.get('host');
-          const origin = request.headers.get('origin');
-          const referer = request.headers.get('referer');
-          console.log('🌐 Request headers:', { host, origin, referer });
+          const headers = {
+            host: request.headers.get('host'),
+            origin: request.headers.get('origin'),
+            referer: request.headers.get('referer'),
+            'x-forwarded-proto': request.headers.get('x-forwarded-proto'),
+            'x-forwarded-host': request.headers.get('x-forwarded-host'),
+          };
+          console.log('🌐 Request headers:', headers);
+
+          // URL验证函数
+          const isValidUrl = (url: string): boolean => {
+            try {
+              const urlObj = new URL(url);
+              return ['http:', 'https:'].includes(urlObj.protocol);
+            } catch {
+              return false;
+            }
+          };
+
+          // 确保URL格式正确
+          const normalizeUrl = (url: string): string => {
+            if (!url) return '';
+            // 移除尾部斜杠
+            url = url.replace(/\/$/, '');
+            // 如果没有协议，添加https
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+              url = `https://${url}`;
+            }
+            return url;
+          };
 
           let apiUrl = '';
 
-          // 方法1: 使用Vercel的VERCEL_URL环境变量
+          // 优先级1: 使用Vercel的VERCEL_URL环境变量（最可靠）
           if (process.env['VERCEL_URL']) {
-            apiUrl = `https://${process.env['VERCEL_URL']}`;
-            console.log('✅ Using VERCEL_URL:', apiUrl);
-            return apiUrl;
-          }
-
-          // 方法2: 使用NEXT_PUBLIC_VERCEL_URL
-          if (process.env['NEXT_PUBLIC_VERCEL_URL']) {
-            apiUrl = process.env['NEXT_PUBLIC_VERCEL_URL'].startsWith('http')
-              ? process.env['NEXT_PUBLIC_VERCEL_URL']
-              : `https://${process.env['NEXT_PUBLIC_VERCEL_URL']}`;
-            console.log('✅ Using NEXT_PUBLIC_VERCEL_URL:', apiUrl);
-            return apiUrl;
-          }
-
-          // 方法3: 从请求头获取host信息
-          if (host && !host.includes('localhost')) {
-            // 在生产环境中，通常使用HTTPS
-            const protocol =
-              process.env['NODE_ENV'] === 'production' ? 'https' : 'http';
-            apiUrl = `${protocol}://${host}`;
-            console.log('✅ Using request host:', apiUrl);
-            return apiUrl;
-          }
-
-          // 方法4: 使用NEXT_PUBLIC_SITE_URL（如果不是localhost）
-          if (
-            process.env['NEXT_PUBLIC_SITE_URL'] &&
-            !process.env['NEXT_PUBLIC_SITE_URL'].includes('localhost')
-          ) {
-            apiUrl = process.env['NEXT_PUBLIC_SITE_URL'];
-            console.log('✅ Using NEXT_PUBLIC_SITE_URL:', apiUrl);
-            return apiUrl;
-          }
-
-          // 方法5: 从origin或referer获取
-          if (origin && !origin.includes('localhost')) {
-            apiUrl = origin;
-            console.log('✅ Using origin:', apiUrl);
-            return apiUrl;
-          }
-
-          if (referer && !referer.includes('localhost')) {
-            try {
-              const url = new URL(referer);
-              apiUrl = `${url.protocol}//${url.host}`;
-              console.log('✅ Using referer:', apiUrl);
+            apiUrl = normalizeUrl(process.env['VERCEL_URL']);
+            if (isValidUrl(apiUrl)) {
+              console.log('✅ Using VERCEL_URL:', apiUrl);
               return apiUrl;
+            }
+            console.warn(
+              '⚠️ Invalid VERCEL_URL format:',
+              process.env['VERCEL_URL']
+            );
+          }
+
+          // 优先级2: 使用x-forwarded-host头（Vercel代理信息）
+          const forwardedHost = headers['x-forwarded-host'];
+          if (forwardedHost && !forwardedHost.includes('localhost')) {
+            const protocol = headers['x-forwarded-proto'] || 'https';
+            apiUrl = `${protocol}://${forwardedHost}`;
+            if (isValidUrl(apiUrl)) {
+              console.log('✅ Using x-forwarded-host:', apiUrl);
+              return apiUrl;
+            }
+          }
+
+          // 优先级3: 使用请求头的host信息
+          if (headers.host && !headers.host.includes('localhost')) {
+            // 在Vercel环境中，总是使用HTTPS
+            const protocol = process.env['VERCEL_ENV']
+              ? 'https'
+              : process.env['NODE_ENV'] === 'production'
+                ? 'https'
+                : 'http';
+            apiUrl = `${protocol}://${headers.host}`;
+            if (isValidUrl(apiUrl)) {
+              console.log('✅ Using request host:', apiUrl);
+              return apiUrl;
+            }
+          }
+
+          // 优先级4: 使用NEXT_PUBLIC_VERCEL_URL
+          if (process.env['NEXT_PUBLIC_VERCEL_URL']) {
+            apiUrl = normalizeUrl(process.env['NEXT_PUBLIC_VERCEL_URL']);
+            if (isValidUrl(apiUrl) && !apiUrl.includes('localhost')) {
+              console.log('✅ Using NEXT_PUBLIC_VERCEL_URL:', apiUrl);
+              return apiUrl;
+            }
+          }
+
+          // 优先级5: 使用NEXT_PUBLIC_SITE_URL（如果不是localhost）
+          if (process.env['NEXT_PUBLIC_SITE_URL']) {
+            apiUrl = normalizeUrl(process.env['NEXT_PUBLIC_SITE_URL']);
+            if (isValidUrl(apiUrl) && !apiUrl.includes('localhost')) {
+              console.log('✅ Using NEXT_PUBLIC_SITE_URL:', apiUrl);
+              return apiUrl;
+            }
+          }
+
+          // 优先级6: 从origin获取
+          if (headers.origin && !headers.origin.includes('localhost')) {
+            apiUrl = normalizeUrl(headers.origin);
+            if (isValidUrl(apiUrl)) {
+              console.log('✅ Using origin:', apiUrl);
+              return apiUrl;
+            }
+          }
+
+          // 优先级7: 从referer获取
+          if (headers.referer && !headers.referer.includes('localhost')) {
+            try {
+              const url = new URL(headers.referer);
+              apiUrl = `${url.protocol}//${url.host}`;
+              if (isValidUrl(apiUrl)) {
+                console.log('✅ Using referer:', apiUrl);
+                return apiUrl;
+              }
             } catch (e) {
-              console.warn('⚠️ Failed to parse referer:', referer);
+              console.warn('⚠️ Failed to parse referer:', headers.referer, e);
             }
           }
 
           // 最后回退到localhost（仅用于开发环境）
           apiUrl = 'http://localhost:3000';
           console.log('⚠️ Falling back to localhost:', apiUrl);
+          console.warn(
+            '🚨 Using localhost in production may cause email sending issues!'
+          );
           return apiUrl;
         };
 
