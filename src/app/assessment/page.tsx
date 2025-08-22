@@ -35,6 +35,7 @@ interface AssessmentData {
     nextSteps: string[];
   };
   completedAt: string;
+  name?: string; // 用户姓名，用于个性化称呼
 }
 
 type AssessmentStep = 'intro' | 'quiz' | 'result';

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邮件数据最终测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .result { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 10px 0; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>邮件数据最终测试</h1>
+        
+        <button onclick="testEmailAPI()">测试邮件API</button>
+        <button onclick="testPageAccess()">测试页面访问</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function testEmailAPI() {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                const response = await fetch('/api/assessment/email');
+                const data = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <div class="result success">
+                        <h3>✅ 邮件API测试成功</h3>
+                        <p><strong>状态码:</strong> ${response.status}</p>
+                        <p><strong>邮件数量:</strong> ${data.emails ? data.emails.length : 0}</p>
+                        <p><strong>响应数据:</strong></p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ 邮件API测试失败</h3>
+                        <p><strong>错误:</strong> ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function testPageAccess() {
+            window.open('/admin/assessment#emails', '_blank');
+        }
+        
+        // 页面加载时自动测试
+        window.onload = function() {
+            testEmailAPI();
+        };
+    </script>
+</body>
+</html>

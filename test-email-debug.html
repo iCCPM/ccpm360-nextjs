@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>邮件数据调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-info { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>邮件数据调试页面</h1>
+    
+    <button onclick="testEmailAPI()">测试邮件API</button>
+    <button onclick="testFrontendFetch()">测试前端获取</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        async function testEmailAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="debug-info">正在测试邮件API...</div>';
+            
+            try {
+                const response = await fetch('/api/assessment/email');
+                const data = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <div class="debug-info success">
+                        <h3>API测试成功</h3>
+                        <p>状态码: ${response.status}</p>
+                        <p>邮件数量: ${data.emails ? data.emails.length : 0}</p>
+                        <h4>完整响应:</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="debug-info error">
+                        <h3>API测试失败</h3>
+                        <p>错误: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testFrontendFetch() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="debug-info">正在模拟前端获取...</div>';
+            
+            try {
+                console.log('正在获取邮件数据...');
+                const emailResponse = await fetch('/api/assessment/email');
+                let emailData = null;
+                if (emailResponse.ok) {
+                    emailData = await emailResponse.json();
+                    console.log('邮件数据获取成功:', emailData);
+                    console.log('邮件数组长度:', emailData.emails?.length || 0);
+                    
+                    // 模拟setEmails
+                    const emails = emailData.emails || [];
+                    console.log('设置邮件状态完成');
+                    
+                    resultsDiv.innerHTML = `
+                        <div class="debug-info success">
+                            <h3>前端获取测试成功</h3>
+                            <p>邮件数组长度: ${emails.length}</p>
+                            <p>第一条邮件: ${emails.length > 0 ? emails[0].recipient_email : '无'}</p>
+                            <h4>所有邮件:</h4>
+                            <pre>${JSON.stringify(emails, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    console.error('获取邮件数据失败:', emailResponse.status, emailResponse.statusText);
+                    resultsDiv.innerHTML = `
+                        <div class="debug-info error">
+                            <h3>前端获取测试失败</h3>
+                            <p>状态码: ${emailResponse.status}</p>
+                            <p>状态文本: ${emailResponse.statusText}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('获取数据时发生错误:', error);
+                resultsDiv.innerHTML = `
+                    <div class="debug-info error">
+                        <h3>前端获取测试失败</h3>
+                        <p>错误: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,21 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { sendContactEmail, getAvailableEmailService } from '@/lib/emailjs';
+import { sendServerEmail, isServerEmailConfigured } from '@/lib/server-email';
+import { supabase } from '@/lib/supabase';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
+// 生成跟踪URL的辅助函数
+function generateTrackingUrls(trackingId: string) {
+  const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] || 'http://localhost:3000';
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  return {
+    openTrackingUrl: `${baseUrl}/api/email/track/open?trackingId=${encodeURIComponent(trackingId)}`,
+    clickTrackingUrl: (targetUrl: string) =>
+      `${baseUrl}/api/email/track/click?trackingId=${encodeURIComponent(trackingId)}&url=${encodeURIComponent(targetUrl)}`,
+  };
+}
 
 // 邮件模板配置
 const emailTemplates = {
   assessment_result: {
     subject: '您的项目管理思维诊断报告 - CCPM360',
-    template: (data: any) => `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+    template: (data: any, trackingId?: string) => {
+      const tracking = trackingId ? generateTrackingUrls(trackingId) : null;
+
+      // 生成个性化称呼
+      const generateGreeting = (name?: string) => {
+        if (name && name.trim()) {
+          // 如果有姓名，使用个性化称呼
+          return `<p style="color: #374151; font-size: 16px; margin-bottom: 20px;">尊敬的${name.trim()}：</p>
+          <p style="color: #6b7280; font-size: 16px;">感谢您完成我们的项目管理思维诊断测试</p>`;
+        } else {
+          // 没有姓名时使用通用称呼
+          return `<p style="color: #6b7280; font-size: 16px;">感谢您完成我们的项目管理思维诊断测试</p>`;
+        }
+      };
+
+      return `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #2563eb; margin-bottom: 10px;">CCPM360 项目管理思维诊断报告</h1>
-          <p style="color: #6b7280; font-size: 16px;">感谢您完成我们的项目管理思维诊断测试</p>
+          ${generateGreeting(data.name)}
         </div>
         
         <div style="background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
@@ -70,7 +92,7 @@ const emailTemplates = {
         <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 25px;">
           <h3 style="margin: 0 0 15px 0;">关键链项目管理（CCPM）</h3>
           <p style="margin: 0 0 20px 0; opacity: 0.9;">突破传统项目管理瓶颈，实现项目成功率提升30%+</p>
-          <a href="https://ccpm360.com/contact" style="display: inline-block; background: white; color: #6366f1; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">免费咨询CCPM解决方案</a>
+          <a href="${tracking ? tracking.clickTrackingUrl('https://ccpm360.com/contact') : 'https://ccpm360.com/contact'}" style="display: inline-block; background: white; color: #6366f1; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">免费咨询CCPM解决方案</a>
         </div>
         
         <div style="text-align: center; padding: 30px 20px; border-top: 1px solid #e5e7eb; background: #f8fafc; margin-top: 30px;">
@@ -99,13 +121,16 @@ const emailTemplates = {
             <p style="color: #9ca3af; font-size: 12px; margin: 5px 0 0 0;">如需帮助，请通过上述联系方式与我们联系</p>
           </div>
         </div>
-      </div>
-    `,
+        ${tracking ? `<img src="${tracking.openTrackingUrl}" width="1" height="1" style="display: none;" alt="" />` : ''}
+      </div>`;
+    },
   },
 
   follow_up_1: {
     subject: '深入了解CCPM：传统项目管理的突破之道',
-    template: () => `
+    template: (trackingId?: string) => {
+      const tracking = trackingId ? generateTrackingUrls(trackingId) : null;
+      return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: #2563eb;">您好，朋友！</h1>
         
@@ -122,7 +147,7 @@ const emailTemplates = {
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://ccpm360.com/resources" style="display: inline-block; background: #2563eb; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600;">获取免费CCPM学习资料</a>
+          <a href="${tracking ? tracking.clickTrackingUrl('https://ccpm360.com/resources') : 'https://ccpm360.com/resources'}" style="display: inline-block; background: #2563eb; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600;">获取免费CCPM学习资料</a>
         </div>
         
         <p>最佳祝愿，<br>CCPM360团队</p>
@@ -153,13 +178,17 @@ const emailTemplates = {
             <p style="color: #9ca3af; font-size: 12px; margin: 5px 0 0 0;">如需帮助，请通过上述联系方式与我们联系</p>
           </div>
         </div>
-      </div>
-    `,
+        ${tracking ? `<img src="${tracking.openTrackingUrl}" width="1" height="1" style="display: none;" alt="" />` : ''}
+      </div>`;
+    },
   },
 
   follow_up_2: {
     subject: 'CCPM实战案例：看看其他企业如何成功转型',
-    template: () => `
+    template: (trackingId?: string) => {
+      const tracking = trackingId ? generateTrackingUrls(trackingId) : null;
+
+      return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: #2563eb;">实战案例分享</h1>
         
@@ -173,7 +202,7 @@ const emailTemplates = {
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://ccpm360.com/cases" style="display: inline-block; background: #059669; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600;">查看更多成功案例</a>
+          <a href="${tracking ? tracking.clickTrackingUrl('https://ccpm360.com/case-studies') : 'https://ccpm360.com/case-studies'}" style="display: inline-block; background: #2563eb; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600;">查看更多成功案例</a>
         </div>
         
         <p>想了解CCPM如何帮助您的企业？我们提供免费的项目诊断服务。</p>
@@ -206,57 +235,97 @@ const emailTemplates = {
             <p style="color: #9ca3af; font-size: 12px; margin: 5px 0 0 0;">如需帮助，请通过上述联系方式与我们联系</p>
           </div>
         </div>
-      </div>
-    `,
+        ${tracking ? `<img src="${tracking.openTrackingUrl}" width="1" height="1" style="display: none;" alt="" />` : ''}
+      </div>`;
+    },
   },
 };
 
-// 邮件发送函数
+// 邮件发送函数 - 实现一用一备策略
 async function sendEmail(to: string, subject: string, html: string) {
   try {
     console.log('Sending email to:', to);
     console.log('Subject:', subject);
     console.log('HTML content length:', html.length);
 
-    // 获取可用的邮件服务
-    const availableService = getAvailableEmailService();
+    // 检查可用的邮件服务
+    const emailjsAvailable = getAvailableEmailService();
+    const serverEmailAvailable = isServerEmailConfigured();
 
-    if (!availableService) {
-      const error = {
-        message: '邮件服务未配置',
-        details: '请配置EmailJS服务',
-      };
-      console.error('邮件服务配置错误:', error);
-      return {
-        success: false,
-        error: error,
-        message: 'Email service not configured',
-      };
+    console.log('EmailJS available:', !!emailjsAvailable);
+    console.log('Server email available:', serverEmailAvailable);
+
+    // 策略1：优先使用EmailJS
+    if (emailjsAvailable) {
+      console.log('Attempting to send email via EmailJS (primary)');
+      try {
+        const result = await sendContactEmail({
+          to_email: to,
+          subject: subject,
+          message: html,
+          from_email: 'noreply@ccpm360.com',
+          name: 'CCPM360系统',
+        });
+
+        if (result.success) {
+          console.log('Email sent successfully via EmailJS');
+          return {
+            success: true,
+            messageId: `emailjs_${Date.now()}`,
+            message: 'Email sent successfully via EmailJS',
+            service: 'emailjs',
+          };
+        } else {
+          console.warn(
+            'EmailJS sending failed, trying backup service:',
+            result.error
+          );
+        }
+      } catch (emailjsError) {
+        console.warn(
+          'EmailJS sending exception, trying backup service:',
+          emailjsError
+        );
+      }
     }
 
-    // 使用EmailJS发送邮件
-    const result = await sendContactEmail({
-      to_email: to,
-      subject: subject,
-      message: html,
-      from_email: 'noreply@ccpm360.com',
-      name: 'CCPM360系统',
-    });
+    // 策略2：备用方案 - 使用腾讯企业邮箱
+    if (serverEmailAvailable) {
+      console.log('Attempting to send email via Server Email (backup)');
+      try {
+        const serverResult = await sendServerEmail({
+          to: to,
+          subject: subject,
+          html: html,
+        });
 
-    if (result.success) {
-      return {
-        success: true,
-        messageId: `msg_${Date.now()}`,
-        message: 'Email sent successfully',
-      };
-    } else {
-      console.error('邮件发送失败:', result.error);
-      return {
-        success: false,
-        error: result.error,
-        message: 'Email sending failed',
-      };
+        if (serverResult) {
+          console.log('Email sent successfully via Server Email (backup)');
+          return {
+            success: true,
+            messageId: `server_${Date.now()}`,
+            message: 'Email sent successfully via Server Email (backup)',
+            service: 'server',
+          };
+        } else {
+          console.error('Server email sending failed');
+        }
+      } catch (serverError) {
+        console.error('Server email sending exception:', serverError);
+      }
     }
+
+    // 所有邮件服务都失败
+    const error = {
+      message: '所有邮件服务都不可用',
+      details: `EmailJS可用: ${!!emailjsAvailable}, 服务器邮件可用: ${serverEmailAvailable}`,
+    };
+    console.error('邮件发送完全失败:', error);
+    return {
+      success: false,
+      error: error,
+      message: 'All email services failed',
+    };
   } catch (error) {
     console.error('邮件发送异常:', error);
     return {
@@ -292,8 +361,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 生成唯一的跟踪ID
+    const trackingId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
     // 发送主邮件
-    const emailHtml = template.template(data);
+    const emailHtml = template.template(data, trackingId);
     const result = await sendEmail(recipientEmail, template.subject, emailHtml);
 
     if (!result.success) {
@@ -307,6 +379,7 @@ export async function POST(request: NextRequest) {
       subject: template.subject,
       sent_at: new Date().toISOString(),
       status: 'sent',
+      tracking_id: trackingId,
     };
 
     // 只有当assessment_id是有效的UUID且在数据库中存在时才添加

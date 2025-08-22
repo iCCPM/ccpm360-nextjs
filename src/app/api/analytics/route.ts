@@ -83,16 +83,20 @@ async function getOverviewData(supabase: any, startDate: string) {
 
     // 计算平均会话时长
     const validSessions =
-      sessions?.filter((s: any) => s.duration && s.duration > 0) || [];
+      sessions?.filter(
+        (s: any) => s.duration_seconds && s.duration_seconds > 0
+      ) || [];
     const avgSessionDuration =
       validSessions.length > 0
-        ? validSessions.reduce((sum: number, s: any) => sum + s.duration, 0) /
-          validSessions.length
+        ? validSessions.reduce(
+            (sum: number, s: any) => sum + s.duration_seconds,
+            0
+          ) / validSessions.length
         : 0;
 
     // 计算跳出率
     const singlePageSessions =
-      sessions?.filter((s: any) => s.page_count === 1) || [];
+      sessions?.filter((s: any) => s.page_views === 1) || [];
     const bounceRate =
       sessions && sessions.length > 0
         ? (singlePageSessions.length / sessions.length) * 100
@@ -307,7 +311,22 @@ async function getEventData(supabase: any, startDate: string) {
 // POST 方法用于记录访客数据
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body;
+    const contentType = request.headers.get('content-type');
+
+    if (contentType && contentType.includes('application/json')) {
+      body = await request.json();
+    } else {
+      // 处理sendBeacon发送的数据（可能没有正确的Content-Type）
+      const text = await request.text();
+      try {
+        body = JSON.parse(text);
+      } catch (parseError) {
+        console.error('Failed to parse request body:', parseError);
+        return NextResponse.json({ error: '无效的请求格式' }, { status: 400 });
+      }
+    }
+
     const { type, data } = body;
 
     switch (type) {
@@ -335,29 +354,47 @@ async function recordPageView(supabase: any, data: any) {
       device: 'desktop',
     };
 
-    const { error: sessionUpsertError } = await supabase
+    // 首先检查session是否存在
+    const { data: existingSession } = await supabase
       .from('visitor_sessions')
-      .upsert(
-        {
+      .select('page_views')
+      .eq('session_id', data.sessionId)
+      .single();
+
+    if (!existingSession) {
+      // 如果session不存在，创建新的
+      const { error: sessionInsertError } = await supabase
+        .from('visitor_sessions')
+        .insert({
           session_id: data.sessionId,
           visitor_id: data.visitorId,
           duration_seconds: 0,
-          page_views: 0,
+          page_views: 1, // 第一个页面浏览
           browser: deviceInfo.browser,
           os: deviceInfo.os,
           device: deviceInfo.device,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'session_id',
-          ignoreDuplicates: true,
-        }
-      );
+        });
 
-    if (sessionUpsertError) {
-      console.error('Session upsert error:', sessionUpsertError);
-      throw sessionUpsertError;
+      if (sessionInsertError) {
+        console.error('Session insert error:', sessionInsertError);
+        throw sessionInsertError;
+      }
+    } else {
+      // 如果session存在，增加页面浏览数
+      const { error: sessionUpdateError } = await supabase
+        .from('visitor_sessions')
+        .update({
+          page_views: (existingSession.page_views || 0) + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('session_id', data.sessionId);
+
+      if (sessionUpdateError) {
+        console.error('Session update error:', sessionUpdateError);
+        throw sessionUpdateError;
+      }
     }
 
     // 现在插入page_view
@@ -385,9 +422,16 @@ async function recordPageView(supabase: any, data: any) {
 
 async function recordSession(supabase: any, data: any) {
   try {
-    // 使用upsert操作，避免重复键错误
-    const { error } = await supabase.from('visitor_sessions').upsert(
-      {
+    // 首先检查session是否存在
+    const { data: existingSession } = await supabase
+      .from('visitor_sessions')
+      .select('*')
+      .eq('session_id', data.sessionId)
+      .single();
+
+    if (!existingSession) {
+      // 如果session不存在，创建新的
+      const { error } = await supabase.from('visitor_sessions').insert({
         session_id: data.sessionId,
         visitor_id: data.visitorId,
         duration_seconds: data.duration || 0,
@@ -397,17 +441,37 @@ async function recordSession(supabase: any, data: any) {
         device: data.deviceType || 'desktop',
         browser: data.browser || 'unknown',
         os: data.os || 'unknown',
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      },
-      {
-        onConflict: 'session_id',
-        ignoreDuplicates: false,
-      }
-    );
+      });
 
-    if (error) {
-      console.error('Session upsert error:', error);
-      throw error;
+      if (error) {
+        console.error('Session insert error:', error);
+        throw error;
+      }
+    } else {
+      // 如果session存在，只更新duration和其他字段，保留page_views
+      const updateData: any = {
+        duration_seconds: data.duration || 0,
+        updated_at: new Date().toISOString(),
+      };
+
+      // 只在有新值时更新这些字段
+      if (data.country) updateData.country = data.country;
+      if (data.city) updateData.city = data.city;
+      if (data.deviceType) updateData.device = data.deviceType;
+      if (data.browser) updateData.browser = data.browser;
+      if (data.os) updateData.os = data.os;
+
+      const { error } = await supabase
+        .from('visitor_sessions')
+        .update(updateData)
+        .eq('session_id', data.sessionId);
+
+      if (error) {
+        console.error('Session update error:', error);
+        throw error;
+      }
     }
 
     return NextResponse.json({ success: true });

@@ -165,6 +165,12 @@ const menuItems: MenuItem[] = [
         icon: BarChart3,
         href: '/admin/assessment',
       },
+      {
+        id: 'visitor-analytics',
+        label: '访客分析',
+        icon: BarChart3,
+        href: '/admin/analytics',
+      },
     ],
   },
   {

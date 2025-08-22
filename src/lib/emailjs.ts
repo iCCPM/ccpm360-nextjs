@@ -4,9 +4,10 @@ import emailjs from '@emailjs/browser';
 
 // EmailJS配置
 const EMAILJS_CONFIG = {
-  serviceId: 'service_ccpm360', // EmailJS服务ID
-  templateId: 'template_assessment_result', // 评估结果邮件模板
-  publicKey: 'YOUR_EMAILJS_PUBLIC_KEY', // EmailJS公钥
+  serviceId: process.env['NEXT_PUBLIC_EMAILJS_SERVICE_ID'] || '',
+  templateId: process.env['NEXT_PUBLIC_EMAILJS_TEMPLATE_ID'] || '',
+  publicKey: process.env['NEXT_PUBLIC_EMAILJS_PUBLIC_KEY'] || '',
+  privateKey: process.env['EMAILJS_PRIVATE_KEY'] || '',
 };
 
 // 腾讯企业邮箱配置（仅用于服务器端）
@@ -20,20 +21,92 @@ export const isEmailJSConfigured = () => {
     EMAILJS_CONFIG.templateId &&
     EMAILJS_CONFIG.templateId !== 'template_assessment_result' &&
     EMAILJS_CONFIG.publicKey &&
-    EMAILJS_CONFIG.publicKey !== 'YOUR_EMAILJS_PUBLIC_KEY'
+    EMAILJS_CONFIG.publicKey !== 'YOUR_EMAILJS_PUBLIC_KEY' &&
+    process.env['NEXT_PUBLIC_EMAILJS_SERVICE_ID'] &&
+    process.env['NEXT_PUBLIC_EMAILJS_TEMPLATE_ID'] &&
+    process.env['NEXT_PUBLIC_EMAILJS_PUBLIC_KEY']
   );
 };
 
 // 腾讯企业邮箱相关函数已移除，因为客户端不能使用SMTP
 
-// 获取可用的邮件服务（客户端只能使用EmailJS）
+// 获取可用的邮件服务（支持多种服务检测）
 export const getAvailableEmailService = () => {
-  // 客户端只能使用EmailJS
-  if (isEmailJSConfigured()) {
-    return 'emailjs';
+  // 检查EmailJS配置
+  const emailjsConfigured = isEmailJSConfigured();
+
+  // 检查服务器端邮件配置（仅在服务器端环境中检查）
+  let serverEmailConfigured = false;
+  if (typeof window === 'undefined') {
+    // 服务器端环境，可以检查服务器邮件配置
+    try {
+      serverEmailConfigured = !!(
+        process.env['EMAIL_USER'] && process.env['EMAIL_PASS']
+      );
+    } catch (error) {
+      // 忽略错误，保持serverEmailConfigured为false
+    }
   }
 
-  return null;
+  // 返回可用服务的信息
+  const availableServices = {
+    emailjs: emailjsConfigured,
+    server: serverEmailConfigured,
+    primary: emailjsConfigured
+      ? 'emailjs'
+      : serverEmailConfigured
+        ? 'server'
+        : null,
+    backup: emailjsConfigured && serverEmailConfigured ? 'server' : null,
+  };
+
+  console.log('Available email services:', availableServices);
+
+  // 客户端只能使用EmailJS
+  if (typeof window !== 'undefined') {
+    return emailjsConfigured ? 'emailjs' : null;
+  }
+
+  // 服务器端返回主要服务
+  return availableServices.primary;
+};
+
+// 获取邮件服务状态详情
+export const getEmailServiceStatus = () => {
+  const emailjsConfigured = isEmailJSConfigured();
+  let serverEmailConfigured = false;
+
+  if (typeof window === 'undefined') {
+    try {
+      serverEmailConfigured = !!(
+        process.env['EMAIL_USER'] && process.env['EMAIL_PASS']
+      );
+    } catch (error) {
+      // 忽略错误
+    }
+  }
+
+  return {
+    emailjs: {
+      available: emailjsConfigured,
+      serviceId: EMAILJS_CONFIG.serviceId,
+      templateId: EMAILJS_CONFIG.templateId,
+      hasPublicKey: EMAILJS_CONFIG.publicKey !== 'YOUR_PUBLIC_KEY',
+    },
+    server: {
+      available: serverEmailConfigured,
+      hasCredentials: serverEmailConfigured,
+    },
+    strategy: {
+      primary: emailjsConfigured
+        ? 'emailjs'
+        : serverEmailConfigured
+          ? 'server'
+          : null,
+      backup: emailjsConfigured && serverEmailConfigured ? 'server' : null,
+      fallbackAvailable: emailjsConfigured && serverEmailConfigured,
+    },
+  };
 };
 
 // 初始化EmailJS
@@ -87,6 +160,18 @@ export const sendContactEmail = async (formData: {
   }
 
   try {
+    console.log('Sending email to:', formData.to_email);
+    console.log('Subject:', formData.subject);
+
+    // 调试：打印配置信息
+    console.log('EmailJS配置调试:');
+    console.log('- SERVICE_ID:', process.env['NEXT_PUBLIC_EMAILJS_SERVICE_ID']);
+    console.log(
+      '- TEMPLATE_ID:',
+      process.env['NEXT_PUBLIC_EMAILJS_TEMPLATE_ID']
+    );
+    console.log('- PUBLIC_KEY:', process.env['NEXT_PUBLIC_EMAILJS_PUBLIC_KEY']);
+    console.log('- 配置完整性检查:', isEmailJSConfigured());
     const templateParams = {
       to_email: formData.to_email || 'business@ccpm360.com',
       from_name: formData.name || formData.user_name || '',
@@ -109,10 +194,12 @@ export const sendContactEmail = async (formData: {
       }),
     };
 
+    // 初始化EmailJS或在send方法中传递公钥
     const response = await emailjs.send(
       EMAILJS_CONFIG.serviceId,
       EMAILJS_CONFIG.templateId,
-      templateParams
+      templateParams,
+      EMAILJS_CONFIG.publicKey // 传递公钥
     );
 
     console.log('邮件发送成功:', response);

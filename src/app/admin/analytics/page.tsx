@@ -198,10 +198,12 @@ export default function AnalyticsPage() {
       .size;
 
     // 计算平均会话时长
-    const validSessions = sessions.filter((s) => s.duration && s.duration > 0);
+    const validSessions = sessions.filter(
+      (s) => s.duration_seconds && s.duration_seconds > 0
+    );
     const avgSessionDuration =
       validSessions.length > 0
-        ? validSessions.reduce((sum, s) => sum + s.duration, 0) /
+        ? validSessions.reduce((sum, s) => sum + s.duration_seconds, 0) /
           validSessions.length
         : 0;
 
@@ -455,7 +457,18 @@ export default function AnalyticsPage() {
           </div>
           <div>
             <div className="text-2xl font-bold">
-              {Math.round(analyticsData.avgSessionDuration / 60)}分钟
+              {(() => {
+                const totalSeconds = Math.round(
+                  analyticsData.avgSessionDuration
+                );
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                if (minutes > 0) {
+                  return `${minutes}分${seconds}秒`;
+                } else {
+                  return `${seconds}秒`;
+                }
+              })()}
             </div>
             <p className="text-xs text-gray-500">平均会话时长</p>
           </div>

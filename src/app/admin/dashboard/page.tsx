@@ -199,6 +199,15 @@ const AdminDashboardPage = () => {
             .gte('created_at', thisMonthStart),
         ]);
 
+      // 添加调试日志
+      console.log('Assessment查询结果:', {
+        assessmentsCount: assessmentsResult.count,
+        assessmentsError: assessmentsResult.error,
+        scoresData: assessmentScoresResult.data,
+        scoresError: assessmentScoresResult.error,
+        scoresLength: assessmentScoresResult.data?.length,
+      });
+
       // 获取最近的数据
       const [recentCasesResult, recentArticlesResult, recentContactsResult] =
         await Promise.all([
@@ -235,6 +244,14 @@ const AdminDashboardPage = () => {
               0
             ) / assessmentScoresResult.data.length
           : 0;
+
+      // 添加调试日志
+      console.log('计算结果:', {
+        totalAssessments,
+        averageScore,
+        rawAverageScore: averageScore,
+        roundedAverageScore: Math.round(averageScore * 10) / 10,
+      });
 
       // 计算访客统计
       const totalVisitors = new Set(

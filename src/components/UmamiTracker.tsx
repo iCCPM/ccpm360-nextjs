@@ -126,36 +126,49 @@ export default function UmamiTracker({
     // 添加到 head
     document.head.appendChild(script);
 
-    // 记录会话开始 (仅在生产环境)
+    // 记录会话开始
     const deviceInfo = getDeviceInfo();
-    if (process.env.NODE_ENV !== 'development') {
+    sendAnalyticsData('session', {
+      sessionId: sessionId.current,
+      visitorId: visitorId.current,
+      duration: 0,
+      pageCount: 0,
+      deviceType: deviceInfo.deviceType,
+      browser: deviceInfo.browser,
+      os: deviceInfo.os,
+      country: null,
+      city: null,
+    });
+
+    // 定期更新会话时长（每30秒更新一次）
+    const updateInterval = setInterval(() => {
+      const duration = Math.floor(
+        (Date.now() - sessionStartTime.current) / 1000
+      );
+
       sendAnalyticsData('session', {
         sessionId: sessionId.current,
         visitorId: visitorId.current,
-        duration: 0,
-        pageCount: 0,
+        duration,
+        pageCount: pageCount.current,
         deviceType: deviceInfo.deviceType,
         browser: deviceInfo.browser,
         os: deviceInfo.os,
         country: null,
         city: null,
       });
-    }
+    }, 30000); // 每30秒更新一次
 
     // 页面卸载时更新会话信息
     const handleBeforeUnload = () => {
-      // 在开发环境中，避免在热重载时发送analytics请求
-      if (process.env.NODE_ENV === 'development') {
-        return;
-      }
-
       const duration = Math.floor(
         (Date.now() - sessionStartTime.current) / 1000
       );
-      // 使用sendBeacon避免ERR_ABORTED错误
-      sendAnalyticsData(
-        'session',
-        {
+
+      // 使用navigator.sendBeacon直接发送数据
+      const sessionData = {
+        type: 'session',
+        data: {
           sessionId: sessionId.current,
           visitorId: visitorId.current,
           duration,
@@ -166,8 +179,25 @@ export default function UmamiTracker({
           country: null,
           city: null,
         },
-        true
-      ); // 使用beacon
+      };
+
+      // 优先使用sendBeacon
+      if (navigator.sendBeacon) {
+        const blob = new Blob([JSON.stringify(sessionData)], {
+          type: 'application/json',
+        });
+        navigator.sendBeacon('/api/analytics', blob);
+      } else {
+        // 备用方案：同步XMLHttpRequest
+        try {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', '/api/analytics', false); // 同步请求
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.send(JSON.stringify(sessionData));
+        } catch (error) {
+          console.error('Failed to send session data:', error);
+        }
+      }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -179,6 +209,7 @@ export default function UmamiTracker({
         document.head.removeChild(existingScript);
       }
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      clearInterval(updateInterval);
     };
   }, []);
 
@@ -207,16 +238,14 @@ export default function UmamiTracker({
         sessionStorage.setItem('session_id', currentSessionId);
       }
 
-      // 发送页面访问数据到Supabase (仅在生产环境)
-      if (process.env.NODE_ENV !== 'development') {
-        sendAnalyticsData('page_view', {
-          visitorId: currentVisitorId,
-          sessionId: currentSessionId,
-          pageUrl: window.location.href,
-          pageTitle: document.title,
-          referrer: document.referrer,
-        });
-      }
+      // 发送页面访问数据到Supabase
+      sendAnalyticsData('page_view', {
+        visitorId: currentVisitorId,
+        sessionId: currentSessionId,
+        pageUrl: window.location.href,
+        pageTitle: document.title,
+        referrer: document.referrer,
+      });
 
       // Umami 追踪
       if ((window as any).umami) {

@@ -34,7 +34,7 @@ interface AssessmentRecord {
   user_name: string | null;
   user_company: string | null;
   total_score: number;
-  dimension_scores: Record<string, number>;
+  scores: Record<string, number>;
   assessment_level: string;
   completed_at: string;
   ip_address: string | null;
@@ -80,6 +80,12 @@ const levelNames = {
 export default function AssessmentAdminPage() {
   const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
   const [emails, setEmails] = useState<EmailRecord[]>([]);
+
+  // 添加调试用的useEffect
+  useEffect(() => {
+    console.log('emails状态更新:', emails);
+    console.log('emails长度:', emails.length);
+  }, [emails]);
   const [stats, setStats] = useState<DashboardStats>({
     totalAssessments: 0,
     averageScore: 0,
@@ -103,43 +109,104 @@ export default function AssessmentAdminPage() {
     fetchData();
   }, [dateRange]);
 
+  // 处理URL哈希，自动切换到对应标签页
+  useEffect(() => {
+    const hash = window.location.hash.substring(1); // 移除#号
+    if (hash === 'emails') {
+      setActiveTab('emails');
+    } else if (hash === 'records') {
+      setActiveTab('records');
+    } else if (hash === 'overview') {
+      setActiveTab('overview');
+    }
+  }, []);
+
   const fetchData = async () => {
     setLoading(true);
     try {
       // 获取测试记录
+      console.log('正在获取测评数据...');
       const assessmentResponse = await fetch('/api/assessment/analytics');
+      let assessmentData = null;
       if (assessmentResponse.ok) {
-        const assessmentData = await assessmentResponse.json();
+        assessmentData = await assessmentResponse.json();
+        console.log('测评数据获取成功:', assessmentData);
         setAssessments(assessmentData.assessments || []);
+      } else {
+        console.error(
+          '获取测评数据失败:',
+          assessmentResponse.status,
+          assessmentResponse.statusText
+        );
       }
 
       // 获取邮件记录
+      console.log('正在获取邮件数据...');
       const emailResponse = await fetch('/api/assessment/email');
+      let emailData = null;
       if (emailResponse.ok) {
-        const emailData = await emailResponse.json();
+        emailData = await emailResponse.json();
+        console.log('邮件数据获取成功:', emailData);
+        console.log('邮件数组长度:', emailData.emails?.length || 0);
         setEmails(emailData.emails || []);
+        console.log('设置邮件状态完成');
+      } else {
+        console.error(
+          '获取邮件数据失败:',
+          emailResponse.status,
+          emailResponse.statusText
+        );
       }
 
-      // 计算统计数据
-      calculateStats();
+      // 使用获取到的数据直接计算统计数据
+      if (assessmentData) {
+        console.log('开始计算统计数据...');
+        calculateStatsWithData(
+          assessmentData.assessments || [],
+          emailData?.emails || []
+        );
+      } else {
+        console.warn('没有测评数据，无法计算统计');
+        // 设置默认统计数据
+        setStats({
+          totalAssessments: 0,
+          averageScore: 0,
+          emailsSent: 0,
+          openRate: 0,
+          clickRate: 0,
+          conversionRate: 0,
+        });
+      }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('获取数据时发生错误:', error);
+      // 设置默认统计数据
+      setStats({
+        totalAssessments: 0,
+        averageScore: 0,
+        emailsSent: 0,
+        openRate: 0,
+        clickRate: 0,
+        conversionRate: 0,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateStats = () => {
-    const totalAssessments = assessments.length;
+  const calculateStatsWithData = (
+    assessmentData: AssessmentRecord[],
+    emailData: EmailRecord[]
+  ) => {
+    const totalAssessments = assessmentData.length;
     const averageScore =
-      assessments.length > 0
-        ? assessments.reduce((sum, a) => sum + a.total_score, 0) /
-          assessments.length
+      assessmentData.length > 0
+        ? assessmentData.reduce((sum, a) => sum + a.total_score, 0) /
+          assessmentData.length
         : 0;
 
-    const emailsSent = emails.length;
-    const openedEmails = emails.filter((e) => e.opened_at).length;
-    const clickedEmails = emails.filter((e) => e.clicked_at).length;
+    const emailsSent = emailData.length;
+    const openedEmails = emailData.filter((e) => e.opened_at).length;
+    const clickedEmails = emailData.filter((e) => e.clicked_at).length;
 
     const openRate = emailsSent > 0 ? (openedEmails / emailsSent) * 100 : 0;
     const clickRate = emailsSent > 0 ? (clickedEmails / emailsSent) * 100 : 0;
@@ -147,7 +214,8 @@ export default function AssessmentAdminPage() {
     // 简化的转化率计算（实际项目中需要更复杂的逻辑）
     const conversionRate =
       totalAssessments > 0
-        ? (assessments.filter((a) => a.user_email).length / totalAssessments) *
+        ? (assessmentData.filter((a) => a.user_email).length /
+            totalAssessments) *
           100
         : 0;
 
@@ -205,12 +273,10 @@ export default function AssessmentAdminPage() {
     const dimensionCounts: Record<string, number> = {};
 
     assessments.forEach((assessment) => {
-      Object.entries(assessment.dimension_scores).forEach(
-        ([dimension, score]) => {
-          dimensionSums[dimension] = (dimensionSums[dimension] || 0) + score;
-          dimensionCounts[dimension] = (dimensionCounts[dimension] || 0) + 1;
-        }
-      );
+      Object.entries(assessment.scores).forEach(([dimension, score]) => {
+        dimensionSums[dimension] = (dimensionSums[dimension] || 0) + score;
+        dimensionCounts[dimension] = (dimensionCounts[dimension] || 0) + 1;
+      });
     });
 
     return Object.entries(dimensionSums).map(([dimension, sum]) => ({
@@ -490,7 +556,10 @@ export default function AssessmentAdminPage() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      window.location.hash = tab.id;
+                    }}
                     className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
                       activeTab === tab.id
                         ? 'border-blue-500 text-blue-600'
@@ -769,8 +838,23 @@ export default function AssessmentAdminPage() {
             {activeTab === 'emails' && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  邮件发送记录
+                  邮件发送记录 ({emails.length} 条记录)
                 </h3>
+                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm text-yellow-800">
+                    调试信息: activeTab = {activeTab}, emails数组长度 ={' '}
+                    {emails.length}
+                  </p>
+                  <p className="text-sm text-yellow-800">
+                    emails数组内容:{' '}
+                    {JSON.stringify(emails.slice(0, 1), null, 2)}
+                  </p>
+                </div>
+                {emails.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    暂无邮件发送记录
+                  </div>
+                )}
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">

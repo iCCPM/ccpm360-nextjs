@@ -284,6 +284,7 @@ export async function POST(request: NextRequest) {
       dimensionScores,
       advice,
       completedAt: new Date().toISOString(),
+      name: userInfo?.name || null, // 添加用户姓名用于个性化称呼
       userAnswers: answers,
       questions: questions.map((q) => ({
         id: q.id,

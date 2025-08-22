@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
 
     if (startDate && endDate) {
       totalQuery = totalQuery
-        .gte('created_at', startDate)
-        .lte('created_at', endDate);
+        .gte('completed_at', startDate)
+        .lte('completed_at', endDate);
     }
 
     const { count: totalAssessments } = await totalQuery;
@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
 
     if (startDate && endDate) {
       scoreQuery = scoreQuery
-        .gte('created_at', startDate)
-        .lte('created_at', endDate);
+        .gte('completed_at', startDate)
+        .lte('completed_at', endDate);
     }
 
     const { data: scoreData } = await scoreQuery;
@@ -88,11 +88,13 @@ export async function GET(request: NextRequest) {
     // 获取时间序列数据（按天统计）
     const timeSeriesQuery = supabase
       .from('assessment_records')
-      .select('created_at, total_score')
-      .order('created_at', { ascending: true });
+      .select('completed_at, total_score')
+      .order('completed_at', { ascending: true });
 
     if (startDate && endDate) {
-      timeSeriesQuery.gte('created_at', startDate).lte('created_at', endDate);
+      timeSeriesQuery
+        .gte('completed_at', startDate)
+        .lte('completed_at', endDate);
     }
 
     const { data: timeSeriesData } = await timeSeriesQuery;
@@ -103,7 +105,7 @@ export async function GET(request: NextRequest) {
 
     if (timeSeriesData) {
       timeSeriesData.forEach((record: any) => {
-        const date = record.created_at?.split('T')[0];
+        const date = record.completed_at?.split('T')[0];
         if (date && !dailyStats[date]) {
           dailyStats[date] = { count: 0, totalScore: 0 };
         }
@@ -153,7 +155,7 @@ export async function GET(request: NextRequest) {
     let assessmentsQuery = supabase
       .from('assessment_records')
       .select(
-        'id, user_email, user_name, user_company, total_score, assessment_level, completed_at, ip_address, user_agent, computer_name, dimension_scores'
+        'id, user_email, user_name, user_company, total_score, assessment_level, completed_at, ip_address, user_agent, computer_name, scores'
       )
       .order('completed_at', { ascending: false });
 

@@ -40,9 +40,10 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const userCache = useRef<{
     userId: string;
     user: AdminUser;
@@ -80,9 +81,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const checkAuth = useCallback(async () => {
-    // 避免在已经加载中时重复调用
-    if (isLoading) return;
-
     setIsLoading(true);
     try {
       const currentUser = await AuthService.getCurrentUser();
@@ -103,7 +101,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [handleError, isLoading]);
+  }, [handleError]);
 
   const hasRole = (role: string): boolean => {
     return AuthService.hasRole(user, role);
@@ -116,76 +114,104 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // 监听认证状态变化
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    // 设置超时机制，确保即使认证检查失败也能设置loading为false
+    console.log(
+      'AuthProvider: useEffect执行，开始认证检查，当前isLoading:',
+      isLoading
+    );
+    timeoutId = setTimeout(() => {
+      if (mounted && isLoading) {
+        console.warn('AuthProvider: 认证检查超时，强制设置loading为false');
+        setIsLoading(false);
+      }
+    }, 10000); // 10秒超时
 
     const { data } = AuthService.onAuthStateChange((authUser) => {
-      if (!mounted) return;
-
-      // 检查缓存，避免重复设置相同用户
-      const cache = userCache.current;
-      const cacheValid =
-        cache &&
-        cache.userId === authUser?.id &&
-        Date.now() - cache.timestamp < 30000; // 30秒缓存
-
-      if (cacheValid && authUser) {
-        // 使用缓存的用户信息
-        setUser(cache.user);
-      } else {
-        // 设置新的用户信息
-        setUser(authUser);
-        if (authUser) {
-          userCache.current = {
-            userId: authUser.id,
-            user: authUser,
-            timestamp: Date.now(),
-          };
-        } else {
-          userCache.current = null;
+      try {
+        console.log(
+          'AuthProvider: onAuthStateChange回调触发，用户:',
+          authUser ? authUser.email : 'null'
+        );
+        if (!mounted) {
+          console.log('AuthProvider: 组件已卸载，忽略认证状态变化');
+          return;
         }
-      }
 
-      if (!authUser) {
+        // 清除超时定时器
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+
+        // 设置认证已初始化
+        setAuthInitialized(true);
+
+        // 检查缓存，避免重复设置相同用户
+        const cache = userCache.current;
+        const cacheValid =
+          cache &&
+          cache.userId === authUser?.id &&
+          Date.now() - cache.timestamp < 30000; // 30秒缓存
+
+        if (cacheValid && authUser) {
+          // 使用缓存的用户信息
+          setUser(cache.user);
+        } else {
+          // 设置新的用户信息
+          setUser(authUser);
+          if (authUser) {
+            userCache.current = {
+              userId: authUser.id,
+              user: authUser,
+              timestamp: Date.now(),
+            };
+          } else {
+            userCache.current = null;
+          }
+        }
+
+        // 无论是否有用户，都要设置加载状态为false
+        console.log(
+          'AuthProvider: 认证状态更新完成，用户:',
+          authUser ? '已登录' : '未登录',
+          '设置isLoading为false'
+        );
         setIsLoading(false);
+      } catch (error) {
+        console.error('AuthProvider: 认证状态处理错误:', error);
+        handleError(error instanceof Error ? error : new Error(String(error)));
+        // 确保即使出错也设置loading为false
+        console.log('AuthProvider: 错误处理完成，设置isLoading为false');
+        setAuthInitialized(true);
+        setIsLoading(false);
+        setUser(null);
       }
     });
 
-    // 初始化时检查认证状态
-    const initAuth = async () => {
-      if (!mounted) return;
-      setIsLoading(true);
-      try {
-        const currentUser = await AuthService.getCurrentUser();
-        if (mounted) {
-          if (currentUser) {
-            userCache.current = {
-              userId: currentUser.id,
-              user: currentUser,
-              timestamp: Date.now(),
-            };
-          }
-          setUser(currentUser);
-        }
-      } catch (error) {
-        if (mounted) {
-          handleError(
-            error instanceof Error ? error : new Error(String(error))
-          );
-          setUser(null);
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    initAuth();
-
     return () => {
       mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       data?.subscription?.unsubscribe();
     };
   }, [handleError]);
+
+  // 添加额外的超时保护，确保认证状态最终会被设置
+  useEffect(() => {
+    const fallbackTimeout = setTimeout(() => {
+      if (!authInitialized && isLoading) {
+        console.warn('AuthProvider: 认证初始化超时，强制设置为未登录状态');
+        setAuthInitialized(true);
+        setIsLoading(false);
+        setUser(null);
+      }
+    }, 8000); // 8秒后强制完成初始化
+
+    return () => clearTimeout(fallbackTimeout);
+  }, [authInitialized, isLoading]);
 
   const value: AuthContextType = {
     user,

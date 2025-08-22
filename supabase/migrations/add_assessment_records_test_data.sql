@@ -1,0 +1,92 @@
+-- 为assessment_records表添加测试数据
+INSERT INTO assessment_records (
+  user_email,
+  user_name,
+  user_company,
+  answers,
+  scores,
+  total_score,
+  assessment_level,
+  completed_at,
+  ip_address,
+  user_agent,
+  computer_name
+) VALUES 
+(
+  'zhangsan@example.com',
+  '张三',
+  '北京科技有限公司',
+  '{"q1": "A", "q2": "B", "q3": "A", "q4": "C", "q5": "B", "q6": "A", "q7": "B", "q8": "A", "q9": "C", "q10": "B"}',
+  '{"planning": 85, "execution": 78, "monitoring": 82, "communication": 88}',
+  83,
+  '良好',
+  NOW() - INTERVAL '3 days',
+  '192.168.1.100',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  'DESKTOP-ABC123'
+),
+(
+  'lisi@company.com',
+  '李四',
+  '上海创新企业',
+  '{"q1": "B", "q2": "A", "q3": "B", "q4": "A", "q5": "C", "q6": "B", "q7": "A", "q8": "B", "q9": "A", "q10": "C"}',
+  '{"planning": 92, "execution": 89, "monitoring": 91, "communication": 94}',
+  91,
+  '优秀',
+  NOW() - INTERVAL '2 days',
+  '192.168.1.101',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  'LAPTOP-XYZ789'
+),
+(
+  'wangwu@tech.com',
+  '王五',
+  '深圳技术公司',
+  '{"q1": "C", "q2": "B", "q3": "C", "q4": "B", "q5": "A", "q6": "C", "q7": "B", "q8": "C", "q9": "B", "q10": "A"}',
+  '{"planning": 76, "execution": 72, "monitoring": 74, "communication": 79}',
+  75,
+  '一般',
+  NOW() - INTERVAL '1 day',
+  '192.168.1.102',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+  'MacBook-Pro'
+),
+(
+  'zhaoliu@business.com',
+  '赵六',
+  '广州商务咨询',
+  '{"q1": "A", "q2": "A", "q3": "A", "q4": "A", "q5": "A", "q6": "A", "q7": "A", "q8": "A", "q9": "A", "q10": "A"}',
+  '{"planning": 95, "execution": 96, "monitoring": 94, "communication": 97}',
+  95,
+  '优秀',
+  NOW() - INTERVAL '6 hours',
+  '192.168.1.103',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  'WORKSTATION-456'
+),
+(
+  'qianqi@startup.com',
+  '钱七',
+  '杭州创业公司',
+  '{"q1": "B", "q2": "C", "q3": "B", "q4": "C", "q5": "B", "q6": "C", "q7": "C", "q8": "B", "q9": "C", "q10": "B"}',
+  '{"planning": 68, "execution": 65, "monitoring": 70, "communication": 72}',
+  69,
+  '一般',
+  NOW() - INTERVAL '2 hours',
+  '192.168.1.104',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  'PC-STARTUP'
+),
+(
+  'test@example.com',
+  '测试用户',
+  '测试公司',
+  '{"q1": "A", "q2": "B", "q3": "A", "q4": "B", "q5": "A", "q6": "B", "q7": "A", "q8": "B", "q9": "A", "q10": "B"}',
+  '{"planning": 87, "execution": 84, "monitoring": 86, "communication": 89}',
+  86,
+  '良好',
+  NOW() - INTERVAL '30 minutes',
+  '192.168.1.105',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  'TEST-MACHINE'
+);

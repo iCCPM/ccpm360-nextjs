@@ -191,11 +191,47 @@ export class AuthService {
    * 监听认证状态变化
    */
   static onAuthStateChange(callback: (user: AdminUser | null) => void) {
+    // 立即检查当前认证状态，确保在所有情况下都调用callback
+    const checkCurrentUser = async () => {
+      try {
+        debugAuth('开始检查当前认证状态...');
+
+        // 添加超时机制，确保不会无限等待
+        const timeoutPromise = new Promise<AdminUser | null>((resolve) => {
+          setTimeout(() => {
+            debugAuth('认证状态检查超时，返回null');
+            resolve(null);
+          }, 5000); // 5秒超时
+        });
+
+        const userPromise = this.getCurrentUser();
+        const user = await Promise.race([userPromise, timeoutPromise]);
+
+        debugAuth('当前认证状态检查完成:', user ? user.email : '未登录');
+        callback(user);
+      } catch (error) {
+        debugError('检查当前认证状态失败:', error);
+        // 确保即使出错也调用callback，避免isLoading一直为true
+        callback(null);
+      }
+    };
+
+    // 立即执行检查
+    checkCurrentUser();
+
     const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        const adminUser = await this.getAdminUser(session.user.id);
-        callback(adminUser);
-      } else if (event === 'SIGNED_OUT') {
+      try {
+        debugAuth('认证状态变化:', event, session?.user?.id);
+
+        if (event === 'SIGNED_IN' && session?.user) {
+          const adminUser = await this.getAdminUser(session.user.id);
+          callback(adminUser);
+        } else if (event === 'SIGNED_OUT') {
+          callback(null);
+        }
+      } catch (error) {
+        debugError('处理认证状态变化失败:', error);
+        // 确保即使出错也调用callback
         callback(null);
       }
     });

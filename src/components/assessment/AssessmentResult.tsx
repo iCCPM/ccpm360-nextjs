@@ -32,6 +32,7 @@ interface AssessmentData {
     nextSteps: string[];
   };
   completedAt: string;
+  name?: string; // 用户姓名，用于个性化称呼
   userAnswers?: Record<string, number>;
   questions?: {
     id: number;
@@ -58,6 +59,14 @@ interface AssessmentResultProps {
   data: AssessmentData;
   onRetake?: () => void;
 }
+
+// 生成个性化问候语的辅助函数
+const generatePersonalizedGreeting = (userName?: string) => {
+  if (userName && userName.trim()) {
+    return `${userName.trim()}，您的测评结果如下`;
+  }
+  return '您的测评结果如下';
+};
 
 const dimensionConfig = {
   time_management: {
@@ -194,6 +203,13 @@ export default function AssessmentResult({
         className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100"
       >
         <div className="text-center mb-8">
+          {/* 个性化问候语 */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-semibold text-gray-800 mb-2">
+              {generatePersonalizedGreeting(data.name)}
+            </h1>
+          </div>
+
           <div className="flex items-center justify-center mb-4">
             <LevelIcon
               className={`w-12 h-12 text-${currentLevel.color}-500 mr-3`}
