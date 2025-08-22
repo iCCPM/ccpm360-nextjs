@@ -36,10 +36,6 @@ export function useAuth() {
   return context;
 }
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
