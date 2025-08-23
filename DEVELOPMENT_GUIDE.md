@@ -52,7 +52,7 @@ npm run build         # 构建验证
 
 ### 必需工具
 
-- Node.js 18+ 或 20+
+- Node.js 22+
 - npm 或 pnpm
 - Git
 
@@ -111,7 +111,7 @@ npm run build         # 构建验证
 
 ### 检查内容
 
-- 多版本 Node.js 兼容性测试（18.x, 20.x）
+- Node.js 22.x 兼容性测试
 - ESLint 代码规范检查
 - TypeScript 类型检查
 - 构建验证
