@@ -40,9 +40,9 @@ echo "────────────────────────�
 # 检查Node.js版本
 echo "🔍 检查Node.js版本兼容性..."
 node_version=$(node -v | cut -d'.' -f1 | cut -d'v' -f2)
-if [ "$node_version" -ne 20 ]; then
-  echo "❌ Node.js版本不兼容: 当前 $(node -v)，CI/CD要求 20.x"
-  echo "💡 请切换到Node.js 20.x版本"
+if [ "$node_version" -ne 22 ]; then
+  echo "❌ Node.js版本不兼容: 当前 $(node -v)，CI/CD要求 22.x"
+  echo "💡 请切换到Node.js 22.x版本"
   exit 1
 fi
 echo "✅ Node.js版本 $(node -v) 与CI/CD环境一致"
