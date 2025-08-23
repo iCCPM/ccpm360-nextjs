@@ -23,35 +23,94 @@ export const supabaseAdmin =
 export function getSupabaseAdmin() {
   if (!supabaseUrl || !supabaseServiceRoleKey) {
     console.warn('Supabase environment variables not found, using mock client');
+
+    // 创建一个更完整的mock客户端，支持所有常用的Supabase方法
+    const createMockQuery = () => ({
+      eq: () => createMockQuery(),
+      neq: () => createMockQuery(),
+      gt: () => createMockQuery(),
+      gte: () => createMockQuery(),
+      lt: () => createMockQuery(),
+      lte: () => createMockQuery(),
+      like: () => createMockQuery(),
+      ilike: () => createMockQuery(),
+      is: () => createMockQuery(),
+      in: () => createMockQuery(),
+      contains: () => createMockQuery(),
+      containedBy: () => createMockQuery(),
+      rangeGt: () => createMockQuery(),
+      rangeGte: () => createMockQuery(),
+      rangeLt: () => createMockQuery(),
+      rangeLte: () => createMockQuery(),
+      rangeAdjacent: () => createMockQuery(),
+      overlaps: () => createMockQuery(),
+      textSearch: () => createMockQuery(),
+      match: () => createMockQuery(),
+      not: () => createMockQuery(),
+      or: () => createMockQuery(),
+      filter: () => createMockQuery(),
+      order: () => createMockQuery(),
+      limit: () => createMockQuery(),
+      range: () => Promise.resolve({ data: [], error: null, count: 0 }),
+      single: () => Promise.resolve({ data: null, error: null }),
+      maybeSingle: () => Promise.resolve({ data: null, error: null }),
+      csv: () => Promise.resolve({ data: '', error: null }),
+      geojson: () => Promise.resolve({ data: null, error: null }),
+      explain: () => Promise.resolve({ data: null, error: null }),
+      rollback: () => Promise.resolve({ data: null, error: null }),
+      returns: () => createMockQuery(),
+      then: (resolve: any) => resolve({ data: [], error: null, count: 0 }),
+    });
+
     return {
       from: () => ({
-        select: () => ({
-          eq: () => ({
-            order: () => ({
-              range: () => Promise.resolve({ data: [], error: null, count: 0 }),
-              single: () => Promise.resolve({ data: null, error: null }),
-            }),
-            single: () => Promise.resolve({ data: null, error: null }),
-          }),
-          insert: () => ({
-            select: () => ({
-              single: () => Promise.resolve({ data: null, error: null }),
-            }),
-          }),
-          update: () => ({
-            eq: () => Promise.resolve({ data: null, error: null }),
-          }),
-          upsert: () => Promise.resolve({ data: null, error: null }),
-        }),
-        storage: {
-          from: () => ({
-            upload: () => Promise.resolve({ data: null, error: null }),
-            getPublicUrl: () => ({ data: { publicUrl: '' } }),
-            list: () => Promise.resolve({ data: [], error: null }),
-            createBucket: () => Promise.resolve({ data: null, error: null }),
-          }),
+        select: (_columns?: string, options?: any) => {
+          const query = createMockQuery();
+          // 如果指定了count选项，返回带count的结果
+          if (options?.count) {
+            return {
+              ...query,
+              then: (resolve: any) =>
+                resolve({ data: [], error: null, count: 0 }),
+            };
+          }
+          return query;
         },
+        insert: () => ({
+          select: () => createMockQuery(),
+          then: (resolve: any) => resolve({ data: null, error: null }),
+        }),
+        update: () => ({
+          eq: () => Promise.resolve({ data: null, error: null }),
+          match: () => Promise.resolve({ data: null, error: null }),
+          then: (resolve: any) => resolve({ data: null, error: null }),
+        }),
+        upsert: () => Promise.resolve({ data: null, error: null }),
+        delete: () => ({
+          eq: () => Promise.resolve({ data: null, error: null }),
+          match: () => Promise.resolve({ data: null, error: null }),
+        }),
       }),
+      storage: {
+        from: () => ({
+          upload: () => Promise.resolve({ data: null, error: null }),
+          getPublicUrl: () => ({ data: { publicUrl: '' } }),
+          list: () => Promise.resolve({ data: [], error: null }),
+          createBucket: () => Promise.resolve({ data: null, error: null }),
+          remove: () => Promise.resolve({ data: null, error: null }),
+          move: () => Promise.resolve({ data: null, error: null }),
+          copy: () => Promise.resolve({ data: null, error: null }),
+          createSignedUrl: () => Promise.resolve({ data: null, error: null }),
+          createSignedUrls: () => Promise.resolve({ data: null, error: null }),
+        }),
+      },
+      auth: {
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        getSession: () =>
+          Promise.resolve({ data: { session: null }, error: null }),
+        signOut: () => Promise.resolve({ error: null }),
+      },
+      rpc: () => Promise.resolve({ data: null, error: null }),
     } as any;
   }
 
