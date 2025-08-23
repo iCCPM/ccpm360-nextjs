@@ -1,37 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// 检查环境变量是否存在
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'];
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
-
-// 创建管理员客户端（使用service role key绕过RLS）
-let supabaseAdmin: any = null;
-if (supabaseUrl && supabaseServiceKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-} else {
-  console.warn('Supabase environment variables not found, using mock client');
-  // 创建一个mock客户端，避免构建时失败
-  supabaseAdmin = {
-    from: () => ({
-      select: () => ({
-        maybeSingle: () => Promise.resolve({ data: null, error: null }),
-      }),
-      insert: () => ({
-        select: () => ({
-          maybeSingle: () => Promise.resolve({ data: null, error: null }),
-        }),
-      }),
-      update: () => ({
-        eq: () => ({
-          select: () => ({
-            maybeSingle: () => Promise.resolve({ data: null, error: null }),
-          }),
-        }),
-      }),
-    }),
-  };
-}
+import { getSupabaseAdmin } from '@/lib/supabase-server';
 
 // 关于我们页面配置的数据类型
 interface AboutPageConfig {
@@ -58,6 +26,7 @@ interface AboutPageConfig {
 // GET - 获取关于我们页面配置
 export async function GET() {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from('about_page_settings')
       .select('*')
@@ -159,6 +128,7 @@ export async function POST(request: NextRequest) {
     };
 
     // 检查是否已存在记录
+    const supabaseAdmin = getSupabaseAdmin();
     const { data: existingData } = await supabaseAdmin
       .from('about_page_settings')
       .select('id')
