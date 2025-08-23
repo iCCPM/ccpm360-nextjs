@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// 创建管理员客户端（使用service role key绕过RLS）
-const supabaseAdmin = createClient(
-  process.env['NEXT_PUBLIC_SUPABASE_URL']!,
-  process.env['SUPABASE_SERVICE_ROLE_KEY']!
-);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 // 首页配置的数据类型
 interface HomepageConfig {
@@ -25,6 +19,7 @@ interface HomepageConfig {
 // GET - 获取首页配置
 export async function GET() {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from('homepage_config')
       .select('*')
@@ -61,6 +56,7 @@ export async function GET() {
 // POST - 保存首页配置
 export async function POST(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const body = await request.json();
 
     // 验证必填字段

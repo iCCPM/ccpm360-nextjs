@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// 初始化Supabase客户端
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'];
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 // 检查并创建 Storage bucket
-async function ensureBucketExists(bucketName: string) {
+async function ensureBucketExists(supabase: any, bucketName: string) {
   try {
     console.log(`检查 bucket: ${bucketName}`);
 
@@ -25,7 +15,9 @@ async function ensureBucketExists(bucketName: string) {
       throw listError;
     }
 
-    const bucketExists = buckets?.some((bucket) => bucket.name === bucketName);
+    const bucketExists = buckets?.some(
+      (bucket: any) => bucket.name === bucketName
+    );
 
     if (!bucketExists) {
       console.log(`创建新的 bucket: ${bucketName}`);
@@ -72,6 +64,7 @@ async function ensureBucketExists(bucketName: string) {
 export async function POST(request: NextRequest) {
   try {
     console.log('开始处理图片上传请求');
+    const supabase = getSupabaseAdmin();
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -104,7 +97,7 @@ export async function POST(request: NextRequest) {
     const bucketName = 'images';
 
     // 确保bucket存在
-    await ensureBucketExists(bucketName);
+    await ensureBucketExists(supabase, bucketName);
 
     // 生成唯一文件名
     const timestamp = Date.now();

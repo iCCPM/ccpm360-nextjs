@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 // 联系页面设置的数据类型
 interface ContactPageSettings {
@@ -28,6 +28,7 @@ interface ContactPageSettings {
 // GET - 获取联系页面设置
 export async function GET() {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     // 如果 Supabase 客户端不可用，返回默认设置
     if (!supabaseAdmin) {
       console.warn(
@@ -106,6 +107,7 @@ export async function GET() {
 // POST - 保存联系页面设置
 export async function POST(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     // 如果 Supabase 客户端不可用，返回错误信息
     if (!supabaseAdmin) {
       console.warn('Supabase admin client not available');
@@ -218,5 +220,30 @@ export async function POST(request: NextRequest) {
 
 // PUT - 更新联系页面设置（与POST相同的逻辑）
 export async function PUT(request: NextRequest) {
-  return POST(request);
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+    const body = (await request.json()) as ContactPageSettings;
+
+    const { data, error } = await supabaseAdmin
+      .from('website_contact')
+      .upsert(body)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('更新联系页面设置失败:', error);
+      return NextResponse.json(
+        { error: '更新联系页面设置失败' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('更新联系页面设置失败:', error);
+    return NextResponse.json(
+      { error: '更新联系页面设置失败' },
+      { status: 500 }
+    );
+  }
 }

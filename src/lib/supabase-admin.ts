@@ -19,6 +19,50 @@ export const supabaseAdmin =
       })
     : null;
 
+// 获取Supabase管理员客户端的函数
+export function getSupabaseAdmin() {
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    console.warn('Supabase environment variables not found, using mock client');
+    return {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            order: () => ({
+              range: () => Promise.resolve({ data: [], error: null, count: 0 }),
+              single: () => Promise.resolve({ data: null, error: null }),
+            }),
+            single: () => Promise.resolve({ data: null, error: null }),
+          }),
+          insert: () => ({
+            select: () => ({
+              single: () => Promise.resolve({ data: null, error: null }),
+            }),
+          }),
+          update: () => ({
+            eq: () => Promise.resolve({ data: null, error: null }),
+          }),
+          upsert: () => Promise.resolve({ data: null, error: null }),
+        }),
+        storage: {
+          from: () => ({
+            upload: () => Promise.resolve({ data: null, error: null }),
+            getPublicUrl: () => ({ data: { publicUrl: '' } }),
+            list: () => Promise.resolve({ data: [], error: null }),
+            createBucket: () => Promise.resolve({ data: null, error: null }),
+          }),
+        },
+      }),
+    } as any;
+  }
+
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+
 // 文件上传函数，使用service role权限
 export const uploadFileWithAdminRights = async (
   file: File,

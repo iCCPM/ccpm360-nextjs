@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env['NEXT_PUBLIC_SUPABASE_URL']!,
-  process.env['SUPABASE_SERVICE_ROLE_KEY']!
-);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 // GET - 获取服务列表
 export async function GET(request: NextRequest) {
   try {
+    const supabase = getSupabaseAdmin();
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -56,6 +52,7 @@ export async function GET(request: NextRequest) {
 // POST - 创建新服务
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabaseAdmin();
     const body = await request.json();
     const { title, description, category, price, features, is_active } = body;
 
@@ -103,6 +100,7 @@ export async function POST(request: NextRequest) {
 // PUT - 更新服务
 export async function PUT(request: NextRequest) {
   try {
+    const supabase = getSupabaseAdmin();
     const body = await request.json();
     const { id, title, description, category, price, features, is_active } =
       body;
@@ -147,6 +145,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - 删除服务
 export async function DELETE(request: NextRequest) {
   try {
+    const supabase = getSupabaseAdmin();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

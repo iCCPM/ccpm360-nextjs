@@ -1,14 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseAnonKey = process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY']!;
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
+// 获取公开读取的客户端
+function getSupabasePublic() {
+  const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'];
+  const supabaseAnonKey = process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY'];
 
-// 用于公开读取的客户端
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-// 用于管理操作的客户端（绕过 RLS）
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('Supabase environment variables not found, using mock client');
+    return {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            order: () => ({
+              range: () => Promise.resolve({ data: [], error: null, count: 0 }),
+            }),
+          }),
+        }),
+      }),
+    } as any;
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +31,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
+    const supabase = getSupabasePublic();
 
     // 获取已发布的案例列表
     const {
@@ -113,6 +129,7 @@ export async function POST(request: NextRequest) {
     console.log('准备插入数据库的数据:', JSON.stringify(caseData, null, 2));
 
     // 保存到数据库（使用管理员客户端绕过 RLS）
+    const supabaseAdmin = getSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from('case_studies')
       .insert([caseData])

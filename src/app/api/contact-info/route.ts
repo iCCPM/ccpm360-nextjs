@@ -1,14 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// 使用服务角色密钥创建Supabase客户端
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET() {
   try {
+    const supabase = getSupabaseAdmin();
     // 从contact_page_settings表获取联系信息
     const { data, error } = await supabase
       .from('contact_page_settings')

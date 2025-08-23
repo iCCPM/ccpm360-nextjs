@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 // 重新生成个性化建议（与submit接口保持一致）
 function regenerateAdvice(scores: Record<string, number>, totalScore: number) {
@@ -132,6 +127,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const supabase = getSupabaseAdmin();
     let query = supabase.from('assessment_records').select('*');
 
     if (id) {
@@ -183,7 +179,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 如果查询用户的所有记录，返回列表
-    const recordsList = records.map((record) => ({
+    const recordsList = records.map((record: any) => ({
       id: record.id,
       totalScore: record.total_score,
       assessmentLevel: record.assessment_level,

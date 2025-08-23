@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 // 评分算法和个性化建议系统
 function calculateScores(answers: Record<string, number>, questions: any[]) {
@@ -221,6 +216,7 @@ function getClientInfo(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('🔍 Assessment submit API called');
+    const supabase = getSupabaseAdmin();
     const body = await request.json();
     console.log('📝 Request body:', JSON.stringify(body, null, 2));
     const { answers, userInfo, clientInfo } = body;
@@ -307,7 +303,7 @@ export async function POST(request: NextRequest) {
       completedAt: new Date().toISOString(),
       name: userInfo?.name || null, // 添加用户姓名用于个性化称呼
       userAnswers: answers,
-      questions: questions.map((q) => ({
+      questions: questions.map((q: any) => ({
         id: q.id,
         question_text: q.question_text,
         dimension: q.dimension,

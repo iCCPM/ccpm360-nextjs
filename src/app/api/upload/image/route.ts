@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 // 检查并创建 Storage bucket（带重试机制）
-async function ensureBucketExists(bucketName: string, maxRetries = 3) {
+async function ensureBucketExists(
+  supabase: any,
+  bucketName: string,
+  maxRetries = 3
+) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(
@@ -40,7 +39,7 @@ async function ensureBucketExists(bucketName: string, maxRetries = 3) {
           console.log(
             'Permission error detected, attempting direct bucket creation...'
           );
-          return await createBucketDirectly(bucketName);
+          return await createBucketDirectly(supabase, bucketName);
         }
 
         throw new Error(
@@ -49,12 +48,12 @@ async function ensureBucketExists(bucketName: string, maxRetries = 3) {
       }
 
       const bucketExists = buckets?.some(
-        (bucket) => bucket.name === bucketName
+        (bucket: any) => bucket.name === bucketName
       );
 
       if (!bucketExists) {
         console.log(`Bucket '${bucketName}' does not exist, creating...`);
-        return await createBucketDirectly(bucketName);
+        return await createBucketDirectly(supabase, bucketName);
       } else {
         console.log(`Bucket '${bucketName}' already exists`);
         return true;
@@ -74,7 +73,7 @@ async function ensureBucketExists(bucketName: string, maxRetries = 3) {
 }
 
 // 直接创建bucket的辅助函数
-async function createBucketDirectly(bucketName: string) {
+async function createBucketDirectly(supabase: any, bucketName: string) {
   try {
     const { data: createData, error: createError } =
       await supabase.storage.createBucket(bucketName, {
@@ -115,6 +114,7 @@ async function createBucketDirectly(bucketName: string) {
 
 // 带重试机制的上传函数
 async function uploadWithRetry(
+  supabase: any,
   bucketName: string,
   filePath: string,
   file: File,
@@ -238,6 +238,7 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     console.log('Starting image upload process...');
+    const supabase = getSupabaseAdmin();
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -282,7 +283,7 @@ export async function POST(request: NextRequest) {
     try {
       // 确保 bucket 存在
       console.log(`Ensuring bucket '${bucketName}' exists...`);
-      await ensureBucketExists(bucketName);
+      await ensureBucketExists(supabase, bucketName);
       console.log('Bucket verification completed');
     } catch (bucketError) {
       console.error('Bucket configuration failed:', bucketError);
@@ -309,7 +310,12 @@ export async function POST(request: NextRequest) {
     try {
       // 上传文件（带重试机制）
       console.log('Starting file upload...');
-      const publicUrl = await uploadWithRetry(bucketName, filePath, file);
+      const publicUrl = await uploadWithRetry(
+        supabase,
+        bucketName,
+        filePath,
+        file
+      );
       console.log(`File uploaded successfully: ${publicUrl}`);
 
       return NextResponse.json({

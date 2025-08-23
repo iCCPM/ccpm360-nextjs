@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 // 1x1 透明像素的 base64 编码
 const TRACKING_PIXEL = Buffer.from(
@@ -31,6 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 更新邮件历史记录的 opened_at 字段
+    const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from('email_history')
       .update({
