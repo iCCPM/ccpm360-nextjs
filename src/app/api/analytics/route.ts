@@ -347,53 +347,51 @@ export async function POST(request: NextRequest) {
 
 async function recordPageView(supabase: any, data: any) {
   try {
-    // 使用upsert确保session存在，避免竞态条件
     const deviceInfo = {
       browser: 'unknown',
       os: 'unknown',
       device: 'desktop',
     };
 
-    // 首先检查session是否存在
-    const { data: existingSession } = await supabase
-      .from('visitor_sessions')
-      .select('page_views')
-      .eq('session_id', data.sessionId)
-      .single();
+    // 使用upsert确保session存在，避免竞态条件
+    // 如果session不存在则创建，存在则增加page_views计数
+    const sessionData = {
+      session_id: data.sessionId,
+      visitor_id: data.visitorId,
+      duration_seconds: 0,
+      page_views: 1, // 新session的第一个页面浏览
+      browser: deviceInfo.browser,
+      os: deviceInfo.os,
+      device: deviceInfo.device,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-    if (!existingSession) {
-      // 如果session不存在，创建新的
-      const { error: sessionInsertError } = await supabase
+    // 使用原生SQL来处理page_views的递增，因为Supabase的upsert不支持复杂的更新逻辑
+    const { error: sessionError } = await supabase.rpc(
+      'upsert_session_page_view',
+      {
+        p_session_id: data.sessionId,
+        p_visitor_id: data.visitorId,
+        p_browser: deviceInfo.browser,
+        p_os: deviceInfo.os,
+        p_device: deviceInfo.device,
+      }
+    );
+
+    if (sessionError) {
+      console.error('Session upsert error:', sessionError);
+      // 如果RPC函数不存在，回退到简单的upsert
+      const { error: fallbackError } = await supabase
         .from('visitor_sessions')
-        .insert({
-          session_id: data.sessionId,
-          visitor_id: data.visitorId,
-          duration_seconds: 0,
-          page_views: 1, // 第一个页面浏览
-          browser: deviceInfo.browser,
-          os: deviceInfo.os,
-          device: deviceInfo.device,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+        .upsert(sessionData, {
+          onConflict: 'session_id',
+          returning: 'minimal',
         });
 
-      if (sessionInsertError) {
-        console.error('Session insert error:', sessionInsertError);
-        throw sessionInsertError;
-      }
-    } else {
-      // 如果session存在，增加页面浏览数
-      const { error: sessionUpdateError } = await supabase
-        .from('visitor_sessions')
-        .update({
-          page_views: (existingSession.page_views || 0) + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('session_id', data.sessionId);
-
-      if (sessionUpdateError) {
-        console.error('Session update error:', sessionUpdateError);
-        throw sessionUpdateError;
+      if (fallbackError) {
+        console.error('Session fallback upsert error:', fallbackError);
+        throw fallbackError;
       }
     }
 
@@ -422,56 +420,43 @@ async function recordPageView(supabase: any, data: any) {
 
 async function recordSession(supabase: any, data: any) {
   try {
-    // 首先检查session是否存在
-    const { data: existingSession } = await supabase
-      .from('visitor_sessions')
-      .select('*')
-      .eq('session_id', data.sessionId)
-      .single();
+    // 准备插入数据
+    const sessionData = {
+      session_id: data.sessionId,
+      visitor_id: data.visitorId,
+      duration_seconds: data.duration || 0,
+      page_views: data.pageCount || 0,
+      country: data.country || null,
+      city: data.city || null,
+      device: data.deviceType || 'desktop',
+      browser: data.browser || 'unknown',
+      os: data.os || 'unknown',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-    if (!existingSession) {
-      // 如果session不存在，创建新的
-      const { error } = await supabase.from('visitor_sessions').insert({
-        session_id: data.sessionId,
-        visitor_id: data.visitorId,
-        duration_seconds: data.duration || 0,
-        page_views: data.pageCount || 0,
-        country: data.country || null,
-        city: data.city || null,
-        device: data.deviceType || 'desktop',
-        browser: data.browser || 'unknown',
-        os: data.os || 'unknown',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+    // 使用upsert操作，如果session_id已存在则更新，不存在则插入
+    // 这样可以避免先查询再插入/更新的竞态条件
+    const { error } = await supabase
+      .from('visitor_sessions')
+      .upsert(sessionData, {
+        onConflict: 'session_id', // 指定冲突列
+        returning: 'minimal', // 不需要返回数据
+        // 更新时只更新这些字段，保留其他字段如page_views
+        update: {
+          duration_seconds: data.duration || 0,
+          updated_at: new Date().toISOString(),
+          country: data.country || undefined,
+          city: data.city || undefined,
+          device: data.deviceType || undefined,
+          browser: data.browser || undefined,
+          os: data.os || undefined,
+        },
       });
 
-      if (error) {
-        console.error('Session insert error:', error);
-        throw error;
-      }
-    } else {
-      // 如果session存在，只更新duration和其他字段，保留page_views
-      const updateData: any = {
-        duration_seconds: data.duration || 0,
-        updated_at: new Date().toISOString(),
-      };
-
-      // 只在有新值时更新这些字段
-      if (data.country) updateData.country = data.country;
-      if (data.city) updateData.city = data.city;
-      if (data.deviceType) updateData.device = data.deviceType;
-      if (data.browser) updateData.browser = data.browser;
-      if (data.os) updateData.os = data.os;
-
-      const { error } = await supabase
-        .from('visitor_sessions')
-        .update(updateData)
-        .eq('session_id', data.sessionId);
-
-      if (error) {
-        console.error('Session update error:', error);
-        throw error;
-      }
+    if (error) {
+      console.error('Session upsert error:', error);
+      throw error;
     }
 
     return NextResponse.json({ success: true });

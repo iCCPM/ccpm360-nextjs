@@ -21,13 +21,15 @@ const generateVisitorId = (): string => {
 
 // 生成会话ID
 const generateSessionId = (): string => {
-  const stored = sessionStorage.getItem('session_id');
-  if (stored) return stored;
+  const existingSessionId = sessionStorage.getItem('session_id');
+  if (existingSessionId) {
+    return existingSessionId;
+  }
 
-  const newId =
-    'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-  sessionStorage.setItem('session_id', newId);
-  return newId;
+  // 使用crypto.randomUUID()确保session_id的唯一性
+  const sessionId = crypto.randomUUID();
+  sessionStorage.setItem('session_id', sessionId);
+  return sessionId;
 };
 
 // 获取设备信息
@@ -218,30 +220,37 @@ export default function UmamiTracker({
     if (typeof window !== 'undefined') {
       pageCount.current += 1;
 
-      // 确保ID已经初始化
-      const currentVisitorId =
-        visitorId.current ||
-        localStorage.getItem('visitor_id') ||
-        generateVisitorId();
-      const currentSessionId =
-        sessionId.current ||
-        sessionStorage.getItem('session_id') ||
-        generateSessionId();
+      // 确保ID已经初始化，优先使用已存在的ID，避免生成新的ID
+      // 1. 首先检查ref中是否已有值
+      // 2. 然后检查storage中是否有值
+      // 3. 只有在都没有值的情况下才生成新的ID
 
-      // 如果ref中的值为空，更新它们
+      // 处理visitorId
       if (!visitorId.current) {
-        visitorId.current = currentVisitorId;
-        localStorage.setItem('visitor_id', currentVisitorId);
+        const storedVisitorId = localStorage.getItem('visitor_id');
+        if (storedVisitorId) {
+          visitorId.current = storedVisitorId;
+        } else {
+          visitorId.current = generateVisitorId();
+          localStorage.setItem('visitor_id', visitorId.current);
+        }
       }
+
+      // 处理sessionId
       if (!sessionId.current) {
-        sessionId.current = currentSessionId;
-        sessionStorage.setItem('session_id', currentSessionId);
+        const storedSessionId = sessionStorage.getItem('session_id');
+        if (storedSessionId) {
+          sessionId.current = storedSessionId;
+        } else {
+          sessionId.current = generateSessionId();
+          sessionStorage.setItem('session_id', sessionId.current);
+        }
       }
 
       // 发送页面访问数据到Supabase
       sendAnalyticsData('page_view', {
-        visitorId: currentVisitorId,
-        sessionId: currentSessionId,
+        visitorId: visitorId.current,
+        sessionId: sessionId.current,
         pageUrl: window.location.href,
         pageTitle: document.title,
         referrer: document.referrer,
@@ -263,13 +272,25 @@ export const trackEvent = (
   eventData?: Record<string, any>
 ) => {
   if (typeof window !== 'undefined') {
-    const visitorId = localStorage.getItem('visitor_id');
-    const sessionId = sessionStorage.getItem('session_id');
+    // 优先使用已存在的ID，避免生成新的ID
+    let visitorId = localStorage.getItem('visitor_id');
+    let sessionId = sessionStorage.getItem('session_id');
+
+    // 如果没有找到ID，尝试生成新的ID
+    if (!visitorId) {
+      visitorId = generateVisitorId();
+      localStorage.setItem('visitor_id', visitorId);
+    }
+
+    if (!sessionId) {
+      sessionId = generateSessionId();
+      sessionStorage.setItem('session_id', sessionId);
+    }
 
     // 确保有有效的ID
     if (!visitorId || !sessionId) {
       console.warn(
-        'Visitor ID or Session ID not found, skipping analytics event'
+        'Failed to generate Visitor ID or Session ID, skipping analytics event'
       );
       return;
     }

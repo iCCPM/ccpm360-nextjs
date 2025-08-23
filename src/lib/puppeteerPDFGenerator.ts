@@ -1,7 +1,21 @@
 import puppeteer, { Browser } from 'puppeteer';
-import fs from 'fs/promises';
-import path from 'path';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import Handlebars from 'handlebars';
+
+// 动态导入chromium函数
+async function loadChromium() {
+  if (process.env.NODE_ENV === 'production' || process.env['VERCEL']) {
+    try {
+      const chromiumModule = await import('@sparticuz/chromium');
+      return chromiumModule.default || chromiumModule;
+    } catch (error) {
+      console.warn('Failed to load @sparticuz/chromium:', error);
+      return null;
+    }
+  }
+  return null;
+}
 
 // 定义接口类型
 interface UserInfo {
@@ -33,8 +47,8 @@ interface AssessmentData {
 
 // Handlebars 辅助函数
 Handlebars.registerHelper('@index_plus_one', function () {
-  // @ts-expect-error - Handlebars context object type is not strictly typed
-  return this['@index'] + 1;
+  // @ts-expect-error - this参数类型问题
+  return (this as any)['@index'] + 1;
 });
 
 // 注册inc助手函数用于索引递增
@@ -180,20 +194,38 @@ export class PuppeteerPDFGenerator {
       const html = template(templateData);
 
       // 为每次生成创建新的浏览器实例
-      browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--disable-gpu',
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor',
-        ],
-        timeout: 30000,
-      });
+      const isProduction =
+        process.env.NODE_ENV === 'production' || process.env['VERCEL'];
+      const chromium = await loadChromium();
+
+      if (isProduction && chromium) {
+        // Vercel环境使用chromium
+        browser = await puppeteer.launch({
+          args: chromium.args,
+          defaultViewport: null,
+          executablePath: await chromium.executablePath(),
+          headless: true,
+          // @ts-expect-error - ignoreHTTPSErrors属性在@sparticuz/chromium中使用但不在puppeteer类型定义中
+          ignoreHTTPSErrors: true,
+          timeout: 30000,
+        });
+      } else {
+        // 本地开发环境使用标准puppeteer
+        browser = await puppeteer.launch({
+          headless: true,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--disable-gpu',
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor',
+          ],
+          timeout: 30000,
+        });
+      }
 
       page = await browser.newPage();
 
@@ -225,9 +257,30 @@ export class PuppeteerPDFGenerator {
 
       return Buffer.from(pdfBuffer);
     } catch (error) {
-      console.error('PDF生成失败:', error);
+      // 增强错误日志，包含环境信息
+      const isProduction =
+        process.env.NODE_ENV === 'production' || process.env['VERCEL'];
+      const chromium = await loadChromium();
+      const envInfo = isProduction ? '生产环境' : '开发环境';
+      const chromiumInfo = chromium
+        ? '使用@sparticuz/chromium'
+        : '使用标准puppeteer';
+
+      console.error(`PDF生成失败 [${envInfo}, ${chromiumInfo}]:`, error);
+
+      // 如果是Vercel环境，记录更多调试信息
+      if (isProduction) {
+        console.error('Vercel环境PDF生成详细信息:', {
+          nodeEnv: process.env.NODE_ENV,
+          isVercel: !!process.env['VERCEL'],
+          hasChromium: !!chromium,
+          templatePath: this.templatePath,
+          error: error instanceof Error ? error.stack : String(error),
+        });
+      }
+
       throw new Error(
-        `PDF生成失败: ${error instanceof Error ? error.message : '未知错误'}`
+        `PDF生成失败 [${envInfo}]: ${error instanceof Error ? error.message : '未知错误'}`
       );
     } finally {
       // 确保资源被正确清理

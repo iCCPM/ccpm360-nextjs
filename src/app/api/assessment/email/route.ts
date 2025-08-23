@@ -307,10 +307,56 @@ async function sendEmail(
 
     console.log('EmailJS available:', !!emailjsAvailable);
     console.log('Server email available:', serverEmailAvailable);
+    console.log('Has attachments:', !!(attachments && attachments.length > 0));
 
-    // 策略1：优先使用EmailJS
+    // 策略调整：如果有附件，优先使用服务器邮件（因为EmailJS不支持附件）
+    if (attachments && attachments.length > 0 && serverEmailAvailable) {
+      console.log(
+        'Has attachments - using Server Email (primary for attachments)'
+      );
+      try {
+        const mailOptions: any = {
+          to: to,
+          subject: subject,
+          html: html,
+          attachments: attachments,
+        };
+        const serverResult = await sendServerEmail(mailOptions);
+
+        if (serverResult) {
+          console.log(
+            'Email with attachments sent successfully via Server Email'
+          );
+          return {
+            success: true,
+            messageId: `server_${Date.now()}`,
+            message:
+              'Email with attachments sent successfully via Server Email',
+            service: 'server',
+          };
+        } else {
+          console.error(
+            'Server email sending failed, trying EmailJS without attachments'
+          );
+        }
+      } catch (serverError) {
+        console.error(
+          'Server email sending exception, trying EmailJS without attachments:',
+          serverError
+        );
+      }
+    }
+
+    // 策略1：使用EmailJS（无附件或服务器邮件失败时）
     if (emailjsAvailable) {
-      console.log('Attempting to send email via EmailJS (primary)');
+      console.log(
+        'Attempting to send email via EmailJS (no attachments supported)'
+      );
+      if (attachments && attachments.length > 0) {
+        console.warn(
+          'EmailJS does not support attachments - attachments will be lost'
+        );
+      }
       try {
         const result = await sendContactEmail({
           to_email: to,
@@ -342,8 +388,8 @@ async function sendEmail(
       }
     }
 
-    // 策略2：备用方案 - 使用腾讯企业邮箱
-    if (serverEmailAvailable) {
+    // 策略2：备用方案 - 使用腾讯企业邮箱（如果之前没有尝试过）
+    if (serverEmailAvailable && !(attachments && attachments.length > 0)) {
       console.log('Attempting to send email via Server Email (backup)');
       try {
         const mailOptions: any = {
