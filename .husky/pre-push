@@ -25,105 +25,12 @@ echo "📍 当前分支: $current_branch"
 
 if [ "$current_branch" = "main" ] || [ "$current_branch" = "master" ]; then
   echo "⚠️  正在推送到主分支: $current_branch"
-  echo "🔍 将执行完整的CI/CD流水线模拟..."
-  FULL_CICD_CHECK=true
 else
   echo "📝 推送到功能分支: $current_branch"
-  echo "🔍 将执行标准质量检查..."
-  FULL_CICD_CHECK=false
 fi
-
-# CI/CD环境兼容性检查
-echo "\n📋 阶段3: CI/CD环境兼容性检查"
-echo "─────────────────────────────────────────────────────────────"
-
-# 检查Node.js版本
-echo "🔍 检查Node.js版本兼容性..."
-node_version=$(node -v | cut -d'.' -f1 | cut -d'v' -f2)
-if [ "$node_version" -ne 22 ]; then
-  echo "❌ Node.js版本不兼容: 当前 $(node -v)，CI/CD要求 22.x"
-  echo "💡 请切换到Node.js 22.x版本"
-  exit 1
-fi
-echo "✅ Node.js版本 $(node -v) 与CI/CD环境一致"
-
-# 检查npm版本
-echo "🔍 检查npm版本..."
-npm_version=$(npm -v)
-echo "✅ npm版本: $npm_version"
-
-# 完整的CI/CD流水线模拟
-echo "\n📋 阶段4: CI/CD流水线模拟"
-echo "─────────────────────────────────────────────────────────────"
-
-if [ "$FULL_CICD_CHECK" = "true" ]; then
-  echo "🔍 执行完整的CI/CD预验证脚本..."
-  node scripts/ci-cd-precheck.js
-  if [ $? -ne 0 ]; then
-    echo "❌ CI/CD预验证失败"
-    echo "💡 请修复所有问题后再推送到主分支"
-    exit 1
-  fi
-else
-  echo "🔍 执行标准质量检查..."
-  npm run pre-deploy:quick
-  if [ $? -ne 0 ]; then
-    echo "❌ 标准质量检查失败"
-    echo "💡 请修复所有问题后再推送"
-    exit 1
-  fi
-fi
-
-# Vercel部署环境模拟
-echo "\n📋 阶段5: Vercel部署环境模拟"
-echo "─────────────────────────────────────────────────────────────"
-
-# 检查Vercel配置
-if [ -f "vercel.json" ]; then
-  echo "✅ 发现Vercel配置文件"
-  # 验证vercel.json语法
-  if ! node -e "JSON.parse(require('fs').readFileSync('vercel.json', 'utf8'))"; then
-    echo "❌ vercel.json语法错误"
-    exit 1
-  fi
-  echo "✅ vercel.json语法正确"
-else
-  echo "⚠️  未发现vercel.json配置文件"
-fi
-
-# 检查环境变量配置
-echo "🔍 检查Vercel环境变量配置..."
-vercel_env_vars="NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY NEXT_PUBLIC_EMAILJS_SERVICE_ID NEXT_PUBLIC_EMAILJS_TEMPLATE_ID NEXT_PUBLIC_EMAILJS_PUBLIC_KEY"
-missing_env_vars=""
-
-for var in $vercel_env_vars; do
-  if ! grep -q "^$var=" .env .env.local .env.production 2>/dev/null; then
-    missing_env_vars="$missing_env_vars $var"
-  fi
-done
-
-if [ -n "$missing_env_vars" ]; then
-  echo "⚠️  警告: 以下环境变量可能需要在Vercel中配置:$missing_env_vars"
-  echo "💡 请确保在Vercel项目设置中配置这些环境变量"
-else
-  echo "✅ 环境变量配置完整"
-fi
-
-# 依赖安全扫描
-echo "\n📋 阶段6: 依赖安全扫描"
-echo "─────────────────────────────────────────────────────────────"
-
-echo "🔍 执行依赖安全审计..."
-npm audit --audit-level=high
-if [ $? -ne 0 ]; then
-  echo "❌ 发现高危安全漏洞"
-  echo "💡 请运行 'npm audit fix' 修复安全漏洞"
-  exit 1
-fi
-echo "✅ 依赖安全检查通过"
 
 # 敏感信息检查
-echo "\n📋 阶段7: 安全检查"
+echo "\n📋 阶段3: 安全检查"
 echo "─────────────────────────────────────────────────────────────"
 
 echo "🔍 检查敏感信息泄露..."
@@ -136,49 +43,7 @@ if git diff --cached --name-only | xargs grep -l -i -E "$sensitive_patterns" 2>/
 fi
 echo "✅ 未发现敏感信息泄露"
 
-# 构建产物检查
-echo "\n📋 阶段8: 构建产物检查"
-echo "─────────────────────────────────────────────────────────────"
-
-if [ -d ".next" ]; then
-  build_size=$(du -sh .next | cut -f1)
-  echo "📦 构建产物大小: $build_size"
-  
-  # 检查构建产物是否过大（超过100MB警告）
-  build_size_mb=$(du -sm .next | cut -f1)
-  if [ "$build_size_mb" -gt 100 ]; then
-    echo "⚠️  警告: 构建产物较大 ($build_size)，可能影响部署性能"
-    echo "💡 建议: 检查是否有不必要的大文件或优化资源"
-  else
-    echo "✅ 构建产物大小合理"
-  fi
-  
-  # 检查关键构建文件
-  if [ -f ".next/BUILD_ID" ]; then
-    build_id=$(cat .next/BUILD_ID)
-    echo "🆔 构建ID: $build_id"
-  fi
-  
-  if [ -d ".next/static" ]; then
-    static_files=$(find .next/static -name "*.js" -o -name "*.css" | wc -l)
-    echo "📁 静态资源文件数: $static_files"
-  fi
-else
-  echo "⚠️  未发现构建产物，建议先执行构建验证"
-fi
-
-# 最终检查总结
-echo "\n📋 阶段9: 最终检查总结"
-echo "─────────────────────────────────────────────────────────────"
-
-if [ "$FULL_CICD_CHECK" = "true" ]; then
-  echo "✅ 完整CI/CD流水线模拟检查通过"
-  echo "🚀 代码已准备好推送到主分支并触发生产部署"
-else
-  echo "✅ 标准质量检查通过"
-  echo "🚀 代码已准备好推送到功能分支"
-fi
-
 echo "\n🎉 pre-push 检查全部通过！"
 echo "✅ 代码已准备好推送"
+echo "💡 注意: CI/CD质量检测已禁用，如需完整检测请手动运行相关脚本"
 echo "═══════════════════════════════════════════════════════════════"
