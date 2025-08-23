@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseAnonKey = process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY']!;
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET(
   _request: NextRequest,
@@ -15,6 +10,29 @@ export async function GET(
 
     if (!id) {
       return NextResponse.json({ error: '案例ID不能为空' }, { status: 400 });
+    }
+
+    const supabase = getSupabaseAdmin();
+
+    // 检查是否为mock客户端
+    if (
+      !process.env['NEXT_PUBLIC_SUPABASE_URL'] ||
+      !process.env['SUPABASE_SERVICE_ROLE_KEY']
+    ) {
+      console.log(
+        'Supabase environment variables not found, returning mock case study'
+      );
+      // 返回模拟案例数据
+      const mockCaseStudy = {
+        id,
+        title: '示例案例研究',
+        description: '这是一个示例案例研究描述',
+        content: '这是案例研究的详细内容...',
+        published: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      return NextResponse.json(mockCaseStudy);
     }
 
     // 从数据库获取案例详情（只获取已发布的案例）

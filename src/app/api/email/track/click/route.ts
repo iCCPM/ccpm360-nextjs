@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,6 +10,19 @@ export async function GET(request: NextRequest) {
     if (!trackingId || !targetUrl) {
       console.log('Missing tracking parameters');
       return NextResponse.redirect('https://ccpm360.com');
+    }
+
+    const supabase = getSupabaseAdmin();
+
+    // 检查是否为mock客户端
+    if (
+      !process.env['NEXT_PUBLIC_SUPABASE_URL'] ||
+      !process.env['SUPABASE_SERVICE_ROLE_KEY']
+    ) {
+      console.log(
+        'Supabase environment variables not found, skipping click tracking'
+      );
+      return NextResponse.redirect(decodeURIComponent(targetUrl));
     }
 
     // 更新邮件点击时间（只更新第一次点击）

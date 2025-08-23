@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 // 支持的文件类型
 const ALLOWED_FILE_TYPES = [
@@ -124,7 +121,22 @@ export async function POST(request: NextRequest) {
     }
 
     // 创建 Supabase 客户端
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getSupabaseAdmin();
+
+    // 检查是否为mock客户端
+    if (
+      !process.env['NEXT_PUBLIC_SUPABASE_URL'] ||
+      !process.env['SUPABASE_SERVICE_ROLE_KEY']
+    ) {
+      console.log(
+        'Supabase environment variables not found, file upload not available'
+      );
+      return NextResponse.json(
+        { error: '文件上传服务暂时不可用' },
+        { status: 503 }
+      );
+    }
+
     console.log('Supabase 客户端创建成功');
 
     // 验证用户（可选，根据需要启用）
@@ -150,10 +162,12 @@ export async function POST(request: NextRequest) {
 
     console.log(
       '当前存在的buckets:',
-      buckets?.map((b) => ({ name: b.name, public: b.public }))
+      buckets?.map((b: any) => ({ name: b.name, public: b.public }))
     );
 
-    const bucketExists = buckets?.some((bucket) => bucket.name === bucketName);
+    const bucketExists = buckets?.some(
+      (bucket: any) => bucket.name === bucketName
+    );
     if (!bucketExists) {
       console.log(
         `创建新的 bucket: ${bucketName}，配置: { public: true, 无MIME类型限制 }`
