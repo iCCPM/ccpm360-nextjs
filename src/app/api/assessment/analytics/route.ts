@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env['NEXT_PUBLIC_SUPABASE_URL']!,
-  process.env['SUPABASE_SERVICE_ROLE_KEY']!
-);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 // GET - 获取评测分析数据
 export async function GET(request: NextRequest) {
   try {
+    const supabase = getSupabaseAdmin();
+
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
@@ -41,7 +38,7 @@ export async function GET(request: NextRequest) {
     const averageScore =
       scoreData && scoreData.length > 0
         ? scoreData.reduce(
-            (sum, record) => sum + (record.total_score || 0),
+            (sum: number, record: any) => sum + (record.total_score || 0),
             0
           ) / scoreData.length
         : 0;
@@ -56,7 +53,7 @@ export async function GET(request: NextRequest) {
     };
 
     if (scoreData) {
-      scoreData.forEach((record) => {
+      scoreData.forEach((record: any) => {
         const score = record.total_score || 0;
         if (score <= 20) scoreDistribution['0-20']++;
         else if (score <= 40) scoreDistribution['21-40']++;
@@ -200,6 +197,8 @@ export async function GET(request: NextRequest) {
 // POST - 创建评测记录（用于测试）
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabaseAdmin();
+
     const body = await request.json();
     const { email, answers, scores } = body;
 
