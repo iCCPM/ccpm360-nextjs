@@ -1,18 +1,101 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# 运行lint-staged进行代码格式化和基础检查
+echo "🚀 开始 pre-commit 检查流程..."
+echo "═══════════════════════════════════════════════════════════════"
+
+# 阶段1: 基础代码质量检查
+echo "\n📋 阶段1: 基础代码质量检查"
+echo "─────────────────────────────────────────────────────────────"
+
+# 运行 lint-staged 进行代码格式化和基础检查
+echo "🔧 运行 lint-staged 进行代码格式化..."
 npx lint-staged
+if [ $? -ne 0 ]; then
+  echo "❌ lint-staged 检查失败"
+  exit 1
+fi
 
-# 运行ESLint检查
+# 运行 ESLint 检查
+echo "\n🔍 运行 ESLint 检查..."
 npm run lint
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint 检查失败"
+  echo "💡 提示: 运行 'npm run lint -- --fix' 尝试自动修复"
+  exit 1
+fi
 
-# 运行TypeScript严格类型检查
-echo "🔍 Running strict TypeScript check..."
+# 运行 TypeScript 类型检查
+echo "\n🔍 运行 TypeScript 类型检查..."
 npx tsc --noEmit --strict
+if [ $? -ne 0 ]; then
+  echo "❌ TypeScript 类型检查失败"
+  echo "💡 提示: 运行 'npm run type-check' 查看详细错误"
+  exit 1
+fi
 
-# 检查依赖完整性
-echo "📦 Checking dependency integrity..."
+# 阶段2: CI/CD环境兼容性检查
+echo "\n📋 阶段2: CI/CD环境兼容性检查"
+echo "─────────────────────────────────────────────────────────────"
+
+# 检查Node.js版本兼容性
+echo "🔍 检查Node.js版本兼容性..."
+node_version=$(node -v | cut -d'.' -f1 | cut -d'v' -f2)
+if [ "$node_version" -ne 20 ]; then
+  echo "⚠️  警告: 当前Node.js版本为 $(node -v)，CI/CD使用20.x版本"
+  echo "💡 建议: 切换到Node.js 20.x以确保环境一致性"
+else
+  echo "✅ Node.js版本 $(node -v) 与CI/CD环境一致"
+fi
+
+# 检查CI/CD必需的环境变量
+echo "\n🔍 检查CI/CD环境变量配置..."
+required_vars="NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY NEXT_PUBLIC_EMAILJS_SERVICE_ID NEXT_PUBLIC_EMAILJS_TEMPLATE_ID NEXT_PUBLIC_EMAILJS_PUBLIC_KEY"
+missing_vars=""
+
+for var in $required_vars; do
+  if ! grep -q "^$var=" .env .env.local 2>/dev/null; then
+    missing_vars="$missing_vars $var"
+  fi
+done
+
+if [ -n "$missing_vars" ]; then
+  echo "❌ 缺失CI/CD必需的环境变量:$missing_vars"
+  echo "💡 提示: 请在.env或.env.local中配置这些环境变量"
+  exit 1
+else
+  echo "✅ CI/CD环境变量配置完整"
+fi
+
+# 运行依赖检查
+echo "\n🔍 检查项目依赖..."
 node scripts/check-dependencies.js
+if [ $? -ne 0 ]; then
+  echo "❌ 依赖检查失败"
+  exit 1
+fi
 
-echo "✅ Pre-commit checks completed successfully!"
+# 阶段3: 快速构建验证
+echo "\n📋 阶段3: 快速构建验证"
+echo "─────────────────────────────────────────────────────────────"
+
+# 检查是否存在构建产物，如果不存在则进行快速构建验证
+if [ ! -d ".next" ]; then
+  echo "🔍 未发现构建产物，执行快速构建验证..."
+  npm run build > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "❌ 快速构建验证失败"
+    echo "💡 提示: 运行 'npm run build' 查看详细错误"
+    exit 1
+  else
+    echo "✅ 快速构建验证通过"
+    # 清理构建产物以避免影响后续开发
+    rm -rf .next
+  fi
+else
+  echo "✅ 发现现有构建产物，跳过构建验证"
+fi
+
+echo "\n🎉 pre-commit 检查全部通过！"
+echo "✅ 代码已准备好提交"
+echo "═══════════════════════════════════════════════════════════════"
