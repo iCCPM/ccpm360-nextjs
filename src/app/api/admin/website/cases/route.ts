@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/lib/supabase-server';
 
 // 案例页面配置数据类型
 interface CasesPageConfig {
@@ -64,10 +64,7 @@ const defaultConfig: CasesPageConfig = {
 };
 
 // 初始化 Supabase 客户端
-const supabase = createClient(
-  process.env['NEXT_PUBLIC_SUPABASE_URL']!,
-  process.env['SUPABASE_SERVICE_ROLE_KEY']!
-);
+const supabase = getSupabaseAdmin();
 
 // GET 方法 - 获取案例页面配置
 export async function GET() {
