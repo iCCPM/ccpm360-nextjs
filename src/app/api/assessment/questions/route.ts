@@ -1,13 +1,49 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET() {
   try {
+    const supabase = getSupabaseAdmin();
+
+    // 检查是否为mock客户端
+    if (
+      !process.env['NEXT_PUBLIC_SUPABASE_URL'] ||
+      !process.env['SUPABASE_SERVICE_ROLE_KEY']
+    ) {
+      console.log(
+        'Supabase environment variables not found, returning default questions'
+      );
+
+      // 返回默认的测试题目数据
+      const defaultQuestions = [
+        {
+          id: 1,
+          question_text: '示例题目：您如何管理项目时间？',
+          dimension: 'time_management',
+          options: [
+            { index: 0, text: '制定详细计划' },
+            { index: 1, text: '灵活调整' },
+            { index: 2, text: '依赖经验' },
+            { index: 3, text: '团队协作' },
+          ],
+        },
+      ];
+
+      return NextResponse.json({
+        questions: defaultQuestions,
+        dimensions: {
+          time_management: '时间管理',
+          resource_coordination: '资源协调',
+          risk_control: '风险控制',
+          team_collaboration: '团队协作',
+        },
+        questionsByDimension: {
+          time_management: defaultQuestions,
+        },
+        totalQuestions: defaultQuestions.length,
+      });
+    }
+
     // 获取所有测试题目，按维度分组
     const { data: questions, error } = await supabase
       .from('assessment_questions')
