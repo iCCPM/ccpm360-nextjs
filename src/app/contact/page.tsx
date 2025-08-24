@@ -15,7 +15,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { contactAPI, type ContactSubmission } from '@/lib/supabase';
-import { initEmailJS, sendContactEmail } from '@/lib/emailjs';
+// EmailJS导入已移除，现在使用API路由发送邮件
 import BaiduMap from '@/components/BaiduMap';
 
 interface FormData {
@@ -72,10 +72,8 @@ export default function ContactPage() {
     map_description: '欢迎您到访我们的办公室',
   });
 
-  // 初始化EmailJS和加载联系信息
+  // 加载联系信息
   useEffect(() => {
-    initEmailJS();
-
     const loadContactInfo = async () => {
       try {
         const response = await fetch('/api/contact-info');
@@ -133,34 +131,37 @@ export default function ContactPage() {
     setEmailSent(false);
 
     try {
-      // 1. 首先发送邮件通知
-      const emailData = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        company: formData.company || '未填写',
-        message: `服务类型：${serviceTypes.find((t) => t.value === formData.serviceType)?.label || '未选择'}\n职位：${formData.position || '未填写'}\n\n详细需求：\n${formData.message}`,
-      };
+      // 1. 通过API路由发送邮件通知
+      try {
+        const emailResponse = await fetch('/api/assessment/email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            recipientEmail: 'business@ccpm360.com', // 发送到业务邮箱
+            type: 'contact_inquiry',
+            data: {
+              userName: formData.name,
+              userEmail: formData.email,
+              userPhone: formData.phone,
+              userCompany: formData.company || '未填写',
+              userPosition: formData.position || '未填写',
+              serviceType:
+                serviceTypes.find((t) => t.value === formData.serviceType)
+                  ?.label || '未选择',
+              userMessage: formData.message,
+            },
+          }),
+        });
 
-      const emailResult = await sendContactEmail(emailData);
-
-      if (emailResult.success) {
-        setEmailSent(true);
-      } else {
-        console.warn('邮件发送失败，但继续保存到数据库:', emailResult.error);
-
-        // 如果是配置问题，给用户更友好的提示
-        if (
-          'needsConfiguration' in emailResult &&
-          emailResult.needsConfiguration
-        ) {
-          if (emailResult.error && 'details' in emailResult.error) {
-            console.info('EmailJS配置提示:', emailResult.error.details);
-          }
-          if (emailResult.error && 'configSteps' in emailResult.error) {
-            console.info('配置步骤:', emailResult.error.configSteps);
-          }
+        if (emailResponse.ok) {
+          setEmailSent(true);
+        } else {
+          console.warn('邮件发送失败，但继续保存到数据库');
         }
+      } catch (emailError) {
+        console.warn('邮件发送失败，但继续保存到数据库:', emailError);
       }
 
       // 2. 保存到数据库

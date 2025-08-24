@@ -18,7 +18,9 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
+  Loader,
 } from 'lucide-react';
+// EmailJS导入已移除，现在只使用SMTP邮件发送
 
 interface AssessmentData {
   id: string;
@@ -130,8 +132,11 @@ export default function AssessmentResult({
     name: '',
     email: '',
     phone: '',
+    company: '',
+    position: '',
     message: '',
   });
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
 
   // 获取题目数据
   useEffect(() => {
@@ -183,10 +188,58 @@ export default function AssessmentResult({
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 这里可以集成邮件发送或CRM系统
-    console.log('Contact form submitted:', contactInfo);
-    alert('感谢您的咨询，我们会尽快与您联系！');
-    setShowContactForm(false);
+    setIsSubmittingContact(true);
+
+    try {
+      // 调用服务器端SMTP邮件发送API
+      const response = await fetch('/api/assessment/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientEmail: contactInfo.email,
+          type: 'contact_inquiry',
+          data: {
+            userName: contactInfo.name,
+            userEmail: contactInfo.email,
+            userPhone: contactInfo.phone,
+            userCompany: contactInfo.company,
+            userPosition: contactInfo.position,
+            userMessage: contactInfo.message,
+            // 移除嵌套的assessmentData，直接添加必要的评估信息
+            id: data.id,
+            totalScore: data.totalScore,
+            level: data.advice?.level || '',
+          },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // SMTP邮件发送成功
+        alert('感谢您的咨询！邮件发送成功，我们会尽快与您联系！');
+        setShowContactForm(false);
+        setContactInfo({
+          name: '',
+          email: '',
+          phone: '',
+          company: '',
+          position: '',
+          message: '',
+        });
+      } else {
+        throw new Error(result.error || '邮件发送失败');
+      }
+    } catch (error) {
+      console.error('邮件发送失败:', error);
+      alert(
+        '抱歉，邮件发送失败，请稍后重试或直接联系我们。可能的原因：网络连接问题或邮件服务暂时不可用。'
+      );
+    } finally {
+      setIsSubmittingContact(false);
+    }
   };
 
   const currentLevel =
@@ -622,18 +675,23 @@ export default function AssessmentResult({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto"
           onClick={() => setShowContactForm(false)}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-2xl p-8 max-w-md w-full"
+            className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-md sm:max-w-lg mx-auto my-8 max-h-[90vh] overflow-y-auto"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">联系我们</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
+              联系我们
+            </h3>
 
-            <form onSubmit={handleContactSubmit} className="space-y-4">
+            <form
+              onSubmit={handleContactSubmit}
+              className="space-y-3 sm:space-y-4"
+            >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   姓名 *
@@ -648,7 +706,7 @@ export default function AssessmentResult({
                       name: e.target.value,
                     }))
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="请输入您的姓名"
                 />
               </div>
@@ -667,7 +725,7 @@ export default function AssessmentResult({
                       email: e.target.value,
                     }))
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="请输入您的邮箱"
                 />
               </div>
@@ -685,8 +743,44 @@ export default function AssessmentResult({
                       phone: e.target.value,
                     }))
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="请输入您的联系电话"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  公司
+                </label>
+                <input
+                  type="text"
+                  value={contactInfo.company}
+                  onChange={(e) =>
+                    setContactInfo((prev) => ({
+                      ...prev,
+                      company: e.target.value,
+                    }))
+                  }
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  placeholder="请输入您的公司名称"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  职位
+                </label>
+                <input
+                  type="text"
+                  value={contactInfo.position}
+                  onChange={(e) =>
+                    setContactInfo((prev) => ({
+                      ...prev,
+                      position: e.target.value,
+                    }))
+                  }
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  placeholder="请输入您的职位"
                 />
               </div>
 
@@ -703,24 +797,33 @@ export default function AssessmentResult({
                     }))
                   }
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base resize-none"
                   placeholder="请描述您的项目管理需求或问题"
                 />
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 sm:pt-6">
                 <button
                   type="button"
                   onClick={() => setShowContactForm(false)}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  disabled={isSubmittingContact}
+                  className="flex-1 px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
                   取消
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={isSubmittingContact}
+                  className="flex-1 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
                 >
-                  提交咨询
+                  {isSubmittingContact ? (
+                    <>
+                      <Loader className="w-5 h-5 mr-2 animate-spin" />
+                      发送中...
+                    </>
+                  ) : (
+                    '提交咨询'
+                  )}
                 </button>
               </div>
             </form>

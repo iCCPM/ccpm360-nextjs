@@ -28,7 +28,6 @@
     "security-check": "npm audit --audit-level=moderate && node scripts/check-dependencies.js"
   },
   "dependencies": {
-    "@emailjs/browser": "^4.4.1",
     "@mdx-js/react": "^3.1.0",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-checkbox": "^1.1.7",

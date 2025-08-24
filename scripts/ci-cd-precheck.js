@@ -212,9 +212,12 @@ function checkCICDEnvVars() {
       'NEXT_PUBLIC_SUPABASE_URL',
       'NEXT_PUBLIC_SUPABASE_ANON_KEY',
       'SUPABASE_SERVICE_ROLE_KEY',
-      'NEXT_PUBLIC_EMAILJS_SERVICE_ID',
-      'NEXT_PUBLIC_EMAILJS_TEMPLATE_ID',
-      'NEXT_PUBLIC_EMAILJS_PUBLIC_KEY',
+      // SMTP邮件服务配置
+      'EMAIL_HOST',
+      'EMAIL_PORT',
+      'EMAIL_USER',
+      'EMAIL_PASS',
+      'EMAIL_FROM',
     ];
 
     // 检查.env文件

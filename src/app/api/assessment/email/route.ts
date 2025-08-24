@@ -1,4 +1,3 @@
-import { sendContactEmail, getAvailableEmailService } from '@/lib/emailjs';
 import { sendServerEmail, isServerEmailConfigured } from '@/lib/server-email';
 import { supabase } from '@/lib/supabase';
 import type { NextRequest } from 'next/server';
@@ -72,7 +71,11 @@ const emailTemplates = {
           <h3 style="color: #1f2937; margin-bottom: 15px;">各维度得分</h3>
           ${(() => {
             // 处理dimensionScores数据格式转换
-            let dimensionData = [];
+            let dimensionData: Array<{
+              dimension: string;
+              score: number;
+              maxScore: number;
+            }> = [];
             if (Array.isArray(data.dimensionScores)) {
               dimensionData = data.dimensionScores;
             } else if (
@@ -90,7 +93,8 @@ const emailTemplates = {
                 ([key, score]) => ({
                   dimension:
                     dimensionNames[key as keyof typeof dimensionNames] || key,
-                  score: score,
+                  score: typeof score === 'number' ? score : 0,
+                  maxScore: 25,
                 })
               );
             }
@@ -283,6 +287,95 @@ const emailTemplates = {
       </div>`;
     },
   },
+
+  contact_inquiry: {
+    subject: '感谢您的咨询 - CCPM360专家将尽快与您联系',
+    template: (data: any, trackingId?: string) => {
+      const tracking = trackingId ? generateTrackingUrls(trackingId) : null;
+
+      return `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #2563eb; margin-bottom: 10px;">CCPM360 专业咨询服务</h1>
+          <p style="color: #6b7280; font-size: 16px;">感谢您对我们的信任</p>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+          <h2 style="margin: 0 0 15px 0; font-size: 24px;">咨询已收到</h2>
+          <p style="margin: 0; opacity: 0.9; font-size: 16px;">我们的专家团队将在24小时内与您取得联系</p>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 25px; border-radius: 12px; margin-bottom: 25px;">
+          <h3 style="color: #1f2937; margin-bottom: 15px;">您的咨询信息</h3>
+          <div style="color: #4b5563; line-height: 1.6;">
+            <p style="margin: 0 0 10px 0;"><strong>姓名：</strong>${data.name || '未提供'}</p>
+            <p style="margin: 0 0 10px 0;"><strong>邮箱：</strong>${data.email || '未提供'}</p>
+            <p style="margin: 0 0 10px 0;"><strong>电话：</strong>${data.phone || '未提供'}</p>
+            <p style="margin: 0 0 10px 0;"><strong>公司：</strong>${data.company || '未提供'}</p>
+            <p style="margin: 0 0 10px 0;"><strong>职位：</strong>${data.position || '未提供'}</p>
+            <p style="margin: 0 0 10px 0;"><strong>咨询内容：</strong></p>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+              ${(data.message || '未提供具体咨询内容').replace(/\n/g, '<br>')}
+            </div>
+          </div>
+        </div>
+        
+        <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+          <h3 style="color: #92400e; margin-bottom: 15px;">接下来的步骤</h3>
+          <ul style="color: #92400e; margin: 0; padding-left: 20px;">
+            <li style="margin-bottom: 8px;">我们的专家将在24小时内通过邮件或电话与您联系</li>
+            <li style="margin-bottom: 8px;">根据您的需求，我们将为您安排合适的解决方案</li>
+            <li style="margin-bottom: 8px;">如有紧急需求，请直接拨打我们的服务热线</li>
+          </ul>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 25px;">
+          <h3 style="margin: 0 0 15px 0;">为什么选择CCPM360？</h3>
+          <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px; margin-top: 20px;">
+            <div style="text-align: center; min-width: 120px;">
+              <div style="font-size: 24px; font-weight: bold;">10+</div>
+              <div style="font-size: 14px; opacity: 0.9;">年专业经验</div>
+            </div>
+            <div style="text-align: center; min-width: 120px;">
+              <div style="font-size: 24px; font-weight: bold;">500+</div>
+              <div style="font-size: 14px; opacity: 0.9;">成功案例</div>
+            </div>
+            <div style="text-align: center; min-width: 120px;">
+              <div style="font-size: 24px; font-weight: bold;">95%</div>
+              <div style="font-size: 14px; opacity: 0.9;">客户满意度</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="text-align: center; padding: 30px 20px; border-top: 1px solid #e5e7eb; background: #f8fafc; margin-top: 30px;">
+          <div style="margin-bottom: 20px;">
+            <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">CCPM360</h3>
+            <p style="color: #6b7280; margin: 0; font-size: 14px;">专业的关键链项目管理解决方案提供商</p>
+          </div>
+          
+          <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">📞</span>
+              <span>+86-400-868-2015</span>
+            </div>
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">💬</span>
+              <span>微信公众号：ccpm360</span>
+            </div>
+            <div style="display: flex; align-items: center; color: #374151; font-size: 14px;">
+              <span style="margin-right: 8px;">✉️</span>
+              <span>contact@ccpm360.com</span>
+            </div>
+          </div>
+          
+          <div style="border-top: 1px solid #d1d5db; padding-top: 15px;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">本邮件由CCPM360系统自动发送，请勿直接回复</p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 5px 0 0 0;">如需帮助，请通过上述联系方式与我们联系</p>
+          </div>
+        </div>
+        ${tracking ? `<img src="${tracking.openTrackingUrl}" width="1" height="1" style="display: none;" alt="" />` : ''}
+      </div>`;
+    },
+  },
 };
 
 // 邮件发送函数 - 实现一用一备策略
@@ -295,140 +388,70 @@ async function sendEmail(
     content: Uint8Array;
     contentType?: string;
   }>
-) {
+): Promise<{
+  success: boolean;
+  messageId?: string;
+  error?: any;
+  message?: string;
+  service?: string;
+}> {
   try {
     console.log('Sending email to:', to);
     console.log('Subject:', subject);
     console.log('HTML content length:', html.length);
 
     // 检查可用的邮件服务
-    const emailjsAvailable = getAvailableEmailService();
     const serverEmailAvailable = isServerEmailConfigured();
 
-    console.log('EmailJS available:', !!emailjsAvailable);
     console.log('Server email available:', serverEmailAvailable);
     console.log('Has attachments:', !!(attachments && attachments.length > 0));
 
-    // 策略调整：如果有附件，优先使用服务器邮件（因为EmailJS不支持附件）
-    if (attachments && attachments.length > 0 && serverEmailAvailable) {
-      console.log(
-        'Has attachments - using Server Email (primary for attachments)'
-      );
-      try {
-        const mailOptions: any = {
-          to: to,
-          subject: subject,
-          html: html,
-          attachments: attachments,
+    // 使用SMTP服务器邮件发送
+    if (!serverEmailAvailable) {
+      console.error('SMTP service not configured');
+      return {
+        success: false,
+        error: 'SMTP service not configured',
+        message: 'Email service unavailable',
+      };
+    }
+
+    console.log('Attempting to send email via SMTP');
+    try {
+      const mailOptions: any = {
+        to: to,
+        subject: subject,
+        html: html,
+      };
+      if (attachments) {
+        mailOptions.attachments = attachments;
+      }
+      const serverResult = await sendServerEmail(mailOptions);
+
+      if (serverResult) {
+        console.log('Email sent successfully via SMTP');
+        return {
+          success: true,
+          messageId: `server_${Date.now()}`,
+          message: 'Email sent successfully via SMTP',
+          service: 'server',
         };
-        const serverResult = await sendServerEmail(mailOptions);
-
-        if (serverResult) {
-          console.log(
-            'Email with attachments sent successfully via Server Email'
-          );
-          return {
-            success: true,
-            messageId: `server_${Date.now()}`,
-            message:
-              'Email with attachments sent successfully via Server Email',
-            service: 'server',
-          };
-        } else {
-          console.error(
-            'Server email sending failed, trying EmailJS without attachments'
-          );
-        }
-      } catch (serverError) {
-        console.error(
-          'Server email sending exception, trying EmailJS without attachments:',
-          serverError
-        );
-      }
-    }
-
-    // 策略1：使用EmailJS（无附件或服务器邮件失败时）
-    if (emailjsAvailable) {
-      console.log(
-        'Attempting to send email via EmailJS (no attachments supported)'
-      );
-      if (attachments && attachments.length > 0) {
-        console.warn(
-          'EmailJS does not support attachments - attachments will be lost'
-        );
-      }
-      try {
-        const result = await sendContactEmail({
-          to_email: to,
-          subject: subject,
-          message: html,
-          from_email: 'noreply@ccpm360.com',
-          name: 'CCPM360系统',
-        });
-
-        if (result.success) {
-          console.log('Email sent successfully via EmailJS');
-          return {
-            success: true,
-            messageId: `emailjs_${Date.now()}`,
-            message: 'Email sent successfully via EmailJS',
-            service: 'emailjs',
-          };
-        } else {
-          console.warn(
-            'EmailJS sending failed, trying backup service:',
-            result.error
-          );
-        }
-      } catch (emailjsError) {
-        console.warn(
-          'EmailJS sending exception, trying backup service:',
-          emailjsError
-        );
-      }
-    }
-
-    // 策略2：备用方案 - 使用腾讯企业邮箱（如果之前没有尝试过）
-    if (serverEmailAvailable && !(attachments && attachments.length > 0)) {
-      console.log('Attempting to send email via Server Email (backup)');
-      try {
-        const mailOptions: any = {
-          to: to,
-          subject: subject,
-          html: html,
+      } else {
+        console.error('SMTP email sending failed');
+        return {
+          success: false,
+          error: 'SMTP email sending failed',
+          message: 'Unable to send email through SMTP service',
         };
-        if (attachments) {
-          mailOptions.attachments = attachments;
-        }
-        const serverResult = await sendServerEmail(mailOptions);
-
-        if (serverResult) {
-          console.log('Email sent successfully via Server Email (backup)');
-          return {
-            success: true,
-            messageId: `server_${Date.now()}`,
-            message: 'Email sent successfully via Server Email (backup)',
-            service: 'server',
-          };
-        } else {
-          console.error('Server email sending failed');
-        }
-      } catch (serverError) {
-        console.error('Server email sending exception:', serverError);
       }
+    } catch (serverError) {
+      console.error('SMTP email sending exception:', serverError);
+      return {
+        success: false,
+        error: serverError,
+        message: 'SMTP email sending exception',
+      };
     }
-
-    // 所有邮件服务都失败
-    const error = {
-      message: '所有邮件服务都不可用',
-      details: `EmailJS可用: ${!!emailjsAvailable}, 服务器邮件可用: ${serverEmailAvailable}`,
-    };
-    console.error('邮件发送完全失败:', error);
-    return {
-      success: false,
-      error: error,
-      message: 'All email services failed',
-    };
   } catch (error) {
     console.error('邮件发送异常:', error);
     return {
@@ -497,25 +520,27 @@ export async function POST(request: NextRequest) {
         // 转换数据格式以匹配PuppeteerPDFGenerator的AssessmentData接口
         const assessmentData = {
           userInfo: {
-            name: data.name || '用户',
-            email: data.email || recipientEmail,
-            company: data.company || undefined,
+            name: data.participant_name || data.name || '用户',
+            email: data.participant_email || data.email || recipientEmail,
+            company: data.participant_company || data.company || undefined,
           },
-          totalScore: Number(data.totalScore) || 0,
+          totalScore: Number(data.overall_score || data.totalScore) || 0,
           maxTotalScore: 100, // 假设总分为100
           dimensionScores: (() => {
             // 处理dimensionScores数据格式转换
-            let dimensionData = [];
-            if (Array.isArray(data.dimensionScores)) {
-              dimensionData = data.dimensionScores.map((item: any) => ({
-                dimension: item?.dimension || '未知维度',
+            let dimensionData: Array<{
+              dimension: string;
+              score: number;
+              maxScore: number;
+            }> = [];
+            const scores = data.dimension_scores || data.dimensionScores;
+            if (Array.isArray(scores)) {
+              dimensionData = scores.map((item: any) => ({
+                dimension: item?.dimension || item?.name || '未知维度',
                 score: Number(item?.score) || 0,
-                maxScore: 25, // 假设每个维度满分25分
+                maxScore: item?.maxScore || 25, // 假设每个维度满分25分
               }));
-            } else if (
-              data.dimensionScores &&
-              typeof data.dimensionScores === 'object'
-            ) {
+            } else if (scores && typeof scores === 'object') {
               // 将Record<string, number>格式转换为数组格式
               const dimensionNames = {
                 time_management: '时间管理',
@@ -523,14 +548,12 @@ export async function POST(request: NextRequest) {
                 risk_control: '风险控制',
                 team_collaboration: '团队协作',
               };
-              dimensionData = Object.entries(data.dimensionScores).map(
-                ([key, score]) => ({
-                  dimension:
-                    dimensionNames[key as keyof typeof dimensionNames] || key,
-                  score: Number(score) || 0,
-                  maxScore: 25,
-                })
-              );
+              dimensionData = Object.entries(scores).map(([key, score]) => ({
+                dimension:
+                  dimensionNames[key as keyof typeof dimensionNames] || key,
+                score: Number(score) || 0,
+                maxScore: 25,
+              }));
             }
 
             // 如果没有维度数据，创建默认数据
@@ -547,13 +570,15 @@ export async function POST(request: NextRequest) {
           })(),
           personalizedAdvice: {
             overallLevel:
+              data.personalized_advice ||
               data.advice?.levelDescription ||
               data.advice?.overallAdvice ||
               '您目前主要采用传统项目管理思维。CCPM能够显著提升项目成功率和效率，建议您系统学习关键链项目管理方法。',
             dimensionAdvice: (() => {
               // 处理dimensionAdvice数据格式转换
               console.log('Processing dimensionAdvice...');
-              const rawAdvice = data.advice?.dimensionAdvice;
+              const rawAdvice =
+                data.dimension_advice || data.advice?.dimensionAdvice;
               console.log('Raw dimensionAdvice:', rawAdvice);
               console.log('Raw dimensionAdvice type:', typeof rawAdvice);
 
@@ -636,7 +661,7 @@ export async function POST(request: NextRequest) {
             nextSteps: (() => {
               // 处理nextSteps数据格式转换
               console.log('Processing nextSteps...');
-              const rawSteps = data.advice?.nextSteps;
+              const rawSteps = data.next_steps || data.advice?.nextSteps;
               console.log('Raw nextSteps:', rawSteps);
               console.log('Raw nextSteps type:', typeof rawSteps);
 
@@ -723,8 +748,8 @@ export async function POST(request: NextRequest) {
               ];
             })(),
           },
-          completedAt: data.completedAt
-            ? new Date(data.completedAt)
+          completedAt: data.completed_at
+            ? new Date(data.completed_at)
             : new Date(),
         };
 
@@ -779,8 +804,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 数据映射处理 - 将前端字段映射到邮件模板期望的字段
+    let templateData = data;
+    if (type === 'contact_inquiry') {
+      // 映射联系表单数据字段
+      templateData = {
+        ...data,
+        name: data.userName || data.name || '未提供',
+        email: data.userEmail || data.email || '未提供',
+        phone: data.userPhone || data.phone || '未提供',
+        company: data.userCompany || data.company || '未提供',
+        position: data.userPosition || data.position || '未提供',
+        message: data.userMessage || data.message || '未提供具体咨询内容',
+      };
+    }
+
     // 发送主邮件
-    const emailHtml = template.template(data, trackingId);
+    const emailHtml = template.template(templateData, trackingId);
     const result = await sendEmail(
       recipientEmail,
       template.subject,
