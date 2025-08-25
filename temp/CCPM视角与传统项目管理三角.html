@@ -1,0 +1,1130 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>施普伦三角 vs 传统项目管理三角 - 深度对比分析</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #3b82f6;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* 背景动画 */
+        .bg-particles {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+        
+        @keyframes float {
+            from {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* 头部 */
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 1s ease;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 0%, #60a5fa 50%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        /* 三角形展示区 */
+        .triangles-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+        
+        .triangle-box {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .triangle-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        
+        .triangle-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .triangle-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .triangle-svg-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+        
+        .triangle-svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .triangle-description {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 10px;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .triangle-description h4 {
+            color: #60a5fa;
+            margin-bottom: 8px;
+        }
+        
+        .triangle-description p {
+            color: #cbd5e1;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+        
+        /* 对比分析区 */
+        .comparison-section {
+            margin-bottom: 60px;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #fff 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .comparison-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .comparison-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--gradient-1);
+        }
+        
+        .comparison-card:hover {
+            transform: translateX(10px);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        
+        .comparison-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .comparison-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+        
+        .comparison-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .badge-similarity {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+        }
+        
+        .badge-difference {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.5);
+        }
+        
+        .comparison-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .comparison-item {
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .comparison-item h5 {
+            color: #60a5fa;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .comparison-item p {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        /* 交互式演示 */
+        .interactive-section {
+            margin-bottom: 60px;
+        }
+        
+        .interactive-container {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+        }
+        
+        .slider-group {
+            margin-bottom: 30px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #cbd5e1;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(148, 163, 184, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 2px 20px rgba(59, 130, 246, 0.8);
+        }
+        
+        .impact-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .impact-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .impact-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .impact-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        /* 理论框架对比 */
+        .framework-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .framework-box {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+        }
+        
+        .framework-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .framework-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .traditional-icon {
+            background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+        }
+        
+        .sprehn-icon {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+        
+        .framework-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        
+        .framework-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+        
+        .framework-list li {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            border-left: 3px solid;
+            color: #cbd5e1;
+            transition: all 0.3s ease;
+        }
+        
+        .framework-list li:hover {
+            transform: translateX(5px);
+            background: rgba(15, 23, 42, 0.8);
+        }
+        
+        .traditional-list li {
+            border-color: #ef4444;
+        }
+        
+        .sprehn-list li {
+            border-color: #3b82f6;
+        }
+        
+        /* 案例展示 */
+        .case-studies {
+            margin-bottom: 60px;
+        }
+        
+        .case-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .case-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .case-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .case-type {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .type-traditional {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+        
+        .type-sprehn {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+        
+        .case-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 10px;
+        }
+        
+        .case-description {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .case-metrics {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .metric-tag {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+        
+        .metric-tag span:first-child {
+            color: #60a5fa;
+        }
+        
+        .metric-tag span:last-child {
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .triangles-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .framework-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 动画 */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script></head>
+<body>
+    <!-- 背景粒子 -->
+    <div class="bg-particles" id="particles"></div>
+    
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>施普伦三角 vs 传统项目管理三角</h1>
+            <p>从机械论到系统论的项目管理范式转变：深入理解两种三角模型的本质差异与互补关系</p>
+        </div>
+        
+        <!-- 三角形可视化 -->
+        <div class="triangles-container">
+            <!-- 传统项目管理三角 -->
+            <div class="triangle-box">
+                <div class="triangle-title">
+                    <div class="triangle-icon">📐</div>
+                    <span>传统项目管理三角</span>
+                </div>
+                <div class="triangle-svg-container">
+                    <svg class="triangle-svg" viewBox="0 0 300 260">
+                        <!-- 三角形 -->
+                        <polygon points="150,30 50,200 250,200" fill="none" stroke="url(#gradient1)" stroke-width="3"></polygon>
+                        
+                        <!-- 顶点标签 -->
+                        <circle cx="150" cy="30" r="25" fill="#ef4444"></circle>
+                        <text x="150" y="35" text-anchor="middle" fill="white" font-size="12" font-weight="bold">时间</text>
+                        
+                        <circle cx="50" cy="200" r="25" fill="#10b981"></circle>
+                        <text x="50" y="205" text-anchor="middle" fill="white" font-size="12" font-weight="bold">质量</text>
+                        
+                        <circle cx="250" cy="200" r="25" fill="#f59e0b"></circle>
+                        <text x="250" y="205" text-anchor="middle" fill="white" font-size="12" font-weight="bold">成本</text>
+                        
+                        <!-- 中心点 -->
+                        <circle cx="150" cy="143" r="5" fill="#60a5fa"></circle>
+                        <text x="150" y="165" text-anchor="middle" fill="#cbd5e1" font-size="11">均衡点</text>
+                        
+                        <!-- 约束关系线 -->
+                        <line x1="150" y1="30" x2="50" y2="200" stroke="#94a3b8" stroke-width="1" stroke-dasharray="5,5" opacity="0.5"></line>
+                        <line x1="150" y1="30" x2="250" y2="200" stroke="#94a3b8" stroke-width="1" stroke-dasharray="5,5" opacity="0.5"></line>
+                        <line x1="50" y1="200" x2="250" y2="200" stroke="#94a3b8" stroke-width="1" stroke-dasharray="5,5" opacity="0.5"></line>
+                        
+                        <!-- 渐变定义 -->
+                        <defs>
+                            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1"></stop>
+                                <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:1"></stop>
+                                <stop offset="100%" style="stop-color:#10b981;stop-opacity:1"></stop>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="triangle-description">
+                    <h4>核心理念：铁三角约束</h4>
+                    <p>基于资源稀缺性假设，三要素相互制约，改变一个必然影响其他。"快速、优质、便宜，只能选两个"的经典困境。</p>
+                </div>
+            </div>
+            
+            <!-- 施普伦三角 -->
+            <div class="triangle-box">
+                <div class="triangle-title">
+                    <div class="triangle-icon">🔺</div>
+                    <span>施普伦三角（CCPM视角）</span>
+                </div>
+                <div class="triangle-svg-container">
+                    <svg class="triangle-svg" viewBox="0 0 300 260">
+                        <!-- 三角形 -->
+                        <polygon points="150,30 50,200 250,200" fill="none" stroke="url(#gradient2)" stroke-width="3"></polygon>
+                        
+                        <!-- 顶点标签 -->
+                        <circle cx="150" cy="30" r="25" fill="#3b82f6"></circle>
+                        <text x="150" y="35" text-anchor="middle" fill="white" font-size="12" font-weight="bold">能量</text>
+                        
+                        <circle cx="50" cy="200" r="25" fill="#8b5cf6"></circle>
+                        <text x="50" y="205" text-anchor="middle" fill="white" font-size="12" font-weight="bold">时间</text>
+                        
+                        <circle cx="250" cy="200" r="25" fill="#06b6d4"></circle>
+                        <text x="250" y="205" text-anchor="middle" fill="white" font-size="12" font-weight="bold">信息</text>
+                        
+                        <!-- 中心流动 -->
+                        <circle cx="150" cy="143" r="8" fill="#60a5fa" class="pulse"></circle>
+                        <text x="150" y="165" text-anchor="middle" fill="#cbd5e1" font-size="11">流动</text>
+                        
+                        <!-- 流动箭头 -->
+                        <path d="M 150 55 Q 100 115 50 175" stroke="#60a5fa" stroke-width="2" fill="none" marker-end="url(#arrowhead)"></path>
+                        <path d="M 150 55 Q 200 115 250 175" stroke="#60a5fa" stroke-width="2" fill="none" marker-end="url(#arrowhead)"></path>
+                        <path d="M 75 200 Q 150 180 225 200" stroke="#60a5fa" stroke-width="2" fill="none" marker-end="url(#arrowhead)"></path>
+                        
+                        <!-- 箭头定义 -->
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa"></polygon>
+                            </marker>
+                            <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1"></stop>
+                                <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1"></stop>
+                                <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1"></stop>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="triangle-description">
+                    <h4>核心理念：系统流动</h4>
+                    <p>基于系统论和约束理论，关注流动和转化。通过识别和管理约束，实现系统整体优化，突破传统三角限制。</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 理论框架对比 -->
+        <div class="framework-comparison">
+            <div class="framework-box">
+                <div class="framework-header">
+                    <div class="framework-icon traditional-icon">⚡</div>
+                    <div class="framework-title">传统三角特征</div>
+                </div>
+                <ul class="framework-list traditional-list">
+                    <li><strong>静态均衡：</strong>追求三要素的平衡状态</li>
+                    <li><strong>零和博弈：</strong>改善一个要素必然牺牲其他</li>
+                    <li><strong>局部优化：</strong>各部门独立优化自己的指标</li>
+                    <li><strong>事后控制：</strong>通过偏差分析进行纠正</li>
+                    <li><strong>确定性假设：</strong>基于详细计划和预测</li>
+                </ul>
+            </div>
+            
+            <div class="framework-box">
+                <div class="framework-header">
+                    <div class="framework-icon sprehn-icon">🔄</div>
+                    <div class="framework-title">施普伦三角特征</div>
+                </div>
+                <ul class="framework-list sprehn-list">
+                    <li><strong>动态流动：</strong>关注系统的流动性和吞吐量</li>
+                    <li><strong>协同增效：</strong>通过约束管理实现整体突破</li>
+                    <li><strong>系统优化：</strong>从全局视角优化瓶颈</li>
+                    <li><strong>实时调整：</strong>基于缓冲消耗动态调整</li>
+                    <li><strong>不确定性管理：</strong>通过缓冲吸收变异</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 核心差异对比 -->
+        <div class="comparison-section">
+            <h2 class="section-title">📊 核心差异深度分析</h2>
+            
+            <div class="comparison-grid">
+                <!-- 哲学基础 -->
+                <div class="comparison-card">
+                    <div class="comparison-header">
+                        <h3 class="comparison-title">哲学基础</h3>
+                        <span class="comparison-badge badge-difference">根本差异</span>
+                    </div>
+                    <div class="comparison-content">
+                        <div class="comparison-item">
+                            <h5>📐 传统三角</h5>
+                            <p>机械论世界观：项目是可分解、可预测、可控制的机器。强调分解、计划、控制。</p>
+                        </div>
+                        <div class="comparison-item">
+                            <h5>🔺 施普伦三角</h5>
+                            <p>系统论世界观：项目是复杂适应系统。强调涌现、流动、约束管理。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 管理焦点 -->
+                <div class="comparison-card">
+                    <div class="comparison-header">
+                        <h3 class="comparison-title">管理焦点</h3>
+                        <span class="comparison-badge badge-difference">方法差异</span>
+                    </div>
+                    <div class="comparison-content">
+                        <div class="comparison-item">
+                            <h5>📐 传统三角</h5>
+                            <p>关注资源利用率，追求局部效率最大化，通过详细计划和严格控制确保目标达成。</p>
+                        </div>
+                        <div class="comparison-item">
+                            <h5>🔺 施普伦三角</h5>
+                            <p>关注系统流动性，识别并管理约束，通过缓冲管理吸收不确定性。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 时间观念 -->
+                <div class="comparison-card">
+                    <div class="comparison-header">
+                        <h3 class="comparison-title">时间观念</h3>
+                        <span class="comparison-badge badge-similarity">部分相似</span>
+                    </div>
+                    <div class="comparison-content">
+                        <div class="comparison-item">
+                            <h5>📐 传统三角</h5>
+                            <p>时间是约束条件，需要通过加班、加人来压缩。时间与成本直接相关。</p>
+                        </div>
+                        <div class="comparison-item">
+                            <h5>🔺 施普伦三角</h5>
+                            <p>时间是流动的维度，通过消除等待和多任务切换来压缩。关注周期时间。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 质量/信息 -->
+                <div class="comparison-card">
+                    <div class="comparison-header">
+                        <h3 class="comparison-title">质量 vs 信息</h3>
+                        <span class="comparison-badge badge-difference">概念转换</span>
+                    </div>
+                    <div class="comparison-content">
+                        <div class="comparison-item">
+                            <h5>📐 质量（传统）</h5>
+                            <p>符合规范和要求，通过检查和测试保证，是静态的标准。</p>
+                        </div>
+                        <div class="comparison-item">
+                            <h5>🔺 信息（施普伦）</h5>
+                            <p>减少不确定性，通过快速反馈学习，是动态的知识流。包含质量但更广泛。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 成本/能量 -->
+                <div class="comparison-card">
+                    <div class="comparison-header">
+                        <h3 class="comparison-title">成本 vs 能量</h3>
+                        <span class="comparison-badge badge-difference">视角转换</span>
+                    </div>
+                    <div class="comparison-content">
+                        <div class="comparison-item">
+                            <h5>📐 成本（传统）</h5>
+                            <p>消耗的资源，需要最小化，是负面指标。关注预算控制。</p>
+                        </div>
+                        <div class="comparison-item">
+                            <h5>🔺 能量（施普伦）</h5>
+                            <p>投入的势能，可以转化为价值，是中性资源。关注投入产出比。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 交互式演示 -->
+        <div class="interactive-section">
+            <h2 class="section-title">🎮 交互式影响分析</h2>
+            
+            <div class="interactive-container">
+                <h3 style="margin-bottom: 30px; color: #f1f5f9;">调整参数，观察两种模型的不同响应</h3>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>项目复杂度</span>
+                        <span id="complexity-value">50%</span>
+                    </div>
+                    <input type="range" class="slider" id="complexity" min="0" max="100" value="50">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>不确定性水平</span>
+                        <span id="uncertainty-value">50%</span>
+                    </div>
+                    <input type="range" class="slider" id="uncertainty" min="0" max="100" value="50">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>资源约束程度</span>
+                        <span id="constraint-value">50%</span>
+                    </div>
+                    <input type="range" class="slider" id="constraint" min="0" max="100" value="50">
+                </div>
+                
+                <div class="impact-display">
+                    <div class="impact-card">
+                        <div class="impact-value" id="traditional-success">65%</div>
+                        <div class="impact-label">传统三角成功率</div>
+                    </div>
+                    <div class="impact-card">
+                        <div class="impact-value" id="sprehn-success">75%</div>
+                        <div class="impact-label">施普伦三角成功率</div>
+                    </div>
+                    <div class="impact-card">
+                        <div class="impact-value" id="time-saving">15%</div>
+                        <div class="impact-label">时间节约</div>
+                    </div>
+                    <div class="impact-card">
+                        <div class="impact-value" id="cost-efficiency">20%</div>
+                        <div class="impact-label">成本效率提升</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 实际案例对比 -->
+        <div class="case-studies">
+            <h2 class="section-title">💼 实践案例对比</h2>
+            
+            <div class="case-grid">
+                <div class="case-card">
+                    <div class="case-header">
+                        <h4 class="case-title">台山核电项目转型</h4>
+                        <span class="case-type type-sprehn">CCPM应用</span>
+                    </div>
+                    <p class="case-description">
+                        从传统管理转向CCPM后，通过识别关键链、设置缓冲、动态调整资源，实现了254天计划仅偏差2天的精准控制。
+                    </p>
+                    <div class="case-metrics">
+                        <div class="metric-tag">
+                            <span>⏱️</span>
+                            <span>准时率99%</span>
+                        </div>
+                        <div class="metric-tag">
+                            <span>💰</span>
+                            <span>节约10亿</span>
+                        </div>
+                        <div class="metric-tag">
+                            <span>📊</span>
+                            <span>效率+30%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="case-card">
+                    <div class="case-header">
+                        <h4 class="case-title">传统ERP项目</h4>
+                        <span class="case-type type-traditional">传统管理</span>
+                    </div>
+                    <p class="case-description">
+                        采用详细WBS分解、甘特图计划、挣值管理。虽然过程控制严格，但面对需求变更和资源冲突时调整困难。
+                    </p>
+                    <div class="case-metrics">
+                        <div class="metric-tag">
+                            <span>⏱️</span>
+                            <span>延期25%</span>
+                        </div>
+                        <div class="metric-tag">
+                            <span>💰</span>
+                            <span>超支20%</span>
+                        </div>
+                        <div class="metric-tag">
+                            <span>📊</span>
+                            <span>返工15%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="case-card">
+                    <div class="case-header">
+                        <h4 class="case-title">巴西风电项目</h4>
+                        <span class="case-type type-sprehn">CCPM应用</span>
+                    </div>
+                    <p class="case-description">
+                        运用施普伦三角理念，通过信息快速流动、能量集中投入、时间缓冲管理，创造巴西风电史最短工期。
+                    </p>
+                    <div class="case-metrics">
+                        <div class="metric-tag">
+                            <span>⏱️</span>
+                            <span>提前69天</span>
+                        </div>
+                        <div class="metric-tag">
+                            <span>💰</span>
+                            <span>低于预算</span>
+                        </div>
+                        <div class="metric-tag">
+                            <span>📊</span>
+                            <span>零事故</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="case-card">
+                    <div class="case-header">
+                        <h4 class="case-title">软件开发项目</h4>
+                        <span class="case-type type-traditional">敏捷+传统</span>
+                    </div>
+                    <p class="case-description">
+                        混合使用敏捷迭代和传统项目管理，在灵活性和控制之间寻找平衡，但缺乏系统性的约束管理。
+                    </p>
+                    <div class="case-metrics">
+                        <div class="metric-tag">
+                            <span>⏱️</span>
+                            <span>按期70%</span>
+                        </div>
+                        <div class="metric-tag">
+                            <span>💰</span>
+                            <span>预算内</span>
+                        </div>
+                        <div class="metric-tag">
+                            <span>📊</span>
+                            <span>范围蔓延</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 整合应用建议 -->
+        <div class="comparison-section">
+            <h2 class="section-title">🔧 整合应用策略</h2>
+            
+            <div class="comparison-grid">
+                <div class="comparison-card">
+                    <div class="comparison-header">
+                        <h3 class="comparison-title">互补而非替代</h3>
+                        <span class="comparison-badge badge-similarity">融合策略</span>
+                    </div>
+                    <div class="comparison-content" style="grid-template-columns: 1fr;">
+                        <div class="comparison-item">
+                            <h5>🔄 整合思路</h5>
+                            <p>• 传统三角提供基础框架和度量体系<br>
+                               • 施普伦三角提供动态优化方法<br>
+                               • 在不同项目阶段灵活切换重点<br>
+                               • 建立双层管理体系：战略用施普伦，战术用传统</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="comparison-card">
+                    <div class="comparison-header">
+                        <h3 class="comparison-title">适用场景分析</h3>
+                        <span class="comparison-badge badge-difference">场景选择</span>
+                    </div>
+                    <div class="comparison-content">
+                        <div class="comparison-item">
+                            <h5>📐 传统三角适用</h5>
+                            <p>• 需求明确稳定<br>
+                               • 技术成熟度高<br>
+                               • 合规要求严格<br>
+                               • 成本控制优先</p>
+                        </div>
+                        <div class="comparison-item">
+                            <h5>🔺 施普伦三角适用</h5>
+                            <p>• 高度不确定性<br>
+                               • 资源严重受限<br>
+                               • 时间极其关键<br>
+                               • 创新型项目</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 生成背景粒子
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        createParticles();
+        
+        // 交互式滑块
+        const sliders = {
+            complexity: document.getElementById('complexity'),
+            uncertainty: document.getElementById('uncertainty'),
+            constraint: document.getElementById('constraint')
+        };
+        
+        const displays = {
+            complexity: document.getElementById('complexity-value'),
+            uncertainty: document.getElementById('uncertainty-value'),
+            constraint: document.getElementById('constraint-value'),
+            traditionalSuccess: document.getElementById('traditional-success'),
+            sprehnSuccess: document.getElementById('sprehn-success'),
+            timeSaving: document.getElementById('time-saving'),
+            costEfficiency: document.getElementById('cost-efficiency')
+        };
+        
+        function updateAnalysis() {
+            const complexity = parseInt(sliders.complexity.value);
+            const uncertainty = parseInt(sliders.uncertainty.value);
+            const constraint = parseInt(sliders.constraint.value);
+            
+            // 更新显示值
+            displays.complexity.textContent = complexity + '%';
+            displays.uncertainty.textContent = uncertainty + '%';
+            displays.constraint.textContent = constraint + '%';
+            
+            // 计算传统三角成功率（复杂度和不确定性越高，成功率越低）
+            const traditionalSuccess = Math.max(20, 100 - (complexity * 0.3 + uncertainty * 0.4 + constraint * 0.3));
+            
+            // 计算施普伦三角成功率（在高复杂度和约束下表现更好）
+            const sprehnSuccess = Math.min(95, 60 + (constraint * 0.2) + (complexity * 0.1) - (uncertainty * 0.1));
+            
+            // 计算时间节约
+            const timeSaving = Math.min(40, (constraint * 0.3 + complexity * 0.2));
+            
+            // 计算成本效率
+            const costEfficiency = Math.min(35, (sprehnSuccess - traditionalSuccess) + 10);
+            
+            // 更新显示
+            displays.traditionalSuccess.textContent = Math.round(traditionalSuccess) + '%';
+            displays.sprehnSuccess.textContent = Math.round(sprehnSuccess) + '%';
+            displays.timeSaving.textContent = Math.round(timeSaving) + '%';
+            displays.costEfficiency.textContent = Math.round(costEfficiency) + '%';
+            
+            // 更新颜色
+            updateColor(displays.traditionalSuccess, traditionalSuccess);
+            updateColor(displays.sprehnSuccess, sprehnSuccess);
+            updateColor(displays.timeSaving, timeSaving);
+            updateColor(displays.costEfficiency, costEfficiency);
+        }
+        
+        function updateColor(element, value) {
+            if (value >= 70) {
+                element.style.color = '#10b981';
+            } else if (value >= 50) {
+                element.style.color = '#f59e0b';
+            } else {
+                element.style.color = '#ef4444';
+            }
+        }
+        
+        // 添加事件监听
+        Object.values(sliders).forEach(slider => {
+            slider.addEventListener('input', updateAnalysis);
+        });
+        
+        // 初始化
+        updateAnalysis();
+        
+        // 案例卡片点击效果
+        document.querySelectorAll('.case-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 200);
+            });
+        });
+        
+        // 滚动动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.comparison-card, .case-card, .framework-box').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'all 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+
+
+</body></html>

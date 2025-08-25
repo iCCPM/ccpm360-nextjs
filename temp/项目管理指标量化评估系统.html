@@ -1,0 +1,1487 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目管理指标量化评估系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #3b82f6;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --light: #f8fafc;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 0%, #60a5fa 50%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+        
+        .header p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        
+        /* 导航标签 */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(148, 163, 184, 0.2);
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            padding: 10px 20px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        
+        .nav-tab:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+            color: #fff;
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        
+        /* 内容面板 */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 评估卡片 */
+        .assessment-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .assessment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .assessment-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .assessment-score {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* 维度网格 */
+        .dimension-grid {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .dimension-item {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .dimension-item:hover {
+            transform: translateX(5px);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .dimension-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .dimension-name {
+            font-weight: 600;
+            color: #f1f5f9;
+            font-size: 0.95rem;
+        }
+        
+        .dimension-value {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .dimension-score {
+            font-weight: 600;
+            color: #60a5fa;
+            font-size: 1.1rem;
+        }
+        
+        .dimension-weight {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            padding: 2px 8px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 4px;
+        }
+        
+        /* 评分控件 */
+        .rating-group {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+        
+        .rating-box {
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(148, 163, 184, 0.3);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
+        .rating-box:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+            color: #fff;
+        }
+        
+        .rating-box.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        
+        .dimension-description {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            line-height: 1.5;
+            margin-top: 8px;
+        }
+        
+        /* 进度条 */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        /* 公式展示 */
+        .formula-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .formula-title {
+            color: #60a5fa;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .formula-content {
+            font-family: 'Courier New', monospace;
+            color: #e2e8f0;
+            line-height: 1.8;
+        }
+        
+        .formula-note {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        /* 雷达图容器 */
+        .radar-container {
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+            margin: 20px auto;
+            position: relative;
+        }
+        
+        .radar-svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 结果汇总 */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .summary-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+        
+        .summary-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .summary-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        .summary-trend {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #10b981;
+        }
+        
+        /* 建议框 */
+        .recommendation-box {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .recommendation-title {
+            color: #10b981;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .recommendation-content {
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+        
+        .recommendation-list {
+            list-style: none;
+            margin-top: 10px;
+        }
+        
+        .recommendation-list li {
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #cbd5e1;
+        }
+        
+        .recommendation-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #10b981;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .nav-tab {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script></head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>📊 项目管理指标量化评估系统</h1>
+            <p>基于多维度评分的科学量化方法，精准测量项目复杂度、不确定性和资源约束</p>
+        </div>
+        
+        <!-- 导航标签 -->
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('complexity')">
+                🔧 项目复杂度
+            </div>
+            <div class="nav-tab" onclick="switchTab('uncertainty')">
+                ❓ 不确定性水平
+            </div>
+            <div class="nav-tab" onclick="switchTab('constraint')">
+                ⚡ 资源约束程度
+            </div>
+            <div class="nav-tab" onclick="switchTab('maturity')">
+                👥 团队成熟度
+            </div>
+            <div class="nav-tab" onclick="switchTab('summary')">
+                📈 综合评估
+            </div>
+        </div>
+        
+        <!-- 项目复杂度评估 -->
+        <div id="complexity" class="tab-content active">
+            <div class="assessment-card">
+                <div class="assessment-header">
+                    <h2 class="assessment-title">
+                        <span>🔧</span>
+                        <span>项目复杂度评估</span>
+                    </h2>
+                    <div class="assessment-score" id="complexity-score">0.00</div>
+                </div>
+                
+                <div class="formula-box">
+                    <div class="formula-title">计算公式</div>
+                    <div class="formula-content">
+                        复杂度 = Σ(维度得分 × 权重) / 100<br>
+                        = 0.25×技术 + 0.20×组织 + 0.20×环境 + 0.15×规模 + 0.10×接口 + 0.10×创新
+                    </div>
+                    <div class="formula-note">
+                        基于 Baccarini(1996) 的项目复杂度框架和 Vidal(2011) 的复杂度评估模型
+                    </div>
+                </div>
+                
+                <div class="dimension-grid">
+                    <!-- 技术复杂度 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">技术复杂度</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="tech-score">0</span>
+                                <span class="dimension-weight">权重 25%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('tech', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('tech', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('tech', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('tech', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('tech', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('tech', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('tech', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('tech', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('tech', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('tech', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：成熟技术、标准解决方案<br>
+                            4-6分：部分新技术、需要集成<br>
+                            7-10分：前沿技术、高度定制化、技术风险高
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tech-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 组织复杂度 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">组织复杂度</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="org-score">0</span>
+                                <span class="dimension-weight">权重 20%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('org', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('org', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('org', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('org', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('org', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('org', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('org', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('org', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('org', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('org', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：单一团队、同地办公、清晰层级<br>
+                            4-6分：多团队协作、部分远程、矩阵结构<br>
+                            7-10分：跨国团队、多方利益相关者、复杂决策链
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="org-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 环境复杂度 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">环境复杂度</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="env-score">0</span>
+                                <span class="dimension-weight">权重 20%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('env', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('env', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('env', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('env', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('env', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('env', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('env', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('env', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('env', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('env', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：稳定环境、低监管要求、内部项目<br>
+                            4-6分：一般监管、行业标准、部分外部依赖<br>
+                            7-10分：严格监管、政治敏感、高外部依赖
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="env-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 规模复杂度 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">规模复杂度</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="scale-score">0</span>
+                                <span class="dimension-weight">权重 15%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('scale', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('scale', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('scale', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('scale', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('scale', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('scale', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('scale', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('scale', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('scale', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('scale', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：&lt;10人团队、&lt;6个月、&lt;100万预算<br>
+                            4-6分：10-50人、6-18个月、100-1000万<br>
+                            7-10分：&gt;50人、&gt;18个月、&gt;1000万
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="scale-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 接口复杂度 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">接口复杂度</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="interface-score">0</span>
+                                <span class="dimension-weight">权重 10%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('interface', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('interface', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('interface', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('interface', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('interface', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('interface', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('interface', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('interface', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('interface', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('interface', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：&lt;5个系统接口、标准协议<br>
+                            4-6分：5-15个接口、部分定制协议<br>
+                            7-10分：&gt;15个接口、复杂集成、实时要求
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="interface-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 创新程度 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">创新程度</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="innovation-score">0</span>
+                                <span class="dimension-weight">权重 10%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('innovation', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('innovation', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('innovation', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('innovation', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('innovation', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('innovation', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('innovation', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('innovation', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('innovation', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('innovation', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：复制已有方案、成熟流程<br>
+                            4-6分：部分创新、改进现有方案<br>
+                            7-10分：全新方案、行业首创、探索性项目
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="innovation-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 不确定性水平评估 -->
+        <div id="uncertainty" class="tab-content">
+            <div class="assessment-card">
+                <div class="assessment-header">
+                    <h2 class="assessment-title">
+                        <span>❓</span>
+                        <span>不确定性水平评估</span>
+                    </h2>
+                    <div class="assessment-score" id="uncertainty-score">0.00</div>
+                </div>
+                
+                <div class="formula-box">
+                    <div class="formula-title">计算公式</div>
+                    <div class="formula-content">
+                        不确定性 = Σ(维度得分 × 权重) / 100<br>
+                        = 0.30×需求 + 0.25×技术 + 0.20×外部 + 0.15×资源 + 0.10×时间
+                    </div>
+                    <div class="formula-note">
+                        基于 De Meyer(2002) 的不确定性分类和 Perminova(2008) 的项目不确定性管理框架
+                    </div>
+                </div>
+                
+                <div class="dimension-grid">
+                    <!-- 需求不确定性 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">需求不确定性</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="req-score">0</span>
+                                <span class="dimension-weight">权重 30%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('req', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('req', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('req', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('req', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('req', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('req', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('req', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('req', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('req', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('req', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：需求明确、书面确认、变更&lt;5%<br>
+                            4-6分：主要需求确定、预期变更5-15%<br>
+                            7-10分：需求模糊、持续演化、变更&gt;15%
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="req-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 技术不确定性 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">技术不确定性</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="tech-unc-score">0</span>
+                                <span class="dimension-weight">权重 25%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('tech-unc', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('tech-unc', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('tech-unc', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('tech-unc', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('tech-unc', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('tech-unc', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('tech-unc', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('tech-unc', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('tech-unc', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('tech-unc', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：成熟技术、已验证方案、低技术风险<br>
+                            4-6分：部分新技术、需要POC验证<br>
+                            7-10分：前沿技术、无先例、高技术风险
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tech-unc-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 外部不确定性 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">外部不确定性</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="external-score">0</span>
+                                <span class="dimension-weight">权重 20%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('external', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('external', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('external', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('external', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('external', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('external', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('external', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('external', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('external', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('external', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：稳定市场、可靠供应商、低依赖<br>
+                            4-6分：一般市场波动、部分外部依赖<br>
+                            7-10分：高度波动、政策风险、强外部依赖
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="external-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 资源不确定性 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">资源不确定性</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="resource-unc-score">0</span>
+                                <span class="dimension-weight">权重 15%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('resource-unc', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('resource-unc', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('resource-unc', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('resource-unc', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('resource-unc', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('resource-unc', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('resource-unc', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('resource-unc', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('resource-unc', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('resource-unc', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：资源确定、专属团队、低流失风险<br>
+                            4-6分：资源基本确定、部分共享、一般流失<br>
+                            7-10分：资源高度不确定、严重共享、高流失
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="resource-unc-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 时间不确定性 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">时间不确定性</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="time-unc-score">0</span>
+                                <span class="dimension-weight">权重 10%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('time-unc', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('time-unc', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('time-unc', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('time-unc', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('time-unc', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('time-unc', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('time-unc', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('time-unc', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('time-unc', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('time-unc', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：工期估算准确度&gt;80%、历史数据充分<br>
+                            4-6分：准确度60-80%、部分历史参考<br>
+                            7-10分：准确度&lt;60%、无历史数据、首次尝试
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="time-unc-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 资源约束程度评估 -->
+        <div id="constraint" class="tab-content">
+            <div class="assessment-card">
+                <div class="assessment-header">
+                    <h2 class="assessment-title">
+                        <span>⚡</span>
+                        <span>资源约束程度评估</span>
+                    </h2>
+                    <div class="assessment-score" id="constraint-score">0.00</div>
+                </div>
+                
+                <div class="formula-box">
+                    <div class="formula-title">计算公式</div>
+                    <div class="formula-content">
+                        约束程度 = Σ(维度得分 × 权重) / 100<br>
+                        = 0.30×人力 + 0.25×预算 + 0.20×时间 + 0.15×设备 + 0.10×知识
+                    </div>
+                    <div class="formula-note">
+                        基于 TOC约束理论和资源依赖理论(RDT)，参考 PMBOK 资源管理知识领域
+                    </div>
+                </div>
+                
+                <div class="dimension-grid">
+                    <!-- 人力资源约束 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">人力资源约束</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="human-score">0</span>
+                                <span class="dimension-weight">权重 30%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('human', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('human', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('human', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('human', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('human', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('human', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('human', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('human', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('human', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('human', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：充足专属团队、技能匹配、低竞争<br>
+                            4-6分：基本满足、部分共享、中等竞争<br>
+                            7-10分：严重短缺、高度共享、激烈竞争
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="human-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 预算约束 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">预算约束</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="budget-score">0</span>
+                                <span class="dimension-weight">权重 25%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('budget', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('budget', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('budget', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('budget', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('budget', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('budget', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('budget', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('budget', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('budget', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('budget', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：预算充裕、&gt;20%缓冲、灵活调整<br>
+                            4-6分：预算适中、10-20%缓冲、有限调整<br>
+                            7-10分：预算紧张、&lt;10%缓冲、固定预算
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="budget-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 时间约束 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">时间约束</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="time-const-score">0</span>
+                                <span class="dimension-weight">权重 20%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('time-const', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('time-const', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('time-const', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('time-const', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('time-const', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('time-const', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('time-const', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('time-const', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('time-const', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('time-const', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：时间充裕、可延期、无硬性截止<br>
+                            4-6分：时间适中、有限延期、软性截止<br>
+                            7-10分：时间紧迫、不可延期、硬性截止
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="time-const-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 设备/工具约束 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">设备/工具约束</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="equipment-score">0</span>
+                                <span class="dimension-weight">权重 15%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('equipment', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('equipment', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('equipment', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('equipment', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('equipment', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('equipment', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('equipment', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('equipment', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('equipment', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('equipment', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：设备充足、工具齐全、专属使用<br>
+                            4-6分：基本满足、部分共享、偶尔等待<br>
+                            7-10分：设备短缺、严重共享、频繁等待
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="equipment-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 知识/技能约束 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">知识/技能约束</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="knowledge-score">0</span>
+                                <span class="dimension-weight">权重 10%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('knowledge', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('knowledge', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('knowledge', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('knowledge', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('knowledge', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('knowledge', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('knowledge', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('knowledge', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('knowledge', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('knowledge', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：技能充足、经验丰富、知识完备<br>
+                            4-6分：技能基本满足、需要部分培训<br>
+                            7-10分：技能缺口大、需要大量培训或外援
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="knowledge-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 团队成熟度评估 -->
+        <div id="maturity" class="tab-content">
+            <div class="assessment-card">
+                <div class="assessment-header">
+                    <h2 class="assessment-title">
+                        <span>👥</span>
+                        <span>团队成熟度评估</span>
+                    </h2>
+                    <div class="assessment-score" id="maturity-score">0.00</div>
+                </div>
+                
+                <div class="formula-box">
+                    <div class="formula-title">计算公式</div>
+                    <div class="formula-content">
+                        成熟度 = Σ(维度得分 × 权重) / 100<br>
+                        = 0.25×经验 + 0.20×协作 + 0.20×流程 + 0.20×工具 + 0.15×文化
+                    </div>
+                    <div class="formula-note">
+                        基于 CMMI成熟度模型和 Tuckman团队发展阶段理论
+                    </div>
+                </div>
+                
+                <div class="dimension-grid">
+                    <!-- 团队经验 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">团队经验</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="experience-score">0</span>
+                                <span class="dimension-weight">权重 25%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('experience', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('experience', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('experience', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('experience', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('experience', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('experience', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('experience', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('experience', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('experience', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('experience', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：新团队、&lt;1年合作、领域新手<br>
+                            4-6分：1-3年合作、部分相似项目经验<br>
+                            7-10分：&gt;3年合作、多个成功项目、领域专家
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="experience-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 协作能力 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">协作能力</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="collaboration-score">0</span>
+                                <span class="dimension-weight">权重 20%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('collaboration', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('collaboration', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('collaboration', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('collaboration', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('collaboration', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('collaboration', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('collaboration', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('collaboration', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('collaboration', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('collaboration', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：沟通困难、信息孤岛、冲突频繁<br>
+                            4-6分：基本沟通、部分协同、偶有冲突<br>
+                            7-10分：高效沟通、无缝协作、建设性冲突
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="collaboration-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 流程成熟度 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">流程成熟度</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="process-score">0</span>
+                                <span class="dimension-weight">权重 20%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('process', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('process', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('process', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('process', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('process', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('process', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('process', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('process', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('process', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('process', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：临时流程、无标准、依赖个人<br>
+                            4-6分：基本流程、部分标准化、可重复<br>
+                            7-10分：优化流程、完全标准化、持续改进
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="process-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 工具使用 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">工具使用</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="tools-score">0</span>
+                                <span class="dimension-weight">权重 20%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('tools', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('tools', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('tools', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('tools', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('tools', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('tools', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('tools', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('tools', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('tools', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('tools', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：基础工具、手工操作多、低集成<br>
+                            4-6分：标准工具、部分自动化、基本集成<br>
+                            7-10分：先进工具、高度自动化、完全集成
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tools-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 团队文化 -->
+                    <div class="dimension-item">
+                        <div class="dimension-header">
+                            <span class="dimension-name">团队文化</span>
+                            <div class="dimension-value">
+                                <span class="dimension-score" id="culture-score">0</span>
+                                <span class="dimension-weight">权重 15%</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-box" onclick="setRating('culture', 1)">1</div>
+                            <div class="rating-box" onclick="setRating('culture', 2)">2</div>
+                            <div class="rating-box" onclick="setRating('culture', 3)">3</div>
+                            <div class="rating-box" onclick="setRating('culture', 4)">4</div>
+                            <div class="rating-box" onclick="setRating('culture', 5)">5</div>
+                            <div class="rating-box" onclick="setRating('culture', 6)">6</div>
+                            <div class="rating-box" onclick="setRating('culture', 7)">7</div>
+                            <div class="rating-box" onclick="setRating('culture', 8)">8</div>
+                            <div class="rating-box" onclick="setRating('culture', 9)">9</div>
+                            <div class="rating-box" onclick="setRating('culture', 10)">10</div>
+                        </div>
+                        <div class="dimension-description">
+                            评估标准：<br>
+                            1-3分：低士气、高流失、推诿责任<br>
+                            4-6分：一般士气、正常流失、基本责任感<br>
+                            7-10分：高士气、低流失、主人翁精神
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="culture-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 综合评估 -->
+        <div id="summary" class="tab-content">
+            <div class="assessment-card">
+                <div class="assessment-header">
+                    <h2 class="assessment-title">
+                        <span>📈</span>
+                        <span>综合评估报告</span>
+                    </h2>
+                </div>
+                
+                <!-- 雷达图 -->
+                <div class="radar-container">
+                    <svg class="radar-svg" viewBox="0 0 400 400">
+                        <!-- 背景网格 -->
+                        <g id="radar-grid">
+                            <!-- 将通过JS生成 -->
+                        </g>
+                        <!-- 数据区域 -->
+                        <g id="radar-data">
+                            <!-- 将通过JS生成 -->
+                        </g>
+                        <!-- 标签 -->
+                        <g id="radar-labels">
+                            <!-- 将通过JS生成 -->
+                        </g>
+                    </svg>
+                </div>
+                
+                <!-- 汇总数据 -->
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-value" id="summary-complexity" style="color: #3b82f6;">0.00</div>
+                        <div class="summary-label">项目复杂度</div>
+                        <div class="summary-trend">趋势：稳定</div>
+                    </div>
+                    
+                    <div class="summary-card">
+                        <div class="summary-value" id="summary-uncertainty" style="color: #f59e0b;">0.00</div>
+                        <div class="summary-label">不确定性水平</div>
+                        <div class="summary-trend">趋势：上升</div>
+                    </div>
+                    
+                    <div class="summary-card">
+                        <div class="summary-value" id="summary-constraint" style="color: #ef4444;">0.00</div>
+                        <div class="summary-label">资源约束程度</div>
+                        <div class="summary-trend">趋势：下降</div>
+                    </div>
+                    
+                    <div class="summary-card">
+                        <div class="summary-value" id="summary-maturity" style="color: #10b981;">0.00</div>
+                        <div class="summary-label">团队成熟度</div>
+                        <div class="summary-trend">趋势：改善</div>
+                    </div>
+                </div>
+                
+                <!-- 建议 -->
+                <div class="recommendation-box">
+                    <h3 class="recommendation-title">
+                        <span>💡</span>
+                        <span>管理建议</span>
+                    </h3>
+                    <div class="recommendation-content">
+                        基于当前评估结果，系统建议：
+                        <ul class="recommendation-list" id="recommendations">
+                            <li>采用CCPM方法管理项目关键链</li>
+                            <li>设置30%的项目缓冲应对不确定性</li>
+                            <li>实施WIP限制减少资源冲突</li>
+                            <li>加强团队培训提升成熟度</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 数据存储
+        const scores = {
+            // 复杂度维度
+            tech: 0,
+            org: 0,
+            env: 0,
+            scale: 0,
+            interface: 0,
+            innovation: 0,
+            // 不确定性维度
+            req: 0,
+            'tech-unc': 0,
+            external: 0,
+            'resource-unc': 0,
+            'time-unc': 0,
+            // 约束维度
+            human: 0,
+            budget: 0,
+            'time-const': 0,
+            equipment: 0,
+            knowledge: 0,
+            // 成熟度维度
+            experience: 0,
+            collaboration: 0,
+            process: 0,
+            tools: 0,
+            culture: 0
+        };
+        
+        // 权重配置
+        const weights = {
+            complexity: {
+                tech: 0.25,
+                org: 0.20,
+                env: 0.20,
+                scale: 0.15,
+                interface: 0.10,
+                innovation: 0.10
+            },
+            uncertainty: {
+                req: 0.30,
+                'tech-unc': 0.25,
+                external: 0.20,
+                'resource-unc': 0.15,
+                'time-unc': 0.10
+            },
+            constraint: {
+                human: 0.30,
+                budget: 0.25,
+                'time-const': 0.20,
+                equipment: 0.15,
+                knowledge: 0.10
+            },
+            maturity: {
+                experience: 0.25,
+                collaboration: 0.20,
+                process: 0.20,
+                tools: 0.20,
+                culture: 0.15
+            }
+        };
+        
+        // 设置评分
+        function setRating(dimension, value) {
+            scores[dimension] = value;
+            
+            // 更新UI
+            updateDimensionUI(dimension, value);
+            
+            // 重新计算总分
+            calculateScores();
+            
+            // 更新雷达图
+            updateRadar();
+        }
+        
+        // 更新维度UI
+        function updateDimensionUI(dimension, value) {
+            // 更新分数显示
+            const scoreElement = document.getElementById(`${dimension}-score`);
+            if (scoreElement) {
+                scoreElement.textContent = value;
+            }
+            
+            // 更新进度条
+            const progressElement = document.getElementById(`${dimension}-progress`);
+            if (progressElement) {
+                progressElement.style.width = (value * 10) + '%';
+            }
+            
+            // 更新选中的评分框
+            const ratingBoxes = document.querySelectorAll(`#${dimension}-score`).length > 0 ?
+                document.querySelectorAll(`#${dimension}-score`)[0].closest('.dimension-item').querySelectorAll('.rating-box') :
+                [];
+            
+            ratingBoxes.forEach((box, index) => {
+                if (index + 1 <= value) {
+                    box.classList.add('selected');
+                } else {
+                    box.classList.remove('selected');
+                }
+            });
+        }
+        
+        // 计算各维度总分
+        function calculateScores() {
+            // 复杂度
+            const complexityScore = calculateCategoryScore('complexity', ['tech', 'org', 'env', 'scale', 'interface', 'innovation']);
+            updateCategoryScore('complexity', complexityScore);
+            
+            // 不确定性
+            const uncertaintyScore = calculateCategoryScore('uncertainty', ['req', 'tech-unc', 'external', 'resource-unc', 'time-unc']);
+            updateCategoryScore('uncertainty', uncertaintyScore);
+            
+            // 约束
+            const constraintScore = calculateCategoryScore('constraint', ['human', 'budget', 'time-const', 'equipment', 'knowledge']);
+            updateCategoryScore('constraint', constraintScore);
+            
+            // 成熟度
+            const maturityScore = calculateCategoryScore('maturity', ['experience', 'collaboration', 'process', 'tools', 'culture']);
+            updateCategoryScore('maturity', maturityScore);
+            
+            // 更新综合页面
+            updateSummary(complexityScore, uncertaintyScore, constraintScore, maturityScore);
+        }
+        
+        // 计算分类得分
+        function calculateCategoryScore(category, dimensions) {
+            let totalScore = 0;
+            dimensions.forEach(dim => {
+                totalScore += scores[dim] * weights[category][dim] * 10;
+            });
+            return totalScore;
+        }
+        
+        // 更新分类得分显示
+        function updateCategoryScore(category, score) {
+            const element = document.getElementById(`${category}-score`);
+            if (element) {
+                element.textContent = score.toFixed(2);
+            }
+        }
+        
+        // 更新综合评估
+        function updateSummary(complexity, uncertainty, constraint, maturity) {
+            document.getElementById('summary-complexity').textContent = complexity.toFixed(2);
+            document.getElementById('summary-uncertainty').textContent = uncertainty.toFixed(2);
+            document.getElementById('summary-constraint').textContent = constraint.toFixed(2);
+            document.getElementById('summary-maturity').textContent = maturity.toFixed(2);
+            
+            // 生成建议
+            generateRecommendations(complexity, uncertainty, constraint, maturity);
+        }
+        
+        // 生成建议
+        function generateRecommendations(complexity, uncertainty, constraint, maturity) {
+            const recommendations = [];
+            
+            if (complexity > 70) {
+                recommendations.push("项目复杂度高，建议采用分阶段交付策略");
+            }
+            
+            if (uncertainty > 60) {
+                recommendations.push("不确定性较高，建议设置40%以上的项目缓冲");
+            }
+            
+            if (constraint > 70) {
+                recommendations.push("资源约束严重，强烈建议采用CCPM关键链管理");
+            }
+            
+            if (maturity < 40) {
+                recommendations.push("团队成熟度偏低，需要加强培训和指导");
+            }
+            
+            if (complexity > 60 && uncertainty > 60) {
+                recommendations.push("高复杂度+高不确定性，建议采用敏捷与CCPM结合");
+            }
+            
+            const recList = document.getElementById('recommendations');
+            recList.innerHTML = recommendations.map(r => `<li>${r}</li>`).join('');
+        }
+        
+        // 切换标签
+        function switchTab(tabName) {
+            // 更新标签状态
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 更新内容显示
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // 绘制雷达图
+        function updateRadar() {
+            // 简化的雷达图实现
+            // 实际项目中可以使用 Chart.js 或 D3.js
+        }
+        
+        // 初始化
+        calculateScores();
+    </script>
+
+
+</body></html>
